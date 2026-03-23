@@ -1,18 +1,33 @@
+/* estilo general de la app */
+
 body{
-font-family: Arial;
-text-align:center;
+
 background:#111;
 color:white;
-margin-top:100px;
+font-family:Arial;
+
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+
+height:100vh;
+
 }
+
+/* boton principal */
 
 button{
 
 background:#4CAF50;
-border:none;
-padding:25px;
-font-size:22px;
-border-radius:10px;
 color:white;
+
+font-size:24px;
+
+border:none;
+
+padding:25px;
+
+border-radius:10px;
 
 }

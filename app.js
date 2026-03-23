@@ -1,27 +1,35 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-
-const app = initializeApp(firebaseConfig);
+// estado inicial del trabajador
 let estado = "fuera"
 
-const boton = document.getElementById("btnIngreso")
+// obtenemos el boton del html
+const boton = document.getElementById("btnAsistencia")
 
+// evento cuando se presiona el boton
 boton.onclick = () => {
 
-if(estado === "fuera"){
+    // si el trabajador esta fuera
+    if(estado === "fuera"){
 
-boton.innerText = "REGISTRAR SALIDA"
-estado = "trabajando"
+        boton.innerText = "REGISTRAR SALIDA"
 
-}else{
+        estado = "trabajando"
 
-boton.innerText = "REGISTRAR INGRESO"
-estado = "fuera"
+    }else{
+
+        boton.innerText = "REGISTRAR INGRESO"
+
+        estado = "fuera"
+
+    }
 
 }
 
-}
-if('serviceWorker' in navigator){
 
-navigator.serviceWorker.register('/service-worker.js')
+// aqui registramos el service worker
+// esto permite instalar la PWA
+
+if("serviceWorker" in navigator){
+
+navigator.serviceWorker.register("service-worker.js")
 
 }

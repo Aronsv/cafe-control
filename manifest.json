@@ -1,20 +1,28 @@
 {
-"name": "Cafe Control",
-"short_name": "CafeControl",
-"start_url": "/",
-"display": "standalone",
-"background_color": "#111111",
-"theme_color": "#111111",
-"icons": [
-{
-"src": "icon-192.png",
-"sizes": "192x192",
-"type": "image/png"
-},
-{
-"src": "icon-512.png",
-"sizes": "512x512",
-"type": "image/png"
-}
-]
+  "name": "Cafe Control",
+  "short_name": "CafeControl",
+
+  // pagina inicial
+  "start_url": "/",
+
+  // modo app (sin barra navegador)
+  "display": "standalone",
+
+  // colores del sistema
+  "background_color": "#111111",
+  "theme_color": "#111111",
+
+  // iconos de la app
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }

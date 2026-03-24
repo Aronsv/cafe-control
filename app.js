@@ -1,22 +1,28 @@
-// firebase app
+// =============================
+// IMPORTAR FIREBASE
+// =============================
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"
 
-// firestore
 import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
 
-// autenticacion
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
 
 
-// configuracion firebase
+// =============================
+// CONFIGURACION FIREBASE
+// =============================
+
 const firebaseConfig = {
-  apiKey: "AIzaSyB-L09L2xGVWtsJO1XE3CCj6F5p4XN2VPo",
-  authDomain: "cafe-control-c05bb.firebaseapp.com",
-  projectId: "cafe-control-c05bb",
-  storageBucket: "cafe-control-c05bb.firebasestorage.app",
-  messagingSenderId: "874681908082",
-  appId: "1:874681908082:web:e8e87dd3d5a070deb47beb"
-};
+
+apiKey: "TU_APIKEY",
+authDomain: "TU_AUTHDOMAIN",
+projectId: "TU_PROJECTID",
+storageBucket: "TU_STORAGE",
+messagingSenderId: "TU_SENDER",
+appId: "TU_APP"
+
+}
 
 
 // iniciar firebase
@@ -31,8 +37,12 @@ const db = getFirestore(app)
 const auth = getAuth(app)
 
 
-// elementos html
+// =============================
+// ELEMENTOS HTML
+// =============================
+
 const btnLogin = document.getElementById("btnLogin")
+
 const email = document.getElementById("email")
 const password = document.getElementById("password")
 
@@ -42,12 +52,20 @@ const appDiv = document.getElementById("app")
 const boton = document.getElementById("btnAsistencia")
 
 
-// estado asistencia
-let estado = "fuera"
+// =============================
+// ESTADO DEL TRABAJADOR
+// =============================
+
+let estado = "ingreso"
 
 
-// login
+// =============================
+// LOGIN
+// =============================
+
 btnLogin.onclick = async () => {
+
+try{
 
 await signInWithEmailAndPassword(
 auth,
@@ -55,10 +73,19 @@ email.value,
 password.value
 )
 
+}catch(error){
+
+alert("Error login: " + error.message)
+
+}
+
 }
 
 
-// detectar usuario logueado
+// =============================
+// DETECTAR SESION ACTIVA
+// =============================
+
 onAuthStateChanged(auth, (user) => {
 
 if(user){
@@ -76,30 +103,24 @@ appDiv.style.display = "none"
 })
 
 
-// registrar asistencia
+// =============================
+// REGISTRAR ASISTENCIA
+// =============================
+
 boton.onclick = async () => {
 
-let tipo = ""
+let tipo = estado
 
-if(estado === "fuera"){
 
-tipo = "ingreso"
-boton.innerText = "REGISTRAR SALIDA"
-estado = "trabajando"
-
-}else{
-
-tipo = "salida"
-boton.innerText = "REGISTRAR INGRESO"
-estado = "fuera"
-
-}
-
+// hora actual
 const ahora = new Date()
 
 const hora = ahora.toLocaleTimeString()
+
 const fecha = ahora.toLocaleDateString()
 
+
+// guardar en firestore
 await addDoc(collection(db, "attendance"), {
 
 userId: auth.currentUser.uid,
@@ -110,10 +131,40 @@ fecha: fecha
 
 })
 
+
+// =============================
+// CAMBIO DE ESTADO
+// =============================
+
+if(estado === "ingreso"){
+
+estado = "break"
+boton.innerText = "INICIAR BREAK"
+
+}else if(estado === "break"){
+
+estado = "regreso"
+boton.innerText = "REGRESAR DEL BREAK"
+
+}else if(estado === "regreso"){
+
+estado = "salida"
+boton.innerText = "REGISTRAR SALIDA"
+
+}else{
+
+estado = "ingreso"
+boton.innerText = "REGISTRAR INGRESO"
+
+}
+
 }
 
 
-// registrar service worker
+// =============================
+// PWA SERVICE WORKER
+// =============================
+
 if("serviceWorker" in navigator){
 
 navigator.serviceWorker.register("service-worker.js")

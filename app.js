@@ -79,10 +79,6 @@ console.error("error guardando", error)
 
 }
 
-
-}
-
-
 // registrar service worker para la PWA
 
 if("serviceWorker" in navigator){

@@ -5,7 +5,6 @@ import { getFirestore, collection, addDoc } from "https://www.gstatic.com/fireba
 
 
 // configuracion de tu proyecto firebase
-// reemplaza estos valores con los tuyos
 
 const firebaseConfig = {
   apiKey: "AIzaSyB-L09L2xGVWtsJO1XE3CCj6F5p4XN2VPo",
@@ -21,33 +20,44 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 
 
-// iniciamos la base de datos firestore
+// iniciamos firestore
 const db = getFirestore(app)
-// estado inicial del trabajador
+
+
+// estado del trabajador
 let estado = "fuera"
 
-// obtenemos el boton del html
+
+// boton de asistencia
 const boton = document.getElementById("btnAsistencia")
 
+
 // evento cuando se presiona el boton
-boton.onclick = () => {
+boton.onclick = async () => {
 
-    // si el trabajador esta fuera
-    if(estado === "fuera"){
+let tipo = ""
 
-        boton.innerText = "REGISTRAR SALIDA"
 
-        estado = "trabajando"
+// logica del estado
 
-    }else{
+if(estado === "fuera"){
 
-        boton.innerText = "REGISTRAR INGRESO"
+tipo = "ingreso"
 
-        estado = "fuera"
+boton.innerText = "REGISTRAR SALIDA"
 
-    }
+estado = "trabajando"
+
+}else{
+
+tipo = "salida"
+
+boton.innerText = "REGISTRAR INGRESO"
+
+estado = "fuera"
 
 }
+
 
 // obtener hora actual
 
@@ -58,7 +68,7 @@ const hora = ahora.toLocaleTimeString()
 const fecha = ahora.toLocaleDateString()
 
 
-// guardar en firebase
+// guardar asistencia en firebase
 
 try{
 
@@ -78,6 +88,9 @@ console.log("asistencia guardada")
 console.error("error guardando", error)
 
 }
+
+}
+
 
 // registrar service worker para la PWA
 

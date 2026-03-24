@@ -2,20 +2,15 @@
 <html lang="es">
 
 <head>
-<meta charset="UTF-8">
 
-<!-- adapta la app al tamaño del celular -->
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-  
+
 <title>Cafe Control</title>
-  
-<!-- estilos -->
+
 <link rel="stylesheet" href="style.css">
-  
-<!-- aqui conectamos el manifest para que funcione como PWA -->
 <link rel="manifest" href="manifest.json">
-  
-<!-- color de barra en celular -->
+
 <meta name="theme-color" content="#111111">
 
 </head>
@@ -24,12 +19,25 @@
 
 <h1>☕ Cafe Control</h1>
 
-<!-- boton principal de asistencia -->
+<div id="login">
+
+<input id="email" placeholder="correo">
+<input id="password" type="password" placeholder="contraseña">
+
+<button id="btnLogin">
+Iniciar sesión
+</button>
+
+</div>
+
+<div id="app" style="display:none">
+
 <button id="btnAsistencia">
 REGISTRAR INGRESO
 </button>
 
-<!-- archivo javascript -->
+</div>
+
 <script type="module" src="app.js"></script>
 
 </body>

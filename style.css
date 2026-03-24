@@ -168,3 +168,18 @@ background:#555;
 color:white;
 
 }
+/* fila usuario */
+
+.filaUsuario{
+
+display:flex;
+
+justify-content:space-between;
+
+padding:12px;
+
+border-bottom:1px solid #ddd;
+
+font-size:18px;
+
+}

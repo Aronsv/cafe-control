@@ -43,6 +43,8 @@ const lista = document.getElementById("listaUsuarios")
 // =============================
 
 onSnapshot(collection(db,"users"),(snapshot)=>{
+  
+console.log("usuarios detectados:", snapshot.size)
 
 lista.innerHTML=""
 

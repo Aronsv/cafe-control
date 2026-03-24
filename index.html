@@ -2,54 +2,60 @@
 <html lang="es">
 
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>Cafe Control</title>
-
 <link rel="stylesheet" href="style.css">
-
-<link rel="manifest" href="manifest.json">
-
-<meta name="theme-color" content="#111111">
-
 </head>
 
 <body>
 
-<div id="login">
+<!-- LOGIN -->
+<div id="loginBox" class="card">
 
-<h1>☕ Cafe Control</h1>
+<h1 class="logo">☕ Cafe Control</h1>
 
-<input id="email" placeholder="Correo">
-
-<div class="password-box">
+<input id="email" placeholder="Usuario o Correo">
 
 <input id="password" type="password" placeholder="Contraseña">
 
-<button id="togglePassword">
-👁
+<button id="btnLogin" class="btn-login">
+INICIAR SESIÓN
+</button>
+
+<p id="resetPassword" class="link">
+¿Olvidaste tu contraseña?
+</p>
+
+</div>
+
+
+<!-- PANEL APP -->
+<div id="appBox" class="card hidden">
+
+<h1 class="logo">☕ Cafe Control</h1>
+
+<p id="mensaje" class="mensaje">
+Tu jornada aún no ha comenzado
+</p>
+
+<div class="botones">
+
+<button id="btnAsistencia" class="btn-verde">
+Registrar ingreso
+</button>
+
+<button id="btnBreak" class="btn-disabled">
+Iniciar break
 </button>
 
 </div>
 
-<button id="btnLogin">
-Iniciar sesión
+<button id="btnLogout" class="logout">
+Cerrar sesión
 </button>
 
 </div>
 
-
-<div id="app" style="display:none">
-
-<h2>Panel de asistencia</h2>
-
-<button id="btnAsistencia">
-REGISTRAR INGRESO
-</button>
-
-</div>
 
 <script type="module" src="app.js"></script>
 

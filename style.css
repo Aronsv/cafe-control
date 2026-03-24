@@ -1,33 +1,82 @@
-/* estilo general de la app */
-
 body{
 
+margin:0;
+font-family:Arial;
 background:#111;
 color:white;
-font-family:Arial;
 
 display:flex;
-flex-direction:column;
-align-items:center;
 justify-content:center;
+align-items:center;
 
 height:100vh;
 
 }
 
-/* boton principal */
+
+/* caja login */
+
+#login{
+
+display:flex;
+flex-direction:column;
+
+gap:15px;
+
+width:250px;
+
+}
+
+
+/* inputs */
+
+input{
+
+padding:10px;
+font-size:16px;
+
+border:none;
+border-radius:6px;
+
+}
+
+
+/* boton */
 
 button{
+
+padding:12px;
+font-size:16px;
+
+border:none;
+border-radius:8px;
 
 background:#4CAF50;
 color:white;
 
-font-size:24px;
+cursor:pointer;
 
-border:none;
+}
 
-padding:25px;
 
-border-radius:10px;
+/* password */
+
+.password-box{
+
+display:flex;
+
+}
+
+.password-box input{
+
+flex:1;
+
+}
+
+#togglePassword{
+
+width:50px;
+
+background:#333;
 
 }

@@ -18,6 +18,12 @@ collection,
 addDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
 
+import {
+doc,
+setDoc,
+getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
+
 
 // =============================
 // SECCION 2 - CONFIG FIREBASE
@@ -101,6 +107,8 @@ if(user){
 loginBox.classList.add("hidden")
 appBox.classList.remove("hidden")
 
+cargarEstado()
+
 }else{
 
 loginBox.classList.remove("hidden")
@@ -164,6 +172,22 @@ fecha:ahora.toLocaleDateString()
 
 }
 
+// =============================
+// GUARDAR ESTADO ACTUAL
+// =============================
+
+async function guardarEstado(nuevoEstado){
+
+await setDoc(
+doc(db,"users",auth.currentUser.uid),
+{
+email:auth.currentUser.email,
+estado:nuevoEstado
+}
+)
+
+}
+
 
 // =============================
 // SECCION 10 - BOTON ASISTENCIA
@@ -173,7 +197,7 @@ btnAsistencia.onclick = async()=>{
 
 if(estado==="inicio"){
 
-await registrar("ingreso")
+await guardarEstado("trabajando")
 
 estado="trabajando"
 
@@ -187,7 +211,7 @@ btnBreak.className="btn-verde"
 
 else if(estado==="trabajando"){
 
-await registrar("salida")
+await guardarEstado("inicio")
 
 estado="inicio"
 
@@ -210,7 +234,7 @@ btnBreak.onclick = async()=>{
 
 if(estado==="trabajando"){
 
-await registrar("break")
+await guardarEstado("break")
 
 estado="break"
 
@@ -224,7 +248,7 @@ btnBreak.className="btn-rojo"
 
 else if(estado==="break"){
 
-await registrar("regreso")
+await guardarEstado("trabajando")
 
 estado="trabajando"
 
@@ -233,6 +257,74 @@ mensaje.innerText="Has regresado a tu jornada"
 btnBreak.innerText="Iniciar break"
 
 btnBreak.className="btn-verde"
+
+}
+
+}
+// =============================
+// CARGAR ESTADO AL INICIAR
+// =============================
+
+async function cargarEstado(){
+
+const ref = doc(db,"users",auth.currentUser.uid)
+
+const snap = await getDoc(ref)
+
+if(!snap.exists()){
+
+estado="inicio"
+actualizarUI()
+
+return
+
+}
+
+estado = snap.data().estado
+
+actualizarUI()
+
+}
+
+// =============================
+// ACTUALIZAR UI SEGUN ESTADO
+// =============================
+
+function actualizarUI(){
+
+if(estado==="inicio"){
+
+mensaje.innerText="Tu jornada aún no ha comenzado"
+
+btnAsistencia.innerText="Registrar ingreso"
+
+btnBreak.innerText="Iniciar break"
+
+btnBreak.className="btn-disabled"
+
+}
+
+else if(estado==="trabajando"){
+
+mensaje.innerText="Tu jornada ha comenzado"
+
+btnAsistencia.innerText="Registrar salida"
+
+btnBreak.innerText="Iniciar break"
+
+btnBreak.className="btn-verde"
+
+}
+
+else if(estado==="break"){
+
+mensaje.innerText="Disfruta tu tiempo de break"
+
+btnAsistencia.innerText="Registrar salida"
+
+btnBreak.innerText="Regresar de break"
+
+btnBreak.className="btn-rojo"
 
 }
 

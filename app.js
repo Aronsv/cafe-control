@@ -170,3 +170,23 @@ if("serviceWorker" in navigator){
 navigator.serviceWorker.register("service-worker.js")
 
 }
+
+// =============================
+// MOSTRAR CONTRASEÑA
+// =============================
+
+const togglePassword = document.getElementById("togglePassword")
+
+togglePassword.onclick = () => {
+
+if(password.type === "password"){
+
+password.type = "text"
+
+}else{
+
+password.type = "password"
+
+}
+
+}

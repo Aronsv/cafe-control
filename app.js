@@ -4,7 +4,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"
 
-import {
+import { 
 getAuth,
 signInWithEmailAndPassword,
 onAuthStateChanged
@@ -22,17 +22,19 @@ serverTimestamp
 
 
 // ===============================
-// CONFIG FIREBASE (CAMBIA SOLO SI CAMBIA TU PROYECTO)
+// CONFIG FIREBASE
 // ===============================
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB-L09L2xGVWtsJO1XE3CCj6F5p4XN2VPo",
-  authDomain: "cafe-control-c05bb.firebaseapp.com",
-  projectId: "cafe-control-c05bb",
-  storageBucket: "cafe-control-c05bb.firebasestorage.app",
-  messagingSenderId: "874681908082",
-  appId: "1:874681908082:web:e8e87dd3d5a070deb47beb"
-};
+
+apiKey: "AQUI_APIKEY",
+authDomain: "AQUI_AUTHDOMAIN",
+projectId: "AQUI_PROJECTID",
+storageBucket: "AQUI_STORAGE",
+messagingSenderId: "AQUI_SENDER",
+appId: "AQUI_APP"
+
+}
 
 const app = initializeApp(firebaseConfig)
 
@@ -76,11 +78,9 @@ btnLogin.addEventListener("click", async () => {
 try {
 
 await signInWithEmailAndPassword(
-
 auth,
 emailInput.value,
 passInput.value
-
 )
 
 } catch (error) {
@@ -129,7 +129,6 @@ if (!snap.exists()) {
 
 estado = "inicio"
 actualizarUI()
-
 return
 
 }
@@ -137,7 +136,7 @@ return
 const data = snap.data()
 
 estado = data.estado
-nombreEmpleado = data.nombre
+nombreEmpleado = data.nombre || ""
 
 actualizarUI()
 
@@ -198,13 +197,9 @@ async function registrar(tipoRegistro) {
 await addDoc(collection(db, "attendance"), {
 
 userId: auth.currentUser.uid,
-
 nombre: nombreEmpleado,
-
 tipo: tipoRegistro,
-
 horaServidor: serverTimestamp(),
-
 validado: false
 
 })
@@ -219,15 +214,11 @@ validado: false
 async function guardarEstado(nuevoEstado) {
 
 await setDoc(
-
 doc(db, "users", auth.currentUser.uid),
-
 {
 estado: nuevoEstado
 },
-
 { merge: true }
-
 )
 
 estado = nuevoEstado
@@ -259,7 +250,7 @@ await guardarEstado("inicio")
 
 }
 
-}
+})
 
 
 // ===============================

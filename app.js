@@ -26,15 +26,13 @@ serverTimestamp
 // ===============================
 
 const firebaseConfig = {
-
-apiKey: "AQUI_APIKEY",
-authDomain: "AQUI_AUTHDOMAIN",
-projectId: "AQUI_PROJECTID",
-storageBucket: "AQUI_STORAGE",
-messagingSenderId: "AQUI_SENDER",
-appId: "AQUI_APP"
-
-}
+  apiKey: "AIzaSyB-L09L2xGVWtsJO1XE3CCj6F5p4XN2VPo",
+  authDomain: "cafe-control-c05bb.firebaseapp.com",
+  projectId: "cafe-control-c05bb",
+  storageBucket: "cafe-control-c05bb.firebasestorage.app",
+  messagingSenderId: "874681908082",
+  appId: "1:874681908082:web:e8e87dd3d5a070deb47beb"
+};
 
 const app = initializeApp(firebaseConfig)
 

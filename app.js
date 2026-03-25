@@ -235,7 +235,6 @@ btnAsistencia.addEventListener("click", async () => {
 if (estado === "inicio") {
 
 await registrar("ingreso")
-
 await guardarEstado("trabajando")
 
 }
@@ -243,8 +242,13 @@ await guardarEstado("trabajando")
 else if (estado === "trabajando") {
 
 await registrar("salida")
-
 await guardarEstado("inicio")
+
+}
+
+else if (estado === "break") {
+
+mensaje.innerText = "Primero debes regresar de tu break"
 
 }
 
@@ -260,7 +264,6 @@ btnBreak.addEventListener("click", async () => {
 if (estado === "trabajando") {
 
 await registrar("break")
-
 await guardarEstado("break")
 
 }
@@ -268,9 +271,20 @@ await guardarEstado("break")
 else if (estado === "break") {
 
 await registrar("regreso")
-
 await guardarEstado("trabajando")
 
 }
+
+else {
+
+mensaje.innerText = "Tu jornada aún no ha comenzado"
+
+}
+
+})
+const btnLogout = document.getElementById("btnLogout")
+btnLogout.addEventListener("click", async () => {
+
+await signOut(auth)
 
 })

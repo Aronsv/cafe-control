@@ -1,33 +1,29 @@
-// =============================
-// SECCION 1 - IMPORT FIREBASE
-// =============================
+// ===============================
+// IMPORT FIREBASE
+// ===============================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"
 
 import {
 getAuth,
 signInWithEmailAndPassword,
-signOut,
-onAuthStateChanged,
-sendPasswordResetEmail
+onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
 
 import {
 getFirestore,
 collection,
-addDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
-
-import {
+addDoc,
 doc,
 setDoc,
-getDoc
+getDoc,
+serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
 
 
-// =============================
-// SECCION 2 - CONFIG FIREBASE
-// =============================
+// ===============================
+// CONFIG FIREBASE (CAMBIA SOLO SI CAMBIA TU PROYECTO)
+// ===============================
 
 const firebaseConfig = {
   apiKey: "AIzaSyB-L09L2xGVWtsJO1XE3CCj6F5p4XN2VPo",
@@ -45,287 +41,247 @@ const auth = getAuth(app)
 const db = getFirestore(app)
 
 
-// =============================
-// SECCION 3 - ELEMENTOS HTML
-// =============================
+// ===============================
+// VARIABLES
+// ===============================
+
+let estado = "inicio"
+let nombreEmpleado = ""
+
+
+// ===============================
+// ELEMENTOS HTML
+// ===============================
 
 const loginBox = document.getElementById("loginBox")
 const appBox = document.getElementById("appBox")
 
-const email = document.getElementById("email")
-const password = document.getElementById("password")
+const emailInput = document.getElementById("email")
+const passInput = document.getElementById("password")
 
 const btnLogin = document.getElementById("btnLogin")
-const btnLogout = document.getElementById("btnLogout")
 
 const btnAsistencia = document.getElementById("btnAsistencia")
 const btnBreak = document.getElementById("btnBreak")
 
 const mensaje = document.getElementById("mensaje")
 
-const resetPassword = document.getElementById("resetPassword")
 
+// ===============================
+// LOGIN
+// ===============================
 
-// =============================
-// SECCION 4 - ESTADO
-// =============================
+btnLogin.addEventListener("click", async () => {
 
-let estado = "inicio"
-
-
-// =============================
-// SECCION 5 - LOGIN
-// =============================
-
-btnLogin.onclick = async () => {
-
-try{
+try {
 
 await signInWithEmailAndPassword(
+
 auth,
-email.value,
-password.value
+emailInput.value,
+passInput.value
+
 )
 
-}catch(error){
+} catch (error) {
 
-alert(error.message)
-
-}
-
-}
-
-
-// =============================
-// SECCION 6 - SESION
-// =============================
-
-onAuthStateChanged(auth,(user)=>{
-
-if(user){
-
-loginBox.classList.add("hidden")
-appBox.classList.remove("hidden")
-
-cargarEstado()
-
-}else{
-
-loginBox.classList.remove("hidden")
-appBox.classList.add("hidden")
+alert("Error login: " + error.message)
 
 }
 
 })
 
 
-// =============================
-// SECCION 7 - LOGOUT
-// =============================
+// ===============================
+// SESION ACTIVA
+// ===============================
 
-btnLogout.onclick = ()=>{
+onAuthStateChanged(auth, async (user) => {
 
-signOut(auth)
+if (user) {
 
-}
+loginBox.style.display = "none"
+appBox.style.display = "block"
 
+await cargarEstado()
 
-// =============================
-// SECCION 8 - RECUPERAR PASSWORD
-// =============================
+} else {
 
-resetPassword.onclick = async()=>{
-
-if(email.value===""){
-
-alert("Escribe tu correo primero")
-return
+loginBox.style.display = "block"
+appBox.style.display = "none"
 
 }
-
-await sendPasswordResetEmail(auth,email.value)
-
-alert("Correo enviado")
-
-}
-
-
-// =============================
-// SECCION 9 - REGISTRAR EVENTO
-// =============================
-
-async function registrar(tipo){
-
-const ahora = new Date()
-
-await addDoc(collection(db,"attendance"),{
-
-email:auth.currentUser.email,
-userId:auth.currentUser.uid,
-
-tipo:tipo,
-
-hora:ahora.toLocaleTimeString(),
-fecha:ahora.toLocaleDateString()
 
 })
 
-}
 
-// =============================
-// GUARDAR ESTADO ACTUAL
-// =============================
+// ===============================
+// CARGAR ESTADO
+// ===============================
 
-async function guardarEstado(nuevoEstado){
+async function cargarEstado() {
 
-await setDoc(
-doc(db,"users",auth.currentUser.uid),
-{
-email:auth.currentUser.email,
-estado:nuevoEstado
-}
-)
-
-}
-
-
-// =============================
-// SECCION 10 - BOTON ASISTENCIA
-// =============================
-
-btnAsistencia.onclick = async()=>{
-
-if(estado==="inicio"){
-
-await guardarEstado("trabajando")
-
-estado="trabajando"
-
-mensaje.innerText="Tu jornada ha comenzado"
-
-btnAsistencia.innerText="Registrar salida"
-
-btnBreak.className="btn-verde"
-
-}
-
-else if(estado==="trabajando"){
-
-await guardarEstado("inicio")
-
-estado="inicio"
-
-mensaje.innerText="Tu jornada ha finalizado"
-
-btnAsistencia.innerText="Registrar ingreso"
-
-btnBreak.className="btn-disabled"
-
-}
-
-}
-
-
-// =============================
-// SECCION 11 - BOTON BREAK
-// =============================
-
-btnBreak.onclick = async()=>{
-
-if(estado==="trabajando"){
-
-await guardarEstado("break")
-
-estado="break"
-
-mensaje.innerText="Disfruta tu tiempo de break"
-
-btnBreak.innerText="Regresar de break"
-
-btnBreak.className="btn-rojo"
-
-}
-
-else if(estado==="break"){
-
-await guardarEstado("trabajando")
-
-estado="trabajando"
-
-mensaje.innerText="Has regresado a tu jornada"
-
-btnBreak.innerText="Iniciar break"
-
-btnBreak.className="btn-verde"
-
-}
-
-}
-// =============================
-// CARGAR ESTADO AL INICIAR
-// =============================
-
-async function cargarEstado(){
-
-const ref = doc(db,"users",auth.currentUser.uid)
+const ref = doc(db, "users", auth.currentUser.uid)
 
 const snap = await getDoc(ref)
 
-if(!snap.exists()){
+if (!snap.exists()) {
 
-estado="inicio"
+estado = "inicio"
 actualizarUI()
 
 return
 
 }
 
-estado = snap.data().estado
+const data = snap.data()
+
+estado = data.estado
+nombreEmpleado = data.nombre
 
 actualizarUI()
 
 }
 
-// =============================
-// ACTUALIZAR UI SEGUN ESTADO
-// =============================
 
-function actualizarUI(){
+// ===============================
+// ACTUALIZAR UI
+// ===============================
 
-if(estado==="inicio"){
+function actualizarUI() {
 
-mensaje.innerText="Tu jornada aún no ha comenzado"
+if (estado === "inicio") {
 
-btnAsistencia.innerText="Registrar ingreso"
+mensaje.innerText = "Tu jornada aún no ha comenzado"
 
-btnBreak.innerText="Iniciar break"
+btnAsistencia.innerText = "Registrar ingreso"
 
-btnBreak.className="btn-disabled"
+btnBreak.innerText = "Iniciar break"
 
-}
-
-else if(estado==="trabajando"){
-
-mensaje.innerText="Tu jornada ha comenzado"
-
-btnAsistencia.innerText="Registrar salida"
-
-btnBreak.innerText="Iniciar break"
-
-btnBreak.className="btn-verde"
+btnBreak.disabled = true
 
 }
 
-else if(estado==="break"){
+else if (estado === "trabajando") {
 
-mensaje.innerText="Disfruta tu tiempo de break"
+mensaje.innerText = "Jornada en curso"
 
-btnAsistencia.innerText="Registrar salida"
+btnAsistencia.innerText = "Registrar salida"
 
-btnBreak.innerText="Regresar de break"
+btnBreak.innerText = "Iniciar break"
 
-btnBreak.className="btn-rojo"
+btnBreak.disabled = false
+
+}
+
+else if (estado === "break") {
+
+mensaje.innerText = "Estás en tu tiempo de descanso"
+
+btnAsistencia.innerText = "Registrar salida"
+
+btnBreak.innerText = "Regresar del break"
+
+btnBreak.disabled = false
 
 }
 
 }
+
+
+// ===============================
+// REGISTRAR HISTORIAL
+// ===============================
+
+async function registrar(tipoRegistro) {
+
+await addDoc(collection(db, "attendance"), {
+
+userId: auth.currentUser.uid,
+
+nombre: nombreEmpleado,
+
+tipo: tipoRegistro,
+
+horaServidor: serverTimestamp(),
+
+validado: false
+
+})
+
+}
+
+
+// ===============================
+// GUARDAR ESTADO
+// ===============================
+
+async function guardarEstado(nuevoEstado) {
+
+await setDoc(
+
+doc(db, "users", auth.currentUser.uid),
+
+{
+estado: nuevoEstado
+},
+
+{ merge: true }
+
+)
+
+estado = nuevoEstado
+
+actualizarUI()
+
+}
+
+
+// ===============================
+// BOTON ASISTENCIA
+// ===============================
+
+btnAsistencia.addEventListener("click", async () => {
+
+if (estado === "inicio") {
+
+await registrar("ingreso")
+
+await guardarEstado("trabajando")
+
+}
+
+else if (estado === "trabajando") {
+
+await registrar("salida")
+
+await guardarEstado("inicio")
+
+}
+
+})
+
+
+// ===============================
+// BOTON BREAK
+// ===============================
+
+btnBreak.addEventListener("click", async () => {
+
+if (estado === "trabajando") {
+
+await registrar("break")
+
+await guardarEstado("break")
+
+}
+
+else if (estado === "break") {
+
+await registrar("regreso")
+
+await guardarEstado("trabajando")
+
+}
+
+})

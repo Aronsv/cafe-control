@@ -7,7 +7,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { 
 getAuth,
 signInWithEmailAndPassword,
-onAuthStateChanged
+onAuthStateChanged,
+signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
 
 import {
@@ -26,13 +27,13 @@ serverTimestamp
 // ===============================
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB-L09L2xGVWtsJO1XE3CCj6F5p4XN2VPo",
-  authDomain: "cafe-control-c05bb.firebaseapp.com",
-  projectId: "cafe-control-c05bb",
-  storageBucket: "cafe-control-c05bb.firebasestorage.app",
-  messagingSenderId: "874681908082",
-  appId: "1:874681908082:web:e8e87dd3d5a070deb47beb"
-};
+apiKey: "AIzaSyB-L09L2xGVWtsJO1XE3CCj6F5p4XN2VPo",
+authDomain: "cafe-control-c05bb.firebaseapp.com",
+projectId: "cafe-control-c05bb",
+storageBucket: "cafe-control-c05bb.firebasestorage.app",
+messagingSenderId: "874681908082",
+appId: "1:874681908082:web:e8e87dd3d5a070deb47beb"
+}
 
 const app = initializeApp(firebaseConfig)
 
@@ -63,6 +64,8 @@ const btnLogin = document.getElementById("btnLogin")
 
 const btnAsistencia = document.getElementById("btnAsistencia")
 const btnBreak = document.getElementById("btnBreak")
+
+const btnLogout = document.getElementById("btnLogout")
 
 const mensaje = document.getElementById("mensaje")
 
@@ -282,7 +285,12 @@ mensaje.innerText = "Tu jornada aún no ha comenzado"
 }
 
 })
-const btnLogout = document.getElementById("btnLogout")
+
+
+// ===============================
+// CERRAR SESION
+// ===============================
+
 btnLogout.addEventListener("click", async () => {
 
 await signOut(auth)

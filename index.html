@@ -1,63 +1,42 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-<meta charset="UTF-8">
-<title>Cafe Control</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cafe Control</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<!-- LOGIN -->
-<div id="loginBox" class="card">
+  <!-- =========================
+       SECCION LOGIN
+  ========================== -->
+  <div id="loginBox" class="card">
+    <h1 class="logo">☕ Cafe Control</h1>
 
-<h1 class="logo">☕ Cafe Control</h1>
+    <input id="email" type="email" placeholder="Usuario o Correo">
+    <input id="password" type="password" placeholder="Contraseña">
 
-<input id="email" placeholder="Usuario o Correo">
+    <button id="btnLogin" class="btn btn-brown">Iniciar sesión</button>
+  </div>
 
-<input id="password" type="password" placeholder="Contraseña">
+  <!-- =========================
+       SECCION APP
+  ========================== -->
+  <div id="appBox" class="card hidden">
+    <h1 class="logo">☕ Cafe Control</h1>
 
-<button id="btnLogin" class="btn-login">
-INICIAR SESIÓN
-</button>
+    <div class="mensaje-wrap">
+      <p id="mensaje">Tu jornada aún no ha comenzado</p>
+    </div>
 
-<p id="resetPassword" class="link">
-¿Olvidaste tu contraseña?
-</p>
+    <div class="botones-wrap">
+      <button id="btnAsistencia" class="btn btn-green-main">Registrar ingreso</button>
+      <button id="btnBreak" class="btn btn-green-soft" disabled>Iniciar break</button>
+      <button id="btnLogout" class="btn btn-dark">Cerrar sesión</button>
+    </div>
+  </div>
 
-</div>
-
-
-<!-- PANEL APP -->
-<div id="appBox" class="card hidden">
-
-<h1 class="logo">☕ Cafe Control</h1>
-
-<p id="mensaje" class="mensaje">
-Tu jornada aún no ha comenzado
-</p>
-
-<div class="botones">
-
-<button id="btnAsistencia" class="btn-verde">
-Registrar ingreso
-</button>
-
-<button id="btnBreak" class="btn-disabled">
-Iniciar break
-</button>
-
-</div>
-
-<button id="btnLogout" class="logout">
-Cerrar sesión
-</button>
-
-</div>
-
-
-<script type="module" src="app.js"></script>
-
+  <script type="module" src="app.js"></script>
 </body>
 </html>

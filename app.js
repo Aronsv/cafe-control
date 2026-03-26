@@ -1,298 +1,284 @@
 // ===============================
-// IMPORT FIREBASE
+// SECCION 1 - IMPORT FIREBASE
 // ===============================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"
 
-import { 
-getAuth,
-signInWithEmailAndPassword,
-onAuthStateChanged,
-signOut
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
 
 import {
-getFirestore,
-collection,
-addDoc,
-doc,
-setDoc,
-getDoc,
-serverTimestamp
+  getFirestore,
+  collection,
+  addDoc,
+  doc,
+  setDoc,
+  getDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
 
 
 // ===============================
-// CONFIG FIREBASE
+// SECCION 2 - CONFIG FIREBASE
 // ===============================
 
 const firebaseConfig = {
-apiKey: "AIzaSyB-L09L2xGVWtsJO1XE3CCj6F5p4XN2VPo",
-authDomain: "cafe-control-c05bb.firebaseapp.com",
-projectId: "cafe-control-c05bb",
-storageBucket: "cafe-control-c05bb.firebasestorage.app",
-messagingSenderId: "874681908082",
-appId: "1:874681908082:web:e8e87dd3d5a070deb47beb"
+  apiKey: "AIzaSyB-L09L2xGVWtsJO1XE3CCj6F5p4XN2VPo",
+  authDomain: "cafe-control-c05bb.firebaseapp.com",
+  projectId: "cafe-control-c05bb",
+  storageBucket: "cafe-control-c05bb.firebasestorage.app",
+  messagingSenderId: "874681908082",
+  appId: "1:874681908082:web:e8e87dd3d5a070deb47beb"
 }
 
 const app = initializeApp(firebaseConfig)
-
 const auth = getAuth(app)
-
 const db = getFirestore(app)
 
 
 // ===============================
-// VARIABLES
+// SECCION 3 - VARIABLES GLOBALES
 // ===============================
 
 let estado = "inicio"
 let nombreEmpleado = ""
+let turnoEmpleado = ""
 
 
 // ===============================
-// ELEMENTOS HTML
+// SECCION 4 - ELEMENTOS HTML
 // ===============================
 
 const loginBox = document.getElementById("loginBox")
 const appBox = document.getElementById("appBox")
 
 const emailInput = document.getElementById("email")
-const passInput = document.getElementById("password")
+const passwordInput = document.getElementById("password")
 
 const btnLogin = document.getElementById("btnLogin")
-
 const btnAsistencia = document.getElementById("btnAsistencia")
 const btnBreak = document.getElementById("btnBreak")
-
 const btnLogout = document.getElementById("btnLogout")
-
 const mensaje = document.getElementById("mensaje")
 
 
 // ===============================
-// LOGIN
+// SECCION 5 - LOGIN
 // ===============================
 
 btnLogin.addEventListener("click", async () => {
-
-try {
-
-await signInWithEmailAndPassword(
-auth,
-emailInput.value,
-passInput.value
-)
-
-} catch (error) {
-
-alert("Error login: " + error.message)
-
-}
-
+  try {
+    await signInWithEmailAndPassword(
+      auth,
+      emailInput.value.trim(),
+      passwordInput.value
+    )
+  } catch (error) {
+    alert("Error login: " + error.message)
+  }
 })
 
 
 // ===============================
-// SESION ACTIVA
+// SECCION 6 - SESION ACTIVA
+// - Mantiene la sesion al recargar
+// - Carga el estado real del usuario
 // ===============================
 
 onAuthStateChanged(auth, async (user) => {
-
-if (user) {
-
-loginBox.style.display = "none"
-appBox.style.display = "block"
-
-await cargarEstado()
-
-} else {
-
-loginBox.style.display = "block"
-appBox.style.display = "none"
-
-}
-
+  if (user) {
+    loginBox.classList.add("hidden")
+    appBox.classList.remove("hidden")
+    await cargarDatosUsuario()
+    actualizarUI()
+  } else {
+    loginBox.classList.remove("hidden")
+    appBox.classList.add("hidden")
+  }
 })
 
 
 // ===============================
-// CARGAR ESTADO
+// SECCION 7 - CARGAR DATOS USUARIO
+// - Lee nombre, estado y turno desde users/{uid}
 // ===============================
 
-async function cargarEstado() {
+async function cargarDatosUsuario() {
+  const user = auth.currentUser
+  if (!user) return
 
-const ref = doc(db, "users", auth.currentUser.uid)
+  const ref = doc(db, "users", user.uid)
+  const snap = await getDoc(ref)
 
-const snap = await getDoc(ref)
+  if (!snap.exists()) {
+    nombreEmpleado = ""
+    turnoEmpleado = ""
+    estado = "inicio"
+    return
+  }
 
-if (!snap.exists()) {
+  const data = snap.data()
 
-estado = "inicio"
-actualizarUI()
-return
-
-}
-
-const data = snap.data()
-
-estado = data.estado
-nombreEmpleado = data.nombre || ""
-
-actualizarUI()
-
+  nombreEmpleado = data.nombre || ""
+  turnoEmpleado = data.turno || ""
+  estado = data.estado || "inicio"
 }
 
 
 // ===============================
-// ACTUALIZAR UI
+// SECCION 8 - ACTUALIZAR INTERFAZ
+// - Aqui se controla texto, color y bloqueo real
 // ===============================
 
 function actualizarUI() {
+  // limpiar estados visuales previos
+  btnAsistencia.className = "btn"
+  btnBreak.className = "btn"
 
-if (estado === "inicio") {
+  if (estado === "inicio") {
+    mensaje.innerText = "Tu jornada aún no ha comenzado"
 
-mensaje.innerText = "Tu jornada aún no ha comenzado"
+    btnAsistencia.innerText = "Registrar ingreso"
+    btnAsistencia.classList.add("btn-green-main")
+    btnAsistencia.disabled = false
 
-btnAsistencia.innerText = "Registrar ingreso"
+    btnBreak.innerText = "Iniciar break"
+    btnBreak.classList.add("btn-green-soft")
+    btnBreak.disabled = true
+  }
 
-btnBreak.innerText = "Iniciar break"
+  else if (estado === "trabajando") {
+    mensaje.innerText = "Jornada en curso"
 
-btnBreak.disabled = true
+    btnAsistencia.innerText = "Registrar salida"
+    btnAsistencia.classList.add("btn-green-main")
+    btnAsistencia.disabled = false
 
-}
+    btnBreak.innerText = "Iniciar break"
+    btnBreak.classList.add("btn-green-soft")
+    btnBreak.disabled = false
+  }
 
-else if (estado === "trabajando") {
+  else if (estado === "break") {
+    mensaje.innerText = "Estás en tu tiempo de descanso"
 
-mensaje.innerText = "Jornada en curso"
+    btnAsistencia.innerText = "Registrar salida"
+    btnAsistencia.classList.add("btn-green-main")
+    btnAsistencia.disabled = false
 
-btnAsistencia.innerText = "Registrar salida"
-
-btnBreak.innerText = "Iniciar break"
-
-btnBreak.disabled = false
-
-}
-
-else if (estado === "break") {
-
-mensaje.innerText = "Estás en tu tiempo de descanso"
-
-btnAsistencia.innerText = "Registrar salida"
-
-btnBreak.innerText = "Regresar del break"
-
-btnBreak.disabled = false
-
-}
-
+    btnBreak.innerText = "Regresar del break"
+    btnBreak.classList.add("btn-red")
+    btnBreak.disabled = false
+  }
 }
 
 
 // ===============================
-// REGISTRAR HISTORIAL
+// SECCION 9 - REGISTRAR HISTORIAL
+// - Guarda cada evento en attendance
+// - Usa hora del servidor
 // ===============================
 
 async function registrar(tipoRegistro) {
+  const user = auth.currentUser
+  if (!user) return
 
-await addDoc(collection(db, "attendance"), {
-
-userId: auth.currentUser.uid,
-nombre: nombreEmpleado,
-tipo: tipoRegistro,
-horaServidor: serverTimestamp(),
-validado: false
-
-})
-
+  await addDoc(collection(db, "attendance"), {
+    userId: user.uid,
+    nombre: nombreEmpleado || user.email,
+    turno: turnoEmpleado || "",
+    tipo: tipoRegistro,
+    horaServidor: serverTimestamp(),
+    validado: false
+  })
 }
 
 
 // ===============================
-// GUARDAR ESTADO
+// SECCION 10 - GUARDAR ESTADO
+// - Actualiza users/{uid}
+// - Usa merge para no borrar nombre o turno
 // ===============================
 
 async function guardarEstado(nuevoEstado) {
+  const user = auth.currentUser
+  if (!user) return
 
-await setDoc(
-doc(db, "users", auth.currentUser.uid),
-{
-estado: nuevoEstado
-},
-{ merge: true }
-)
+  await setDoc(
+    doc(db, "users", user.uid),
+    {
+      userId: user.uid,
+      estado: nuevoEstado
+    },
+    { merge: true }
+  )
 
-estado = nuevoEstado
-
-actualizarUI()
-
+  estado = nuevoEstado
 }
 
 
 // ===============================
-// BOTON ASISTENCIA
+// SECCION 11 - BOTON ASISTENCIA
 // ===============================
 
 btnAsistencia.addEventListener("click", async () => {
+  if (estado === "inicio") {
+    await registrar("ingreso")
+    await guardarEstado("trabajando")
+    actualizarUI()
+    return
+  }
 
-if (estado === "inicio") {
+  if (estado === "trabajando") {
+    await registrar("salida")
+    await guardarEstado("inicio")
+    actualizarUI()
+    return
+  }
 
-await registrar("ingreso")
-await guardarEstado("trabajando")
-
-}
-
-else if (estado === "trabajando") {
-
-await registrar("salida")
-await guardarEstado("inicio")
-
-}
-
-else if (estado === "break") {
-
-mensaje.innerText = "Primero debes regresar de tu break"
-
-}
-
+  if (estado === "break") {
+    mensaje.innerText = "Primero debes regresar de tu break"
+    return
+  }
 })
 
 
 // ===============================
-// BOTON BREAK
+// SECCION 12 - BOTON BREAK
+// - Bloqueo real: si esta disabled, no hace nada
 // ===============================
 
 btnBreak.addEventListener("click", async () => {
+  if (btnBreak.disabled) {
+    return
+  }
 
-if (estado === "trabajando") {
+  if (estado === "trabajando") {
+    await registrar("break")
+    await guardarEstado("break")
+    actualizarUI()
+    return
+  }
 
-await registrar("break")
-await guardarEstado("break")
+  if (estado === "break") {
+    await registrar("regreso")
+    await guardarEstado("trabajando")
+    actualizarUI()
+    return
+  }
 
-}
-
-else if (estado === "break") {
-
-await registrar("regreso")
-await guardarEstado("trabajando")
-
-}
-
-else {
-
-mensaje.innerText = "Tu jornada aún no ha comenzado"
-
-}
-
+  mensaje.innerText = "Tu jornada aún no ha comenzado"
 })
 
 
 // ===============================
-// CERRAR SESION
+// SECCION 13 - CERRAR SESION
 // ===============================
 
 btnLogout.addEventListener("click", async () => {
-
-await signOut(auth)
-
+  await signOut(auth)
 })

@@ -1,185 +1,145 @@
-body{
-
-margin:0;
-height:100vh;
-
-display:flex;
-justify-content:center;
-align-items:center;
-
-font-family:Arial;
-
-background:#F5F1E8;
-
+/* =========================
+   SECCION GENERAL
+========================= */
+* {
+  box-sizing: border-box;
 }
 
-
-/* tarjeta */
-
-.card{
-
-width:320px;
-text-align:center;
-
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f5f1e8;
+  font-family: Arial, sans-serif;
+  color: #5b341c;
 }
 
-
-/* ocultar */
-
-.hidden{
-display:none;
+/* =========================
+   TARJETA PRINCIPAL
+========================= */
+.card {
+  width: 340px;
+  min-height: 430px;
+  background: #f5f1e8;
+  padding: 28px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
-
-/* logo */
-
-.logo{
-
-color:#6B3E26;
-margin-bottom:20px;
-
+.hidden {
+  display: none;
 }
 
-
-/* inputs */
-
-input{
-
-width:100%;
-padding:14px;
-
-margin-bottom:12px;
-
-border-radius:10px;
-border:2px solid #D8CBB8;
-
-font-size:16px;
-box-sizing:border-box;
-
+/* =========================
+   TITULO
+========================= */
+.logo {
+  margin: 0 0 20px 0;
+  font-size: 24px;
+  color: #7a4422;
 }
 
-
-/* mensaje */
-
-.mensaje{
-
-height:40px;
-
-display:flex;
-align-items:center;
-justify-content:center;
-
-margin-bottom:20px;
-
-color:#444;
-
+/* =========================
+   INPUTS
+========================= */
+input {
+  width: 100%;
+  height: 52px;
+  margin-bottom: 14px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 2px solid #8a5a33;
+  background: #ffffff;
+  font-size: 16px;
+  outline: none;
 }
 
-
-/* contenedor botones */
-
-.botones{
-
-display:flex;
-flex-direction:column;
-
-gap:12px;
-
+/* =========================
+   ZONA DE MENSAJE
+   altura fija para que no se mueva
+========================= */
+.mensaje-wrap {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
 }
 
-
-/* botones */
-
-button{
-
-width:100%;
-padding:16px;
-
-border:none;
-
-border-radius:10px;
-
-font-size:18px;
-
-cursor:pointer;
-
+#mensaje {
+  margin: 0;
+  font-size: 16px;
+  color: #5e5e5e;
 }
 
-
-/* ingreso */
-
-.btn-verde{
-
-background:#3D7A3A;
-color:white;
-
+/* =========================
+   CONTENEDOR BOTONES
+========================= */
+.botones-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-
-/* rojo */
-
-.btn-rojo{
-
-background:#C0392B;
-color:white;
-
+/* =========================
+   BOTONES BASE
+========================= */
+.btn {
+  width: 100%;
+  height: 56px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
 }
 
-
-/* desactivado */
-
-.btn-disabled{
-
-background:#B5B5B5;
-color:white;
-
-cursor:not-allowed;
-
+.btn:active {
+  transform: scale(0.98);
 }
 
-
-/* login */
-
-.btn-login{
-
-background:#8B5A3C;
-color:white;
-
+/* =========================
+   COLORES
+========================= */
+.btn-brown {
+  background: #996033;
+  color: #ffffff;
+  box-shadow: 0 4px 0 #6f421f;
 }
 
-
-/* link */
-
-.link{
-
-margin-top:10px;
-cursor:pointer;
-
+.btn-green-main {
+  background: #3f8a3d;
+  color: #ffffff;
 }
 
-
-/* logout */
-
-.logout{
-
-margin-top:20px;
-
-background:#555;
-color:white;
-
+.btn-green-soft {
+  background: #6aa564;
+  color: #ffffff;
 }
-/* fila usuario */
 
-.filaUsuario{
+.btn-red {
+  background: #c94537;
+  color: #ffffff;
+}
 
-display:flex;
+.btn-dark {
+  background: #5b5b5b;
+  color: #ffffff;
+}
 
-justify-content:space-between;
-
-padding:12px;
-
-border-bottom:1px solid #ddd;
-
-font-size:18px;
-
+/* =========================
+   BOTON DESACTIVADO REAL
+========================= */
+.btn:disabled {
+  background: #b9b9b9 !important;
+  color: #ffffff !important;
+  cursor: not-allowed !important;
+  opacity: 1;
+  box-shadow: none;
+  transform: none;
 }

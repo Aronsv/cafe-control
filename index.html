@@ -5,37 +5,130 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cafe Control</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#8a5a33">
 </head>
 <body>
 
   <!-- =========================
-       SECCION LOGIN
+       SECCION 1 - LOGIN UNICO
   ========================== -->
-  <div id="loginBox" class="card">
-    <h1 class="logo">☕ Cafe Control</h1>
+  <section id="loginView" class="screen">
+    <div class="card login-card">
+      <h1 class="logo">☕ Cafe Control</h1>
+      <p class="subtitle">Acceso al sistema</p>
 
-    <input id="email" type="email" placeholder="Usuario o Correo">
-    <input id="password" type="password" placeholder="Contraseña">
+      <input id="email" type="email" placeholder="Usuario o Correo">
+      <div class="password-row">
+        <input id="password" type="password" placeholder="Contraseña">
+        <button id="togglePassword" type="button" class="icon-btn">👁</button>
+      </div>
 
-    <button id="btnLogin" class="btn btn-brown">Iniciar sesión</button>
-  </div>
+      <button id="btnLogin" class="btn btn-brown">Iniciar sesión</button>
+      <p id="resetPassword" class="link-text">¿Olvidaste tu contraseña?</p>
+      <p id="loginMsg" class="mini-msg"></p>
+    </div>
+  </section>
 
   <!-- =========================
-       SECCION APP
+       SECCION 2 - VISTA STAFF
   ========================== -->
-  <div id="appBox" class="card hidden">
-    <h1 class="logo">☕ Cafe Control</h1>
+  <section id="staffView" class="screen hidden">
+    <div class="card staff-card">
+      <h1 class="logo">☕ Cafe Control</h1>
 
-    <div class="mensaje-wrap">
-      <p id="mensaje">Tu jornada aún no ha comenzado</p>
-    </div>
+      <div class="mensaje-wrap">
+        <p id="mensajeStaff">Tu jornada aún no ha comenzado</p>
+      </div>
 
-    <div class="botones-wrap">
-      <button id="btnAsistencia" class="btn btn-green-main">Registrar ingreso</button>
-      <button id="btnBreak" class="btn btn-green-soft" disabled>Iniciar break</button>
-      <button id="btnLogout" class="btn btn-dark">Cerrar sesión</button>
+      <div class="botones-wrap">
+        <button id="btnAsistencia" class="btn btn-green-main">Registrar ingreso</button>
+        <button id="btnBreak" class="btn btn-green-soft" disabled>Iniciar break</button>
+        <button id="btnLogoutStaff" class="btn btn-dark">Cerrar sesión</button>
+      </div>
     </div>
-  </div>
+  </section>
+
+  <!-- =========================
+       SECCION 3 - VISTA ADMIN
+  ========================== -->
+  <section id="adminView" class="screen hidden">
+    <div class="dashboard-page">
+
+      <header class="dashboard-header">
+        <div>
+          <h1 class="dashboard-title">ESTADO EN VIVO</h1>
+          <p class="dashboard-subtitle">Resumen del personal en tiempo real</p>
+        </div>
+
+        <div class="dashboard-brand">
+          <div class="brand-icon">☕</div>
+          <div class="brand-text">Cafe Control</div>
+        </div>
+      </header>
+
+      <!-- =========================
+           RESUMEN SUPERIOR
+      ========================== -->
+      <section class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-label">EMPLEADOS EN TURNO</div>
+          <div id="countTrabajando" class="summary-value">0</div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-label">EMPLEADOS EN BREAK</div>
+          <div id="countBreak" class="summary-value">0</div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-label">PENDIENTES DE INGRESO</div>
+          <div id="countInicio" class="summary-value">0</div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-label">TOTAL TRABAJADORES</div>
+          <div id="countTotal" class="summary-value">0</div>
+        </div>
+
+        <div class="summary-card donut-card">
+          <div class="donut-wrap">
+            <div class="donut-center">HOY</div>
+            <svg viewBox="0 0 42 42" class="donut-svg">
+              <circle class="donut-bg" cx="21" cy="21" r="15.9155"></circle>
+              <circle id="arcTrabajando" class="donut-segment donut-green" cx="21" cy="21" r="15.9155"></circle>
+              <circle id="arcBreak" class="donut-segment donut-gold" cx="21" cy="21" r="15.9155"></circle>
+              <circle id="arcInicio" class="donut-segment donut-brown" cx="21" cy="21" r="15.9155"></circle>
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================
+           TABLA DETALLADA
+      ========================== -->
+      <section class="table-card">
+        <div class="table-head">
+          <div>EMPLEADO</div>
+          <div>TURNO</div>
+          <div>ESTADO</div>
+          <div>BREAKS (CANT.)</div>
+          <div>DURACIÓN TOTAL BREAK</div>
+          <div>ÚLTIMO REGISTRO</div>
+          <div>OBSERVACIÓN</div>
+        </div>
+
+        <div id="adminTableBody" class="table-body">
+          <div class="empty-state">Cargando empleados...</div>
+        </div>
+      </section>
+
+      <div class="dashboard-actions">
+        <button id="btnLogoutAdmin" class="btn btn-dark">Cerrar sesión</button>
+      </div>
+
+    </div>
+  </section>
 
   <script type="module" src="app.js"></script>
 </body>

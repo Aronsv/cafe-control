@@ -22,7 +22,9 @@ import {
   getDocs,
   query,
   onSnapshot,
-  serverTimestamp
+  serverTimestamp,
+  updateDoc,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
 
 
@@ -52,13 +54,17 @@ let estado = "inicio"
 let nombreEmpleado = ""
 let turnoEmpleado = ""
 let roleUsuario = ""
-let dashboardUnsubscribe = null
+let dashboardUnsubscribeUsers = null
+let dashboardUnsubscribeAttendance = null
+let usersCache = []
+let attendanceCache = []
 
 
 // ===============================
 // SECCION 4 - ELEMENTOS HTML
 // ===============================
 
+// login
 const loginView = document.getElementById("loginView")
 const emailInput = document.getElementById("email")
 const passwordInput = document.getElementById("password")
@@ -67,19 +73,21 @@ const btnLogin = document.getElementById("btnLogin")
 const resetPassword = document.getElementById("resetPassword")
 const loginMsg = document.getElementById("loginMsg")
 
+// staff
 const staffView = document.getElementById("staffView")
 const mensajeStaff = document.getElementById("mensajeStaff")
 const btnAsistencia = document.getElementById("btnAsistencia")
 const btnBreak = document.getElementById("btnBreak")
 const btnLogoutStaff = document.getElementById("btnLogoutStaff")
 
+// admin
 const adminView = document.getElementById("adminView")
 const btnLogoutAdmin = document.getElementById("btnLogoutAdmin")
 const countTrabajando = document.getElementById("countTrabajando")
 const countBreak = document.getElementById("countBreak")
 const countInicio = document.getElementById("countInicio")
 const countTotal = document.getElementById("countTotal")
-const adminTableBody = document.getElementById("adminTableBody")
+const adminHistoryList = document.getElementById("adminHistoryList")
 const arcTrabajando = document.getElementById("arcTrabajando")
 const arcBreak = document.getElementById("arcBreak")
 const arcInicio = document.getElementById("arcInicio")
@@ -101,6 +109,21 @@ function mostrarVista(nombreVista) {
   if (nombreVista === "login" && loginView) loginView.classList.remove("hidden")
   if (nombreVista === "staff" && staffView) staffView.classList.remove("hidden")
   if (nombreVista === "admin" && adminView) adminView.classList.remove("hidden")
+}
+
+function detenerDashboard() {
+  if (dashboardUnsubscribeUsers) {
+    dashboardUnsubscribeUsers()
+    dashboardUnsubscribeUsers = null
+  }
+
+  if (dashboardUnsubscribeAttendance) {
+    dashboardUnsubscribeAttendance()
+    dashboardUnsubscribeAttendance = null
+  }
+
+  usersCache = []
+  attendanceCache = []
 }
 
 
@@ -161,10 +184,7 @@ if (resetPassword) {
 
 onAuthStateChanged(auth, async (user) => {
   try {
-    if (dashboardUnsubscribe) {
-      dashboardUnsubscribe()
-      dashboardUnsubscribe = null
-    }
+    detenerDashboard()
 
     if (!user) {
       mostrarVista("login")
@@ -363,35 +383,31 @@ if (btnLogoutAdmin) {
 
 function iniciarDashboard() {
   const usersQuery = query(collection(db, "users"))
+  const attendanceQuery = query(collection(db, "attendance"))
 
-  dashboardUnsubscribe = onSnapshot(usersQuery, async (usersSnapshot) => {
-    const users = []
+  dashboardUnsubscribeUsers = onSnapshot(usersQuery, (usersSnapshot) => {
+    usersCache = usersSnapshot.docs.map(docItem => ({
+      id: docItem.id,
+      ...docItem.data()
+    }))
 
-    usersSnapshot.forEach((docItem) => {
-      users.push({
-        id: docItem.id,
-        ...docItem.data()
-      })
-    })
+    renderDashboardAdmin()
+  })
 
-    await renderDashboard(users)
+  dashboardUnsubscribeAttendance = onSnapshot(attendanceQuery, (attendanceSnapshot) => {
+    attendanceCache = attendanceSnapshot.docs.map(docItem => ({
+      id: docItem.id,
+      ...docItem.data()
+    }))
+
+    renderDashboardAdmin()
   })
 }
 
-async function renderDashboard(users) {
-  if (!adminTableBody) return
+function renderDashboardAdmin() {
+  if (!adminHistoryList) return
 
-  const attendanceSnapshot = await getDocs(collection(db, "attendance"))
-
-  const attendance = []
-  attendanceSnapshot.forEach((docItem) => {
-    attendance.push({
-      id: docItem.id,
-      ...docItem.data()
-    })
-  })
-
-  const trabajadores = users.filter(user => user.activo !== false && user.role !== "admin")
+  const trabajadores = usersCache.filter(user => user.activo !== false && user.role !== "admin")
 
   const enTurno = trabajadores.filter(user => user.estado === "trabajando").length
   const enBreak = trabajadores.filter(user => user.estado === "break").length
@@ -404,7 +420,7 @@ async function renderDashboard(users) {
   if (countTotal) countTotal.innerText = total
 
   actualizarDonut(enTurno, enBreak, pendientes, total)
-  renderTablaAdmin(trabajadores, attendance)
+  renderHistorialAdmin(trabajadores)
 }
 
 
@@ -438,35 +454,180 @@ function setSegment(el, value, offset) {
 
 
 // ===============================
-// SECCION 14 - TABLA ADMIN
+// SECCION 14 - HISTORIAL ADMIN
 // ===============================
 
-function renderTablaAdmin(users, attendance) {
-  if (!adminTableBody) return
+function renderHistorialAdmin(users) {
+  if (!adminHistoryList) return
 
   if (users.length === 0) {
-    adminTableBody.innerHTML = `<div class="empty-state">No hay trabajadores para mostrar.</div>`
+    adminHistoryList.innerHTML = `<div class="empty-state">No hay trabajadores para mostrar.</div>`
     return
   }
 
-  const rows = users.map(user => {
-    const stats = calcularStatsUsuario(user, attendance)
+  const bloques = users.map(user => {
+    const registrosHoy = obtenerRegistrosDeHoy(user.userId || user.id)
+    const stats = calcularResumenUsuario(user, registrosHoy)
+
+    const detalleHtml = registrosHoy.length === 0
+      ? `<div class="detail-row"><div class="detail-label">Sin registros hoy</div><div class="detail-status">-</div><div class="detail-actions"></div></div>`
+      : registrosHoy.map(registro => {
+          const estadoValidacion = obtenerEstadoValidacion(registro)
+
+          return `
+            <div class="detail-row">
+              <div class="detail-label">
+                - ${traducirTipo(registro.tipo)}: ${obtenerHoraMostrada(registro)}
+              </div>
+
+              <div class="detail-status ${estadoValidacion.clase}">
+                ${estadoValidacion.texto}
+              </div>
+
+              <div class="detail-actions">
+                <button class="btn-mini btn-accept" data-action="accept" data-id="${registro.id}" data-user="${registro.userId}">
+                  Aceptar
+                </button>
+
+                <button class="btn-mini btn-edit" data-action="edit" data-id="${registro.id}" data-user="${registro.userId}">
+                  Editar
+                </button>
+
+                <button class="btn-mini btn-delete" data-action="delete" data-id="${registro.id}" data-user="${registro.userId}">
+                  Borrar
+                </button>
+              </div>
+            </div>
+          `
+        }).join("")
 
     return `
-      <div class="table-row">
-        <div>${user.nombre || user.email || "Sin nombre"}</div>
-        <div>${user.turno || "-"}</div>
-        <div>${renderEstado(user.estado)}</div>
-        <div>${stats.breakCount}</div>
-        <div>${stats.breakDuration}</div>
-        <div>${stats.lastRecord}</div>
-        <div class="${stats.obsClass}">${stats.observacion}</div>
+      <div class="employee-block">
+        <div class="employee-summary">
+          <div>${user.nombre || user.email || "Sin nombre"}</div>
+          <div>${user.turno || "-"}</div>
+          <div>${renderEstado(user.estado)}</div>
+          <div>${stats.breakCount}</div>
+          <div>${stats.breakDuration}</div>
+          <div>${stats.totalHours}</div>
+          <div>${stats.lastRecord}</div>
+          <div class="${stats.obsClass}">${stats.observacion}</div>
+        </div>
+
+        <div class="employee-details">
+          ${detalleHtml}
+        </div>
       </div>
     `
   })
 
-  adminTableBody.innerHTML = rows.join("")
+  adminHistoryList.innerHTML = bloques.join("")
 }
+
+if (adminHistoryList) {
+  adminHistoryList.addEventListener("click", async (event) => {
+    const button = event.target.closest("button[data-action]")
+    if (!button) return
+
+    const action = button.dataset.action
+    const recordId = button.dataset.id
+    const userId = button.dataset.user
+
+    if (!recordId) return
+
+    if (action === "accept") {
+      await aceptarRegistro(recordId)
+      return
+    }
+
+    if (action === "edit") {
+      await editarRegistro(recordId)
+      return
+    }
+
+    if (action === "delete") {
+      await borrarRegistro(recordId, userId)
+      return
+    }
+  })
+}
+
+
+// ===============================
+// SECCION 15 - ACCIONES ADMIN
+// ===============================
+
+async function aceptarRegistro(recordId) {
+  const currentUser = auth.currentUser
+  if (!currentUser) return
+
+  await updateDoc(doc(db, "attendance", recordId), {
+    validado: true,
+    validadoPor: currentUser.email || currentUser.uid,
+    validadoEn: serverTimestamp()
+  })
+}
+
+async function editarRegistro(recordId) {
+  const currentUser = auth.currentUser
+  if (!currentUser) return
+
+  const registro = attendanceCache.find(item => item.id === recordId)
+  if (!registro) return
+
+  const horaActual = registro.horaEditada || obtenerHoraMostrada(registro)
+  const nuevaHora = prompt("Ingresa la nueva hora en formato HH:MM o HH:MM:SS", horaActual)
+
+  if (!nuevaHora) return
+
+  const horaNormalizada = normalizarHoraManual(nuevaHora)
+  if (!horaNormalizada) {
+    alert("Formato inválido. Usa HH:MM o HH:MM:SS")
+    return
+  }
+
+  await updateDoc(doc(db, "attendance", recordId), {
+    horaEditada: horaNormalizada,
+    validado: true,
+    editadoPor: currentUser.email || currentUser.uid,
+    editadoEn: serverTimestamp()
+  })
+}
+
+async function borrarRegistro(recordId, userId) {
+  const confirmar = confirm("¿Seguro que deseas borrar este registro?")
+  if (!confirmar) return
+
+  await deleteDoc(doc(db, "attendance", recordId))
+
+  if (userId) {
+    await recalcularEstadoUsuario(userId)
+  }
+}
+
+async function recalcularEstadoUsuario(userId) {
+  const registrosHoy = obtenerRegistrosDeHoy(userId)
+
+  let nuevoEstado = "inicio"
+
+  registrosHoy.forEach(registro => {
+    if (registro.tipo === "ingreso") nuevoEstado = "trabajando"
+    if (registro.tipo === "break") nuevoEstado = "break"
+    if (registro.tipo === "regreso") nuevoEstado = "trabajando"
+    if (registro.tipo === "salida") nuevoEstado = "inicio"
+  })
+
+  await setDoc(
+    doc(db, "users", userId),
+    { estado: nuevoEstado },
+    { merge: true }
+  )
+}
+
+
+// ===============================
+// SECCION 16 - RENDER ESTADO
+// ===============================
 
 function renderEstado(estadoActual) {
   if (estadoActual === "trabajando") {
@@ -495,50 +656,119 @@ function renderEstado(estadoActual) {
   `
 }
 
+function traducirTipo(tipo) {
+  if (tipo === "ingreso") return "Ingreso"
+  if (tipo === "break") return "Inicio break"
+  if (tipo === "regreso") return "Fin break"
+  if (tipo === "salida") return "Salida"
+  return tipo
+}
+
+function obtenerEstadoValidacion(registro) {
+  if (registro.horaEditada) {
+    return {
+      texto: "EDITADO",
+      clase: "badge-edited"
+    }
+  }
+
+  if (registro.validado) {
+    return {
+      texto: "VALIDADO",
+      clase: "badge-valid"
+    }
+  }
+
+  return {
+    texto: "PENDIENTE",
+    clase: "badge-pending"
+  }
+}
+
 
 // ===============================
-// SECCION 15 - CALCULO STATS
+// SECCION 17 - CALCULO DE TIEMPOS
 // ===============================
 
-function calcularStatsUsuario(user, attendance) {
-  const registros = attendance
-    .filter(item => item.userId === user.userId || item.userId === user.id)
+function obtenerRegistrosDeHoy(userId) {
+  const hoy = claveFechaLocal(new Date())
+
+  return attendanceCache
+    .filter(item => item.userId === userId)
+    .filter(item => {
+      const fechaBase = obtenerFechaBase(item)
+      if (!fechaBase) return false
+      return claveFechaLocal(fechaBase) === hoy
+    })
     .sort((a, b) => {
-      const ta = a.horaServidor?.seconds || 0
-      const tb = b.horaServidor?.seconds || 0
+      const ta = obtenerFechaEfectiva(a)?.getTime() || 0
+      const tb = obtenerFechaEfectiva(b)?.getTime() || 0
       return ta - tb
     })
+}
 
+function calcularResumenUsuario(user, registrosHoy) {
   let breakCount = 0
   let totalBreakMs = 0
-  let lastBreakStart = null
+  let totalTrabajoMs = 0
   let lastRecord = "-"
   let observacion = "-"
   let obsClass = "obs-normal"
 
-  registros.forEach(registro => {
-    if (registro.tipo === "break") {
+  let inicioTrabajo = null
+  let inicioBreak = null
+
+  registrosHoy.forEach(registro => {
+    const fecha = obtenerFechaEfectiva(registro)
+    if (!fecha) return
+
+    lastRecord = formatearFechaHora(fecha)
+
+    if (registro.tipo === "ingreso") {
+      if (!inicioTrabajo) {
+        inicioTrabajo = fecha
+      }
+    }
+
+    else if (registro.tipo === "break") {
       breakCount += 1
-      if (registro.horaServidor?.toDate) {
-        lastBreakStart = registro.horaServidor.toDate()
+
+      if (inicioTrabajo) {
+        totalTrabajoMs += fecha - inicioTrabajo
+        inicioTrabajo = null
+      }
+
+      if (!inicioBreak) {
+        inicioBreak = fecha
       }
     }
 
-    if (registro.tipo === "regreso") {
-      if (lastBreakStart && registro.horaServidor?.toDate) {
-        const regresoDate = registro.horaServidor.toDate()
-        totalBreakMs += regresoDate - lastBreakStart
-        lastBreakStart = null
+    else if (registro.tipo === "regreso") {
+      if (inicioBreak) {
+        totalBreakMs += fecha - inicioBreak
+        inicioBreak = null
+      }
+
+      if (!inicioTrabajo) {
+        inicioTrabajo = fecha
       }
     }
 
-    if (registro.horaServidor?.toDate) {
-      lastRecord = formatearFechaHora(registro.horaServidor.toDate())
+    else if (registro.tipo === "salida") {
+      if (inicioTrabajo) {
+        totalTrabajoMs += fecha - inicioTrabajo
+        inicioTrabajo = null
+      }
+
+      if (inicioBreak) {
+        totalBreakMs += fecha - inicioBreak
+        inicioBreak = null
+      }
     }
   })
 
-  if (user.estado === "break" && lastBreakStart) {
-    const mins = Math.floor((new Date() - lastBreakStart) / 60000)
+  if (user.estado === "break" && inicioBreak) {
+    const mins = Math.floor((new Date() - inicioBreak) / 60000)
 
     if (mins >= 30) {
       observacion = "⚠ Break prolongado"
@@ -548,13 +778,19 @@ function calcularStatsUsuario(user, attendance) {
     }
   }
 
-  if (user.estado === "inicio" && registros.length === 0) {
+  if (user.estado === "inicio" && registrosHoy.length === 0) {
     observacion = "Sin registros hoy"
+  }
+
+  if (registrosHoy.some(item => !item.validado && !item.horaEditada)) {
+    observacion = "Pendiente validar"
+    obsClass = "obs-warning"
   }
 
   return {
     breakCount,
     breakDuration: formatearDuracion(totalBreakMs),
+    totalHours: formatearDuracion(totalTrabajoMs),
     lastRecord,
     observacion,
     obsClass
@@ -563,8 +799,71 @@ function calcularStatsUsuario(user, attendance) {
 
 
 // ===============================
-// SECCION 16 - HELPERS
+// SECCION 18 - FECHAS Y HORAS
 // ===============================
+
+function obtenerFechaBase(registro) {
+  if (registro.horaServidor?.toDate) {
+    return registro.horaServidor.toDate()
+  }
+
+  return null
+}
+
+function obtenerFechaEfectiva(registro) {
+  const base = obtenerFechaBase(registro)
+  if (!base) return null
+
+  if (!registro.horaEditada) return base
+
+  const partes = registro.horaEditada.split(":")
+  if (partes.length < 2) return base
+
+  const horas = Number(partes[0])
+  const minutos = Number(partes[1])
+  const segundos = Number(partes[2] || 0)
+
+  const clon = new Date(base)
+  clon.setHours(horas, minutos, segundos, 0)
+
+  return clon
+}
+
+function obtenerHoraMostrada(registro) {
+  if (registro.horaEditada) {
+    return registro.horaEditada
+  }
+
+  const fecha = obtenerFechaBase(registro)
+  if (!fecha) return "-"
+
+  return fecha.toLocaleTimeString("es-PE", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  })
+}
+
+function normalizarHoraManual(valor) {
+  const limpio = valor.trim()
+  const patron = /^([01]?\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/
+  const match = limpio.match(patron)
+
+  if (!match) return null
+
+  const h = match[1].padStart(2, "0")
+  const m = match[2].padStart(2, "0")
+  const s = (match[3] || "00").padStart(2, "0")
+
+  return `${h}:${m}:${s}`
+}
+
+function claveFechaLocal(date) {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
+}
 
 function formatearDuracion(ms) {
   if (!ms || ms <= 0) return "-"
@@ -578,7 +877,7 @@ function formatearDuracion(ms) {
   const horas = Math.floor(minutos / 60)
   const mins = minutos % 60
 
-  return `${horas}h ${mins}m`
+  return `${horas}h ${mins}min`
 }
 
 function formatearFechaHora(date) {

@@ -75,7 +75,7 @@ const btnAsistencia = document.getElementById("btnAsistencia")
 const btnBreak = document.getElementById("btnBreak")
 const btnLogout = document.getElementById("btnLogout")
 
-const mensaje = document.getElementById("mensaje")
+const mensaje = document.getElementById("mensajeStaff")
 
 const adminHistoryList = document.getElementById("adminHistoryList")
 
@@ -180,7 +180,7 @@ function mostrar(tipo) {
 
 function actualizarUI() {
 
-  if (!btnAsistencia || !btnBreak) return
+  if (!btnAsistencia || !btnBreak || !mensaje) return
 
   btnBreak.disabled = false
 
@@ -213,7 +213,6 @@ function actualizarUI() {
   }
 
 }
-
 
 // ===============================
 // REGISTRAR

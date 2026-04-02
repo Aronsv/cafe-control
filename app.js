@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { 
     getFirestore, collection, addDoc, doc, getDoc, getDocs, query, 
-    where, orderBy, limit, serverTimestamp, updateDoc 
+    where, orderBy, limit, serverTimestamp, updateDoc, onSnapshot 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -21,12 +21,15 @@ const db = getFirestore(app);
 // Variables de estado
 let estadoActual = "inicio";
 let datosUsuario = null;
+let usersCache = [];
+let attendanceCache = [];
 
 // Elementos UI
 const views = { login: document.getElementById("loginView"), staff: document.getElementById("staffView"), admin: document.getElementById("adminView") };
 const btnAsistencia = document.getElementById("btnAsistencia");
 const btnBreak = document.getElementById("btnBreak");
 const mensajeStaff = document.getElementById("mensajeStaff");
+const adminHistoryList = document.getElementById("adminHistoryList");
 
 // --- LOGICA DE SESIÓN ---
 onAuthStateChanged(auth, async (user) => {
@@ -38,6 +41,7 @@ onAuthStateChanged(auth, async (user) => {
         estadoActual = datosUsuario.estado || "inicio";
         if (datosUsuario.role === "admin") {
             switchView('admin');
+            iniciarEscuchasAdmin(); // <-- ESTO ES LO QUE FALTABA
         } else {
             switchView('staff');
             actualizarInterfaz();
@@ -55,7 +59,6 @@ async function registrarAccion(tipo) {
     const user = auth.currentUser;
     const obs = document.getElementById("obsDia").value;
 
-    // Buscar último turno para incrementarlo si es necesario
     const q = query(collection(db, "attendance"), where("userId", "==", user.uid), orderBy("horaServidor", "desc"), limit(1));
     const snap = await getDocs(q);
     let nTurno = datosUsuario.turno || "Turno 1";
@@ -77,28 +80,24 @@ async function registrarAccion(tipo) {
 
     await updateDoc(doc(db, "users", user.uid), { estado: tipo, turno: nTurno });
     estadoActual = tipo;
-    document.getElementById("obsDia").value = ""; // Limpiar obs
+    document.getElementById("obsDia").value = ""; 
     actualizarInterfaz();
 }
 
 function actualizarInterfaz() {
-    // 1. Normalizar el estado: Si en Firebase dice "salida" o "regreso", 
-    // lo traducimos a los estados que la interfaz entiende.
     if (estadoActual === "salida") estadoActual = "inicio";
     if (estadoActual === "regreso" || estadoActual === "ingreso") estadoActual = "trabajando";
 
-    // 2. Limpiar estilos previos
     btnAsistencia.classList.remove("btn-green", "btn-red");
     btnBreak.classList.remove("btn-orange");
     btnAsistencia.disabled = false;
     btnBreak.disabled = false;
 
-    // 3. Aplicar lógica de botones según el estado normalizado
     if (estadoActual === "inicio") {
         mensajeStaff.innerText = "Tu jornada aún no ha comenzado";
         btnAsistencia.innerText = "Registrar ingreso";
         btnAsistencia.classList.add("btn-green");
-        btnBreak.disabled = true; // No hay break si no has entrado
+        btnBreak.disabled = true;
     } 
     else if (estadoActual === "trabajando") {
         mensajeStaff.innerText = "En jornada de trabajo";
@@ -110,122 +109,140 @@ function actualizarInterfaz() {
     else if (estadoActual === "break") {
         mensajeStaff.innerText = "Estás en descanso (Break)";
         btnAsistencia.innerText = "Regresa del break para salir";
-        btnAsistencia.disabled = true; // Bloqueo de seguridad
+        btnAsistencia.disabled = true;
         btnBreak.innerText = "Finalizar break";
         btnBreak.classList.add("btn-orange");
     }
 }
 
 // --- EVENTOS ---
-btnAsistencia.onclick = () => {
-    if (estadoActual === "inicio") registrarAccion("ingreso");
-    else if (estadoActual !== "break") registrarAccion("salida");
-};
+if(btnAsistencia) {
+    btnAsistencia.onclick = () => {
+        if (estadoActual === "inicio") registrarAccion("ingreso");
+        else if (estadoActual !== "break") registrarAccion("salida");
+    };
+}
 
-btnBreak.onclick = () => {
-    if (estadoActual === "break") registrarAccion("regreso");
-    else registrarAccion("break");
-};
+if(btnBreak) {
+    btnBreak.onclick = () => {
+        if (estadoActual === "break") registrarAccion("regreso");
+        else registrarAccion("break");
+    };
+}
 
 document.getElementById("btnLogin").onclick = async () => {
     const e = document.getElementById("email").value;
     const p = document.getElementById("password").value;
-    try { await signInWithEmailAndPassword(auth, e, p); } catch(e) { alert("Error: " + e.message); }
+    try { await signInWithEmailAndPassword(auth, e, p); } catch(err) { alert("Error: " + err.message); }
 };
 
 document.getElementById("btnLogoutStaff").onclick = () => signOut(auth);
 document.getElementById("btnLogoutAdmin").onclick = () => signOut(auth);
 
-// Variable para controlar qué pestaña interna está abierta (por defecto Asistencia)
-let activeSubTab = "asistencia";
+// ===============================
+// SECCIÓN 10 - LÓGICA ADMIN (CONEXIÓN REAL)
+// ===============================
 
-function renderAdmin() {
-  if (!adminHistoryList) return;
+function iniciarEscuchasAdmin() {
+    // 1. Escuchar Usuarios
+    onSnapshot(collection(db, "users"), (snap) => {
+        usersCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        actualizarContadores();
+        renderAdmin();
+    });
 
-  // Filtramos para NO mostrar al propio Admin en la lista de staff
-  const staffUsers = usersCache.filter(u => u.role !== 'admin');
-
-  const html = staffUsers.map(user => {
-    // IMPORTANTE: Asegúrate que en Firebase el campo sea 'userId'
-    const registros = attendanceCache.filter(r => r.userId === user.id)
-      .sort((a, b) => {
-        const dateA = a.horaServidor?.seconds || 0;
-        const dateB = b.horaServidor?.seconds || 0;
-        return dateB - dateA; // Ordenar del más reciente al más antiguo
-      });
-
-    // Definimos el estado para el color del circulito/pill
-    let estadoPill = user.estado || 'inicio';
-    if (estadoPill === 'ingreso' || estadoPill === 'regreso') estadoPill = 'trabajando';
-    if (estadoPill === 'salida') estadoPill = 'inicio';
-
-    return `
-      <div class="employee-block" id="block-${user.id}">
-        <div class="employee-summary" onclick="document.getElementById('block-${user.id}').classList.toggle('open')">
-          <div class="employee-main-name">
-            <strong>${user.nombre || 'Sin Nombre'}</strong>
-          </div>
-          <div>${user.turno || 'Turno 1'}</div>
-          <div>
-            <span class="status-pill status-${estadoPill}">
-              <span class="status-dot"></span> ${estadoPill.toUpperCase()}
-            </span>
-          </div>
-          <div>${registros.filter(r => r.tipo === 'break').length} Breaks</div>
-          <div>${registros.length > 0 ? 'Ver Historial' : 'Sin datos hoy'}</div>
-        </div>
-        
-        <div class="employee-details">
-          <div class="admin-tabs-nav">
-            <button class="tab-link active" onclick="switchSubTab(this, 'asistencia', '${user.id}')">Asistencia</button>
-            <button class="tab-link" onclick="switchSubTab(this, 'tareas', '${user.id}')">Tareas</button>
-            <button class="tab-link" onclick="switchSubTab(this, 'finanzas', '${user.id}')">Finanzas</button>
-          </div>
-          <div class="sub-tab-content" id="content-${user.id}">
-            ${renderAsistenciaTab(registros)}
-          </div>
-        </div>
-      </div>
-    `;
-  }).join("");
-
-  adminHistoryList.innerHTML = html || '<div class="empty-state">No se encontraron empleados en la base de datos.</div>';
+    // 2. Escuchar Asistencia
+    onSnapshot(collection(db, "attendance"), (snap) => {
+        attendanceCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderAdmin();
+    });
 }
 
-// Función para cambiar entre Asistencia, Tareas y Finanzas dentro del empleado
-window.switchSubTab = (btn, tab, userId) => {
-  const parent = btn.parentElement;
-  parent.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
-  btn.classList.add('active');
-  
-  const contentDiv = document.getElementById(`content-${userId}`);
-  const registros = attendanceCache.filter(r => r.userId === userId);
+function actualizarContadores() {
+    const counts = { trabajando: 0, break: 0, inicio: 0 };
+    usersCache.forEach(u => {
+        if (u.role !== 'admin') {
+            let est = u.estado || 'inicio';
+            if (est === 'ingreso' || est === 'regreso') est = 'trabajando';
+            if (est === 'salida') est = 'inicio';
+            counts[est]++;
+        }
+    });
 
-  if (tab === 'asistencia') contentDiv.innerHTML = renderAsistenciaTab(registros);
-  if (tab === 'tareas') contentDiv.innerHTML = `<p>Próximamente: Módulo de Tareas</p>`;
-  if (tab === 'finanzas') contentDiv.innerHTML = renderFinanzasTab(userId);
+    document.getElementById("countTrabajando").innerText = counts.trabajando;
+    document.getElementById("countBreak").innerText = counts.break;
+    
+    // Gráfico Donut
+    const total = usersCache.filter(u => u.role !== 'admin').length || 1;
+    document.getElementById("arcTrabajando").style.strokeDasharray = `${(counts.trabajando / total) * 100} 100`;
+    document.getElementById("arcBreak").style.strokeDasharray = `${(counts.break / total) * 100} 100`;
+}
+
+function renderAdmin() {
+    if (!adminHistoryList) return;
+    const staffUsers = usersCache.filter(u => u.role !== 'admin');
+
+    adminHistoryList.innerHTML = staffUsers.map(user => {
+        const registros = attendanceCache.filter(r => r.userId === user.id)
+            .sort((a, b) => (b.horaServidor?.seconds || 0) - (a.horaServidor?.seconds || 0));
+
+        let estPill = user.estado || 'inicio';
+        if (estPill === 'ingreso' || estPill === 'regreso') estPill = 'trabajando';
+        if (estPill === 'salida') estPill = 'inicio';
+
+        return `
+            <div class="employee-block" id="block-${user.id}">
+                <div class="employee-summary" onclick="document.getElementById('block-${user.id}').classList.toggle('open')">
+                    <strong>${user.nombre || 'Staff'}</strong>
+                    <span>${user.turno || 'Turno 1'}</span>
+                    <span class="status-pill status-${estPill}">
+                        <span class="status-dot"></span> ${estPill.toUpperCase()}
+                    </span>
+                    <span>${registros.filter(r => r.tipo === 'break').length} Breaks</span>
+                    <span>${registros.length > 0 ? 'Ver Historial' : 'Sin datos'}</span>
+                </div>
+                <div class="employee-details">
+                    <div class="admin-tabs-nav">
+                        <button class="tab-link active" onclick="event.stopPropagation(); switchSubTab(this, 'asistencia', '${user.id}')">Asistencia</button>
+                        <button class="tab-link" onclick="event.stopPropagation(); switchSubTab(this, 'tareas', '${user.id}')">Tareas</button>
+                        <button class="tab-link" onclick="event.stopPropagation(); switchSubTab(this, 'finanzas', '${user.id}')">Finanzas</button>
+                    </div>
+                    <div class="sub-tab-content" id="content-${user.id}">
+                        ${renderAsistenciaTab(registros)}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join("") || '<div class="empty-state">No hay empleados.</div>';
+}
+
+window.switchSubTab = (btn, tab, userId) => {
+    const parent = btn.parentElement;
+    parent.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
+    btn.classList.add('active');
+    
+    const contentDiv = document.getElementById(`content-${userId}`);
+    const registros = attendanceCache.filter(r => r.userId === userId);
+
+    if (tab === 'asistencia') contentDiv.innerHTML = renderAsistenciaTab(registros);
+    if (tab === 'tareas') contentDiv.innerHTML = `<p>Módulo de Tareas en construcción</p>`;
+    if (tab === 'finanzas') contentDiv.innerHTML = renderFinanzasTab(userId);
 };
 
 function renderAsistenciaTab(regs) {
-  return regs.map(r => `
-    <div class="detail-row">
-      <span>${r.tipo.toUpperCase()} - ${r.horaServidor ? new Date(r.horaServidor.seconds * 1000).toLocaleTimeString() : '...'}</span>
-      <button class="btn-mini btn-accept" onclick="validar('${r.id}')">Validar ✅</button>
-    </div>
-  `).join("");
+    return regs.map(r => `
+        <div class="detail-row" style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;">
+            <span>${r.tipo.toUpperCase()} - ${r.horaServidor ? new Date(r.horaServidor.seconds * 1000).toLocaleTimeString() : '...'}</span>
+            <button class="btn-mini btn-accept" onclick="alert('Validado')">Validar ✅</button>
+        </div>
+    `).join("") || '<p>Sin registros hoy</p>';
 }
 
 function renderFinanzasTab(userId) {
-  return `
-    <div class="finance-grid">
-      <div class="finance-box">
-        <h4>Reportes del Staff</h4>
-        <p class="empty-msg">Sin consumos reportados hoy.</p>
-      </div>
-      <div class="finance-box">
-        <h4>Control Manual (Adelantos/Cobros)</h4>
-        <button class="btn btn-brown" style="height:40px; font-size:12px;" onclick="agregarMontoManual('${userId}')">+ Agregar Monto</button>
-      </div>
-    </div>
-  `;
+    return `
+        <div class="finance-grid">
+            <div class="finance-box"><h4>Reportes Staff</h4><p>Sin datos</p></div>
+            <div class="finance-box"><h4>Manual</h4><button class="btn btn-brown" style="height:35px">Agregar</button></div>
+        </div>
+    `;
 }

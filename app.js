@@ -142,18 +142,37 @@ let activeSubTab = "asistencia";
 function renderAdmin() {
   if (!adminHistoryList) return;
 
-  const html = usersCache.filter(u => u.role !== 'admin').map(user => {
+  // Filtramos para NO mostrar al propio Admin en la lista de staff
+  const staffUsers = usersCache.filter(u => u.role !== 'admin');
+
+  const html = staffUsers.map(user => {
+    // IMPORTANTE: Asegúrate que en Firebase el campo sea 'userId'
     const registros = attendanceCache.filter(r => r.userId === user.id)
-      .sort((a, b) => b.horaServidor?.seconds - a.horaServidor?.seconds);
+      .sort((a, b) => {
+        const dateA = a.horaServidor?.seconds || 0;
+        const dateB = b.horaServidor?.seconds || 0;
+        return dateB - dateA; // Ordenar del más reciente al más antiguo
+      });
+
+    // Definimos el estado para el color del circulito/pill
+    let estadoPill = user.estado || 'inicio';
+    if (estadoPill === 'ingreso' || estadoPill === 'regreso') estadoPill = 'trabajando';
+    if (estadoPill === 'salida') estadoPill = 'inicio';
 
     return `
       <div class="employee-block" id="block-${user.id}">
         <div class="employee-summary" onclick="document.getElementById('block-${user.id}').classList.toggle('open')">
-          <strong>${user.nombre}</strong>
-          <span>${user.turno || 'Sin Turno'}</span>
-          <span class="status-pill status-${user.estado || 'inicio'}">${(user.estado || 'INICIO').toUpperCase()}</span>
-          <span>${registros.filter(r => r.tipo === 'break').length} Breaks</span>
-          <span>▼</span>
+          <div class="employee-main-name">
+            <strong>${user.nombre || 'Sin Nombre'}</strong>
+          </div>
+          <div>${user.turno || 'Turno 1'}</div>
+          <div>
+            <span class="status-pill status-${estadoPill}">
+              <span class="status-dot"></span> ${estadoPill.toUpperCase()}
+            </span>
+          </div>
+          <div>${registros.filter(r => r.tipo === 'break').length} Breaks</div>
+          <div>${registros.length > 0 ? 'Ver Historial' : 'Sin datos hoy'}</div>
         </div>
         
         <div class="employee-details">
@@ -162,7 +181,6 @@ function renderAdmin() {
             <button class="tab-link" onclick="switchSubTab(this, 'tareas', '${user.id}')">Tareas</button>
             <button class="tab-link" onclick="switchSubTab(this, 'finanzas', '${user.id}')">Finanzas</button>
           </div>
-
           <div class="sub-tab-content" id="content-${user.id}">
             ${renderAsistenciaTab(registros)}
           </div>
@@ -171,7 +189,7 @@ function renderAdmin() {
     `;
   }).join("");
 
-  adminHistoryList.innerHTML = html;
+  adminHistoryList.innerHTML = html || '<div class="empty-state">No se encontraron empleados en la base de datos.</div>';
 }
 
 // Función para cambiar entre Asistencia, Tareas y Finanzas dentro del empleado

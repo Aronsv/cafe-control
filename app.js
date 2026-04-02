@@ -82,26 +82,29 @@ async function registrarAccion(tipo) {
 }
 
 function actualizarInterfaz() {
+    // Reset de clases para evitar conflictos
     btnAsistencia.classList.remove("btn-green", "btn-red");
     btnBreak.classList.remove("btn-orange");
+    btnAsistencia.disabled = false; // Aseguramos que empiece habilitado
 
     if (estadoActual === "inicio" || estadoActual === "salida") {
         mensajeStaff.innerText = "Tu jornada aún no ha comenzado";
         btnAsistencia.innerText = "Registrar ingreso";
         btnAsistencia.classList.add("btn-green");
         btnBreak.disabled = true;
-        estadoActual = "inicio";
-    } else if (estadoActual === "ingreso" || estadoActual === "regreso") {
+    } 
+    else if (estadoActual === "ingreso" || estadoActual === "regreso" || estadoActual === "trabajando") {
         mensajeStaff.innerText = "En jornada de trabajo";
         btnAsistencia.innerText = "Registrar salida";
         btnAsistencia.classList.add("btn-red");
         btnBreak.innerText = "Iniciar break";
         btnBreak.classList.add("btn-orange");
         btnBreak.disabled = false;
-    } else if (estadoActual === "break") {
-        mensajeStaff.innerText = "Estás en break";
-        btnAsistencia.innerText = "Registrar salida (Vuelve del break primero)";
-        btnAsistencia.disabled = true;
+    } 
+    else if (estadoActual === "break") {
+        mensajeStaff.innerText = "Estás en descanso (Break)";
+        btnAsistencia.innerText = "Regresa del break para salir";
+        btnAsistencia.disabled = true; // Aquí sí se bloquea porque está almorzando/descansando
         btnBreak.innerText = "Finalizar break";
         btnBreak.classList.add("btn-orange");
         btnBreak.disabled = false;

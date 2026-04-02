@@ -605,3 +605,43 @@ input {
   font-weight: 700;
   color: #8a5a33;
 }
+
+/* Añade o reemplaza esto en tu style.css */
+
+:root {
+  --bg-crema: #F5F1E8;
+  --mostaza: #D8AD43;
+  --cafe-oscuro: #5B341C;
+}
+
+body {
+  background-color: var(--bg-crema); /* Fondo suave */
+}
+
+/* Botones con los colores del Mockup */
+.btn-green-main {
+  background: #3F8A3D !important; /* Verde Ingreso */
+  box-shadow: 0 4px 0 #2D632C;
+}
+
+.btn-green-soft {
+  background: #D8AD43 !important; /* Mostaza para el Break */
+  box-shadow: 0 4px 0 #A68533;
+}
+
+.btn-red {
+  background: #C94537 !important; /* Rojo Salida */
+  box-shadow: 0 4px 0 #943228;
+}
+
+/* Estilo para el área de observaciones */
+.input-obs {
+  width: 100%;
+  border: 1px solid #D1C4B9;
+  border-radius: 8px;
+  padding: 10px;
+  background: #FFF;
+  font-family: inherit;
+  margin-top: 10px;
+  resize: none;
+}

@@ -46,16 +46,42 @@
     </div>
   </section>
 
-  <section id="adminView" class="screen hidden">
-    <div class="dashboard-page">
-      <header class="dashboard-header">
-        <h1>PANEL ADMIN</h1>
-        <button id="btnLogoutAdmin" class="btn btn-dark" style="width:auto; padding:0 20px;">Salir</button>
-      </header>
-      <div id="adminHistoryList" class="history-list">
+<section id="adminView" class="screen hidden">
+  <div class="dashboard-page">
+    <header class="dashboard-header">
+      <div>
+        <h1 class="dashboard-title">ESTADO EN VIVO</h1>
+        <p class="dashboard-subtitle">Panel de Control - 6:30 Specialty Coffee</p>
+      </div>
+      <button id="btnLogoutAdmin" class="btn btn-dark" style="width:auto; padding:0 20px;">Cerrar Sesión</button>
+    </header>
+
+    <section class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-label">EN TURNO</div>
+        <div id="countTrabajando" class="summary-value">0</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">EN BREAK</div>
+        <div id="countBreak" class="summary-value">0</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">SISTEMA</div>
+        <div class="donut-wrap">
+          <svg viewBox="0 0 42 42" class="donut-svg">
+            <circle class="donut-bg" cx="21" cy="21" r="15.9155"></circle>
+            <circle id="arcTrabajando" class="donut-segment donut-green" cx="21" cy="21" r="15.9155" style="stroke-dasharray: 0 100;"></circle>
+            <circle id="arcBreak" class="donut-segment donut-gold" cx="21" cy="21" r="15.9155" style="stroke-dasharray: 0 100;"></circle>
+          </svg>
         </div>
+      </div>
+    </section>
+
+    <div id="adminHistoryList" class="history-list">
+      <div class="empty-state">Cargando personal...</div>
     </div>
-  </section>
+  </div>
+</section>
 
   <script type="module" src="app.js"></script>
 </body>

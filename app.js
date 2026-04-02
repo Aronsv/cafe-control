@@ -82,32 +82,37 @@ async function registrarAccion(tipo) {
 }
 
 function actualizarInterfaz() {
-    // Reset de clases para evitar conflictos
+    // 1. Normalizar el estado: Si en Firebase dice "salida" o "regreso", 
+    // lo traducimos a los estados que la interfaz entiende.
+    if (estadoActual === "salida") estadoActual = "inicio";
+    if (estadoActual === "regreso" || estadoActual === "ingreso") estadoActual = "trabajando";
+
+    // 2. Limpiar estilos previos
     btnAsistencia.classList.remove("btn-green", "btn-red");
     btnBreak.classList.remove("btn-orange");
-    btnAsistencia.disabled = false; // Aseguramos que empiece habilitado
+    btnAsistencia.disabled = false;
+    btnBreak.disabled = false;
 
-    if (estadoActual === "inicio" || estadoActual === "salida") {
+    // 3. Aplicar lógica de botones según el estado normalizado
+    if (estadoActual === "inicio") {
         mensajeStaff.innerText = "Tu jornada aún no ha comenzado";
         btnAsistencia.innerText = "Registrar ingreso";
         btnAsistencia.classList.add("btn-green");
-        btnBreak.disabled = true;
+        btnBreak.disabled = true; // No hay break si no has entrado
     } 
-    else if (estadoActual === "ingreso" || estadoActual === "regreso" || estadoActual === "trabajando") {
+    else if (estadoActual === "trabajando") {
         mensajeStaff.innerText = "En jornada de trabajo";
         btnAsistencia.innerText = "Registrar salida";
         btnAsistencia.classList.add("btn-red");
         btnBreak.innerText = "Iniciar break";
         btnBreak.classList.add("btn-orange");
-        btnBreak.disabled = false;
     } 
     else if (estadoActual === "break") {
         mensajeStaff.innerText = "Estás en descanso (Break)";
         btnAsistencia.innerText = "Regresa del break para salir";
-        btnAsistencia.disabled = true; // Aquí sí se bloquea porque está almorzando/descansando
+        btnAsistencia.disabled = true; // Bloqueo de seguridad
         btnBreak.innerText = "Finalizar break";
         btnBreak.classList.add("btn-orange");
-        btnBreak.disabled = false;
     }
 }
 

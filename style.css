@@ -39,14 +39,13 @@ input, .input-obs {
 .btn:disabled { background: #ccc !important; cursor: not-allowed; }
 
 /* --- STAFF LAYOUT CORREGIDO --- */
+/* Ajuste para que el cuerpo de la app no choque con la barra */
 .staff-shell {
   min-height: 100vh;
-  width: 100%;
+  padding-bottom: 90px; /* Espacio extra para la barra */
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 20px 10px 100px 10px; /* Padding inferior para que no tape la barra */
-  overflow-y: auto;
+  justify-content: center;
 }
 
 .staff-bottom-nav {
@@ -54,27 +53,25 @@ input, .input-obs {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 75px; /* Altura fija */
+  height: 70px;
   background: #ffffff;
-  border-top: 2px solid #e2d9cf;
-  display: flex;
-  justify-content: space-around;
+  border-top: 1px solid #e2d9cf;
+  display: grid; /* Grid es mejor para responsive que flex en este caso */
+  grid-template-columns: repeat(3, 1fr);
   align-items: center;
-  z-index: 999;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+  z-index: 1000;
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
 }
 
 .nav-tab {
-  flex: 1;
-  background: none;
+  height: 100%;
   border: none;
+  background: none;
+  font-size: 12px; /* Letra un poco más pequeña para móviles */
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 4px;
-  color: #8c7c70;
-  cursor: pointer;
-  padding: 10px 0;
 }
 
 /* --- RESPONSIVE GENERAL --- */

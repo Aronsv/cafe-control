@@ -85,3 +85,67 @@ input, .input-obs {
   .btn { height: 50px; font-size: 15px; }
   .nav-tab span { font-size: 12px; }
 }
+
+/* --- ADMIN INTERACTIVO --- */
+.employee-block {
+  background: #ffffff;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.employee-summary {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 0.5fr;
+  padding: 20px;
+  cursor: pointer;
+  align-items: center;
+  background: #fff;
+  transition: background 0.2s;
+}
+
+.employee-summary:hover { background: #fdfaf7; }
+
+/* Sub-pestañas internas */
+.admin-tabs-nav {
+  display: flex;
+  gap: 10px;
+  padding: 10px 20px;
+  background: #f9f6f2;
+  border-bottom: 1px solid #eee;
+}
+
+.tab-link {
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-weight: bold;
+  color: #8c7c70;
+}
+
+.tab-link.active {
+  color: #8a5a33;
+  border-bottom: 2px solid #8a5a33;
+}
+
+.employee-details {
+  display: none; /* Se activa con la clase .open en employee-block */
+  padding: 20px;
+}
+
+.employee-block.open .employee-details { display: block; }
+
+/* Estilos de Finanzas */
+.finance-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.finance-box {
+  padding: 15px;
+  border: 1px solid #e2d9cf;
+  border-radius: 8px;
+}

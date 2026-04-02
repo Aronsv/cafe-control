@@ -149,3 +149,82 @@ input, .input-obs {
   border: 1px solid #e2d9cf;
   border-radius: 8px;
 }
+
+/* Layout del Admin */
+.admin-layout {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  width: 100vw;
+  height: 100vh;
+  background: #f5f1e8;
+}
+
+.admin-sidebar {
+  background: #5b341c; /* Marrón café */
+  color: white;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-sidebar .brand {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nav-item {
+  background: none;
+  border: none;
+  color: #d1c4b9;
+  text-align: left;
+  padding: 12px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.nav-item.active {
+  background: #8a5a33;
+  color: white;
+}
+
+/* Main Content */
+.admin-main {
+  padding: 40px;
+  overflow-y: auto;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.summary-card {
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-card .label { font-size: 14px; font-weight: bold; color: #8a5a33; }
+.summary-card .value { font-size: 48px; font-weight: bold; }
+
+/* El Donut Corregido */
+.donut-wrap { width: 100px; height: 100px; margin: 0 auto; }
+.donut-svg { transform: rotate(-90deg); }
+.donut-bg { fill: none; stroke: #eee; stroke-width: 4; }
+.donut-segment { fill: none; stroke-width: 4; stroke-dasharray: 0 100; transition: 0.5s; }
+.donut-green { stroke: #3f8a3d; }
+.donut-gold { stroke: #d8ad43; }

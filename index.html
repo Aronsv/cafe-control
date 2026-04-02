@@ -47,39 +47,45 @@
   </section>
 
 <section id="adminView" class="screen hidden">
-  <div class="dashboard-page">
-    <header class="dashboard-header">
-      <div>
-        <h1 class="dashboard-title">ESTADO EN VIVO</h1>
-        <p class="dashboard-subtitle">Panel de Control - 6:30 Specialty Coffee</p>
-      </div>
-      <button id="btnLogoutAdmin" class="btn btn-dark" style="width:auto; padding:0 20px;">Cerrar Sesión</button>
-    </header>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="brand">6:30</div>
+      <nav class="sidebar-nav">
+        <button class="nav-item active">📊 Dashboard</button>
+        <button class="nav-item">👥 Empleados</button>
+        <button id="btnLogoutAdmin" class="nav-item logout">Cerrar Sesión</button>
+      </nav>
+    </aside>
 
-    <section class="summary-grid">
-      <div class="summary-card">
-        <div class="summary-label">EN TURNO</div>
-        <div id="countTrabajando" class="summary-value">0</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-label">EN BREAK</div>
-        <div id="countBreak" class="summary-value">0</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-label">SISTEMA</div>
-        <div class="donut-wrap">
-          <svg viewBox="0 0 42 42" class="donut-svg">
-            <circle class="donut-bg" cx="21" cy="21" r="15.9155"></circle>
-            <circle id="arcTrabajando" class="donut-segment donut-green" cx="21" cy="21" r="15.9155" style="stroke-dasharray: 0 100;"></circle>
-            <circle id="arcBreak" class="donut-segment donut-gold" cx="21" cy="21" r="15.9155" style="stroke-dasharray: 0 100;"></circle>
-          </svg>
+    <main class="admin-main">
+      <header class="main-header">
+        <h1>ESTADO EN VIVO</h1>
+        <p>Panel de Control - 6:30 Specialty Coffee</p>
+      </header>
+
+      <div class="summary-grid">
+        <div class="summary-card">
+          <span class="label">EN TURNO</span>
+          <span id="countTrabajando" class="value">0</span>
+        </div>
+        <div class="summary-card">
+          <span class="label">EN BREAK</span>
+          <span id="countBreak" class="value">0</span>
+        </div>
+        <div class="summary-card donut-card">
+          <div class="donut-wrap">
+            <svg viewBox="0 0 42 42">
+              <circle class="donut-bg" cx="21" cy="21" r="15.9155"></circle>
+              <circle id="arcTrabajando" class="donut-segment donut-green" cx="21" cy="21" r="15.9155"></circle>
+              <circle id="arcBreak" class="donut-segment donut-gold" cx="21" cy="21" r="15.9155"></circle>
+            </svg>
+          </div>
         </div>
       </div>
-    </section>
 
-    <div id="adminHistoryList" class="history-list">
-      <div class="empty-state">Cargando personal...</div>
-    </div>
+      <div id="adminHistoryList" class="history-list">
+        </div>
+    </main>
   </div>
 </section>
 

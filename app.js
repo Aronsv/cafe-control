@@ -135,3 +135,79 @@ document.getElementById("btnLogin").onclick = async () => {
 
 document.getElementById("btnLogoutStaff").onclick = () => signOut(auth);
 document.getElementById("btnLogoutAdmin").onclick = () => signOut(auth);
+
+// Variable para controlar qué pestaña interna está abierta (por defecto Asistencia)
+let activeSubTab = "asistencia";
+
+function renderAdmin() {
+  if (!adminHistoryList) return;
+
+  const html = usersCache.filter(u => u.role !== 'admin').map(user => {
+    const registros = attendanceCache.filter(r => r.userId === user.id)
+      .sort((a, b) => b.horaServidor?.seconds - a.horaServidor?.seconds);
+
+    return `
+      <div class="employee-block" id="block-${user.id}">
+        <div class="employee-summary" onclick="document.getElementById('block-${user.id}').classList.toggle('open')">
+          <strong>${user.nombre}</strong>
+          <span>${user.turno || 'Sin Turno'}</span>
+          <span class="status-pill status-${user.estado || 'inicio'}">${(user.estado || 'INICIO').toUpperCase()}</span>
+          <span>${registros.filter(r => r.tipo === 'break').length} Breaks</span>
+          <span>▼</span>
+        </div>
+        
+        <div class="employee-details">
+          <div class="admin-tabs-nav">
+            <button class="tab-link active" onclick="switchSubTab(this, 'asistencia', '${user.id}')">Asistencia</button>
+            <button class="tab-link" onclick="switchSubTab(this, 'tareas', '${user.id}')">Tareas</button>
+            <button class="tab-link" onclick="switchSubTab(this, 'finanzas', '${user.id}')">Finanzas</button>
+          </div>
+
+          <div class="sub-tab-content" id="content-${user.id}">
+            ${renderAsistenciaTab(registros)}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  adminHistoryList.innerHTML = html;
+}
+
+// Función para cambiar entre Asistencia, Tareas y Finanzas dentro del empleado
+window.switchSubTab = (btn, tab, userId) => {
+  const parent = btn.parentElement;
+  parent.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
+  btn.classList.add('active');
+  
+  const contentDiv = document.getElementById(`content-${userId}`);
+  const registros = attendanceCache.filter(r => r.userId === userId);
+
+  if (tab === 'asistencia') contentDiv.innerHTML = renderAsistenciaTab(registros);
+  if (tab === 'tareas') contentDiv.innerHTML = `<p>Próximamente: Módulo de Tareas</p>`;
+  if (tab === 'finanzas') contentDiv.innerHTML = renderFinanzasTab(userId);
+};
+
+function renderAsistenciaTab(regs) {
+  return regs.map(r => `
+    <div class="detail-row">
+      <span>${r.tipo.toUpperCase()} - ${r.horaServidor ? new Date(r.horaServidor.seconds * 1000).toLocaleTimeString() : '...'}</span>
+      <button class="btn-mini btn-accept" onclick="validar('${r.id}')">Validar ✅</button>
+    </div>
+  `).join("");
+}
+
+function renderFinanzasTab(userId) {
+  return `
+    <div class="finance-grid">
+      <div class="finance-box">
+        <h4>Reportes del Staff</h4>
+        <p class="empty-msg">Sin consumos reportados hoy.</p>
+      </div>
+      <div class="finance-box">
+        <h4>Control Manual (Adelantos/Cobros)</h4>
+        <button class="btn btn-brown" style="height:40px; font-size:12px;" onclick="agregarMontoManual('${userId}')">+ Agregar Monto</button>
+      </div>
+    </div>
+  `;
+}

@@ -9,8 +9,8 @@
   "display": "standalone",
 
   // colores del sistema
-  "background_color": "#111111",
-  "theme_color": "#111111",
+  "background_color": "#F5F5DC",
+  "theme_color": "#F5F5DC",
 
   // iconos de la app
   "icons": [

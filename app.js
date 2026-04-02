@@ -219,16 +219,41 @@ function actualizarUI() {
 // ===============================
 
 async function registrar(tipo) {
+  const user = auth.currentUser;
+  
+  // Buscamos el último registro para manejar turnos
+  const q = query(
+    collection(db, "attendance"),
+    where("userId", "==", user.uid),
+    orderBy("horaServidor", "desc"),
+    limit(1)
+  );
+  
+  const snap = await getDocs(q);
+  let turnoActual = turnoEmpleado || "Turno 1";
 
-  await addDoc(collection(db, "attendance"), {
-    userId: auth.currentUser.uid,
+  // Lógica de incremento de turno: Si el último registro fue 'salida', este ingreso es un nuevo turno
+  if (!snap.empty) {
+    const ultimo = snap.docs[0].data();
+    if (ultimo.tipo === "salida" && tipo === "ingreso") {
+      const num = parseInt(ultimo.turno.split(" ")[1]) + 1;
+      turnoActual = `Turno ${num}`;
+    } else {
+      turnoActual = ultimo.turno;
+    }
+  }
+
+  const docRef = await addDoc(collection(db, "attendance"), {
+    userId: user.uid,
     nombre: nombreEmpleado,
-    turno: turnoEmpleado,
-    tipo: tipo,
+    turno: turnoActual,
+    tipo: tipo, // "ingreso", "break", "regreso", "salida"
     horaServidor: serverTimestamp(),
-    validado: false
-  })
-
+    validado: false,
+    observacion: ""
+  });
+  
+  return turnoActual;
 }
 
 
@@ -254,52 +279,41 @@ async function guardarEstado(nuevoEstado) {
 // ===============================
 
 if (btnAsistencia) {
-
   btnAsistencia.onclick = async () => {
-
+    btnAsistencia.disabled = true; // Evitar doble click
+    
     if (estado === "inicio") {
-      await registrar("ingreso")
-      await guardarEstado("trabajando")
-    }
-
+      const nuevoTurno = await registrar("ingreso");
+      // Actualizamos el turno en el perfil del usuario también
+      await updateDoc(doc(db, "users", auth.currentUser.uid), { 
+        estado: "trabajando",
+        turno: nuevoTurno 
+      });
+      estado = "trabajando";
+    } 
     else if (estado === "trabajando") {
-      await registrar("salida")
-      await guardarEstado("inicio")
+      await registrar("salida");
+      await guardarEstado("inicio");
     }
-
-    else if (estado === "break") {
-      mensaje.innerText = "Debes regresar del break"
-      return
-    }
-
-    actualizarUI()
-
-  }
-
+    
+    btnAsistencia.disabled = false;
+    actualizarUI();
+  };
 }
 
 if (btnBreak) {
-
   btnBreak.onclick = async () => {
-
-    if (btnBreak.disabled) return
-
     if (estado === "trabajando") {
-      await registrar("break")
-      await guardarEstado("break")
-    }
-
+      await registrar("break");
+      await guardarEstado("break");
+    } 
     else if (estado === "break") {
-      await registrar("regreso")
-      await guardarEstado("trabajando")
+      await registrar("regreso");
+      await guardarEstado("trabajando");
     }
-
-    actualizarUI()
-
-  }
-
+    actualizarUI();
+  };
 }
-
 
 // ===============================
 // LOGOUT

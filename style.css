@@ -1,54 +1,51 @@
+/* --- GENERAL --- */
 * { box-sizing: border-box; }
 body { margin: 0; background: #f5f1e8; font-family: 'Segoe UI', sans-serif; color: #5b341c; }
 .hidden { display: none !important; }
-.screen { min-height: 100vh; display: flex; justify-content: center; align-items: center; }
 
-/* LOGIN & CARDS */
-.card { width: 90%; max-width: 400px; background: #ffffff; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
-.logo { color: #7a4422; margin-bottom: 20px; }
-input, .input-obs { width: 100%; height: 50px; margin-bottom: 15px; border-radius: 12px; border: 2px solid #e2d9cf; padding: 0 15px; font-size: 16px; }
-.input-obs { height: 80px; padding: 10px; resize: none; margin-top: 10px; }
+/* --- STAFF UI --- */
+.staff-shell { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding-bottom: 80px; }
+.staff-bottom-nav { 
+  position: fixed; bottom: 0; width: 100%; height: 70px; background: white; 
+  display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #e2d9cf;
+}
+.nav-tab { background: none; border: none; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #8c7c70; }
+.nav-tab.active { color: #8a5a33; font-weight: bold; }
 
-/* BOTONES */
-.btn { width: 100%; height: 55px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; color: white; margin-bottom: 10px; }
-.btn-brown { background: #8a5a33; }
-.btn-green { background: #3f8a3d; }
-.btn-orange { background: #d8ad43; }
-.btn-red { background: #c94537; }
-.btn-dark { background: #5b5b5b; }
-.btn:disabled { background: #ccc !important; }
+/* --- ADMIN LAYOUT (IMAGEN 3 CORREGIDA) --- */
+.admin-layout { display: flex; width: 100vw; height: 100vh; overflow: hidden; }
+.admin-sidebar { 
+  min-width: 250px; background: #5b341c; color: white; transition: all 0.3s ease; 
+  display: flex; flex-direction: column;
+}
+/* Ocultar sidebar completamente */
+.admin-sidebar.collapsed { min-width: 0; width: 0; margin-left: -250px; overflow: hidden; }
 
-/* ADMIN LAYOUT */
-.admin-layout { display: flex; width: 100vw; height: 100vh; background: #f5f1e8; overflow: hidden; }
-.admin-sidebar { min-width: 250px; background: #5b341c; color: white; transition: margin-left 0.3s; display: flex; flex-direction: column; padding: 20px; }
-.admin-sidebar.collapsed { margin-left: -250px; }
-.admin-main { flex-grow: 1; padding: 30px; overflow-y: auto; }
+.btn-open-floating { 
+  position: fixed; top: 15px; left: 15px; z-index: 100;
+  background: #8a5a33; color: white; border: none; border-radius: 5px; padding: 10px; cursor: pointer;
+}
 
-/* SUMMARY CARDS */
-.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; }
-.summary-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); text-align: center; }
-.summary-card .label { font-size: 12px; font-weight: bold; color: #8a5a33; }
-.summary-card .value { font-size: 40px; font-weight: bold; }
+/* --- CONTADORES CENTRADOS (IMAGEN 4) --- */
+.summary-grid { 
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+  gap: 15px; margin-bottom: 25px; padding: 10px;
+}
+.summary-card { 
+  background: white; border-radius: 12px; padding: 20px; 
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px;
+}
+.card-icon { font-size: 24px; opacity: 0.7; }
+.card-info { display: flex; flex-direction: column; }
+.summary-card .label { font-size: 11px; font-weight: bold; color: #8a5a33; text-transform: uppercase; }
+.summary-card .value { font-size: 32px; font-weight: bold; }
 
-/* TABLE HEADER (IMAGEN 3) */
-.table-header-admin { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr; background: #eaddca; padding: 15px; font-weight: bold; border-radius: 8px 8px 0 0; border-bottom: 2px solid #8a5a33; margin-top: 20px; }
-
-/* ACORDEON EMPLEADO */
-.employee-block { background: white; border-radius: 10px; margin-bottom: 10px; border: 1px solid #eee; overflow: hidden; }
-.employee-summary { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr; padding: 15px; align-items: center; cursor: pointer; }
-.employee-block.open .employee-details { display: block; }
-.employee-details { display: none; padding: 15px; background: #fdfcfb; border-top: 1px solid #eee; }
-
-/* BOTONES ACCION */
-.admin-actions-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #f0f0f0; align-items: center; }
-.btn-mini { padding: 6px 12px; font-size: 11px; border-radius: 6px; cursor: pointer; border: none; margin-left: 5px; font-weight: bold; }
-.btn-valid { background: #dcfce7; color: #166534; border: 1px solid #166534; }
-.btn-edit { background: #fef9c3; color: #854d0e; border: 1px solid #d8ad43; }
-.btn-delete { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
-
-/* DONUT */
-.donut-wrap { width: 80px; height: 80px; margin: 0 auto; }
-.donut-bg { fill: none; stroke: #eee; stroke-width: 4; }
-.donut-segment { fill: none; stroke-width: 4; stroke-dasharray: 0 100; transform: rotate(-90deg); transform-origin: center; transition: 0.5s; }
-.donut-green { stroke: #3f8a3d; }
-.donut-gold { stroke: #d8ad43; }
+/* --- TABLA ADMIN --- */
+.table-header-admin { 
+  display: grid; grid-template-columns: 1.2fr 0.8fr 0.8fr 0.8fr 1.2fr; 
+  background: #eaddca; padding: 15px; font-weight: bold; border-radius: 8px 8px 0 0;
+}
+.employee-summary { 
+  display: grid; grid-template-columns: 1.2fr 0.8fr 0.8fr 0.8fr 1.2fr; 
+  padding: 15px; align-items: center; border-bottom: 1px solid #eee; background: white;
+}

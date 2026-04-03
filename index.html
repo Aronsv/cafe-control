@@ -47,44 +47,36 @@
   </section>
 
 <section id="adminView" class="screen hidden">
-  <div class="admin-layout">
-    <aside class="admin-sidebar">
-      <div class="brand">6:30</div>
+  <div class="admin-layout" id="adminLayout">
+    <aside class="admin-sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="brand">6:30</span>
+        <button id="toggleSidebar" class="icon-btn">☰</button>
+      </div>
       <nav class="sidebar-nav">
         <button class="nav-item active">📊 Dashboard</button>
-        <button class="nav-item">👥 Empleados</button>
+        <button class="nav-item">👥 Empleados (Historial)</button>
         <button id="btnLogoutAdmin" class="nav-item logout">Cerrar Sesión</button>
       </nav>
     </aside>
 
     <main class="admin-main">
       <header class="main-header">
+        <button id="openSidebar" class="btn-open-sidebar hidden">☰</button>
         <h1>ESTADO EN VIVO</h1>
-        <p>Panel de Control - 6:30 Specialty Coffee</p>
       </header>
 
-      <div class="summary-grid">
-        <div class="summary-card">
-          <span class="label">EN TURNO</span>
-          <span id="countTrabajando" class="value">0</span>
-        </div>
-        <div class="summary-card">
-          <span class="label">EN BREAK</span>
-          <span id="countBreak" class="value">0</span>
-        </div>
-        <div class="summary-card donut-card">
-          <div class="donut-wrap">
-            <svg viewBox="0 0 42 42">
-              <circle class="donut-bg" cx="21" cy="21" r="15.9155"></circle>
-              <circle id="arcTrabajando" class="donut-segment donut-green" cx="21" cy="21" r="15.9155"></circle>
-              <circle id="arcBreak" class="donut-segment donut-gold" cx="21" cy="21" r="15.9155"></circle>
-            </svg>
-          </div>
-        </div>
-      </div>
+      <section class="summary-grid">
+        <div class="summary-card"><div class="label">EMPLEADOS EN TURNO</div><div id="countTrabajando" class="value">0</div></div>
+        <div class="summary-card"><div class="label">EMPLEADOS EN BREAK</div><div id="countBreak" class="value">0</div></div>
+        <div class="summary-card"><div class="label">PENDIENTES INGRESO</div><div id="countInicio" class="value">0</div></div>
+        <div class="summary-card"><div class="label">TOTAL TRABAJADORES</div><div id="countTotal" class="value">0</div></div>
+      </section>
 
-      <div id="adminHistoryList" class="history-list">
-        </div>
+      <div class="table-header-admin">
+        <span>NOMBRE</span><span>TURNO</span><span>ESTADO</span><span>BREAKS</span><span>HISTORIAL</span>
+      </div>
+      <div id="adminHistoryList" class="history-list"></div>
     </main>
   </div>
 </section>

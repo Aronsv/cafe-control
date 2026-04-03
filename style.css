@@ -1,298 +1,54 @@
 * { box-sizing: border-box; }
-body {
-  margin: 0;
-  background: #f5f1e8; /* Crema suave */
-  font-family: 'Segoe UI', sans-serif;
-  color: #5b341c;
-}
+body { margin: 0; background: #f5f1e8; font-family: 'Segoe UI', sans-serif; color: #5b341c; }
 .hidden { display: none !important; }
 .screen { min-height: 100vh; display: flex; justify-content: center; align-items: center; }
 
-/* Tarjetas */
-.card {
-  width: 90%; max-width: 400px;
-  background: #ffffff; padding: 30px;
-  border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-  text-align: center;
-}
+/* LOGIN & CARDS */
+.card { width: 90%; max-width: 400px; background: #ffffff; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
 .logo { color: #7a4422; margin-bottom: 20px; }
-
-/* Inputs */
-input, .input-obs {
-  width: 100%; height: 50px; margin-bottom: 15px;
-  border-radius: 12px; border: 2px solid #e2d9cf;
-  padding: 0 15px; font-size: 16px;
-}
+input, .input-obs { width: 100%; height: 50px; margin-bottom: 15px; border-radius: 12px; border: 2px solid #e2d9cf; padding: 0 15px; font-size: 16px; }
 .input-obs { height: 80px; padding: 10px; resize: none; margin-top: 10px; }
 
-/* Botones Dinámicos */
-.btn {
-  width: 100%; height: 55px; border: none; border-radius: 12px;
-  font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s;
-  color: white; margin-bottom: 10px;
-}
+/* BOTONES */
+.btn { width: 100%; height: 55px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; color: white; margin-bottom: 10px; }
 .btn-brown { background: #8a5a33; }
-.btn-green { background: #3f8a3d; } /* Ingreso */
-.btn-orange { background: #d8ad43; } /* Break */
-.btn-red { background: #c94537; } /* Salida */
+.btn-green { background: #3f8a3d; }
+.btn-orange { background: #d8ad43; }
+.btn-red { background: #c94537; }
 .btn-dark { background: #5b5b5b; }
-.btn:disabled { background: #ccc !important; cursor: not-allowed; }
+.btn:disabled { background: #ccc !important; }
 
-/* --- STAFF LAYOUT CORREGIDO --- */
-/* Ajuste para que el cuerpo de la app no choque con la barra */
-.staff-shell {
-  min-height: 100vh;
-  padding-bottom: 90px; /* Espacio extra para la barra */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
+/* ADMIN LAYOUT */
+.admin-layout { display: flex; width: 100vw; height: 100vh; background: #f5f1e8; overflow: hidden; }
+.admin-sidebar { min-width: 250px; background: #5b341c; color: white; transition: margin-left 0.3s; display: flex; flex-direction: column; padding: 20px; }
+.admin-sidebar.collapsed { margin-left: -250px; }
+.admin-main { flex-grow: 1; padding: 30px; overflow-y: auto; }
 
-.staff-bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 70px;
-  background: #ffffff;
-  border-top: 1px solid #e2d9cf;
-  display: grid; /* Grid es mejor para responsive que flex en este caso */
-  grid-template-columns: repeat(3, 1fr);
-  align-items: center;
-  z-index: 1000;
-  box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
-}
+/* SUMMARY CARDS */
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; }
+.summary-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); text-align: center; }
+.summary-card .label { font-size: 12px; font-weight: bold; color: #8a5a33; }
+.summary-card .value { font-size: 40px; font-weight: bold; }
 
-.nav-tab {
-  height: 100%;
-  border: none;
-  background: none;
-  font-size: 12px; /* Letra un poco más pequeña para móviles */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
+/* TABLE HEADER (IMAGEN 3) */
+.table-header-admin { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr; background: #eaddca; padding: 15px; font-weight: bold; border-radius: 8px 8px 0 0; border-bottom: 2px solid #8a5a33; margin-top: 20px; }
 
-/* --- RESPONSIVE GENERAL --- */
-@media (max-width: 600px) {
-  .card {
-    width: 95%;
-    padding: 20px;
-    margin-top: 20px;
-  }
-  .logo { font-size: 20px; }
-  .btn { height: 50px; font-size: 15px; }
-  .nav-tab span { font-size: 12px; }
-}
-
-/* --- ADMIN INTERACTIVO --- */
-.employee-block {
-  background: #ffffff;
-  border-radius: 12px;
-  margin-bottom: 15px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-}
-
-.employee-summary {
-  display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr 0.5fr;
-  padding: 20px;
-  cursor: pointer;
-  align-items: center;
-  background: #fff;
-  transition: background 0.2s;
-}
-
-.employee-summary:hover { background: #fdfaf7; }
-
-/* Sub-pestañas internas */
-.admin-tabs-nav {
-  display: flex;
-  gap: 10px;
-  padding: 10px 20px;
-  background: #f9f6f2;
-  border-bottom: 1px solid #eee;
-}
-
-.tab-link {
-  padding: 8px 16px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-weight: bold;
-  color: #8c7c70;
-}
-
-.tab-link.active {
-  color: #8a5a33;
-  border-bottom: 2px solid #8a5a33;
-}
-
-.employee-details {
-  display: none; /* Se activa con la clase .open en employee-block */
-  padding: 20px;
-}
-
+/* ACORDEON EMPLEADO */
+.employee-block { background: white; border-radius: 10px; margin-bottom: 10px; border: 1px solid #eee; overflow: hidden; }
+.employee-summary { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr; padding: 15px; align-items: center; cursor: pointer; }
 .employee-block.open .employee-details { display: block; }
+.employee-details { display: none; padding: 15px; background: #fdfcfb; border-top: 1px solid #eee; }
 
-/* Estilos de Finanzas */
-.finance-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.finance-box {
-  padding: 15px;
-  border: 1px solid #e2d9cf;
-  border-radius: 8px;
-}
-
-/* Layout del Admin */
-.admin-layout {
-  display: grid;
-  grid-template-columns: 250px 1fr;
-  width: 100vw;
-  height: 100vh;
-  background: #f5f1e8;
-  display: flex;
-  transition: all 0.3s;
-}
-
-.admin-sidebar {
-  background: #5b341c; /* Marrón café */
-  color: white;
-  padding: 30px 20px;
-  display: flex;
-  flex-direction: column;
-}
-
-.admin-sidebar .brand {
-  font-size: 32px;
-  font-weight: bold;
-  margin-bottom: 40px;
-  text-align: center;
-}
-
-.sidebar-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.nav-item {
-  background: none;
-  border: none;
-  color: #d1c4b9;
-  text-align: left;
-  padding: 12px 15px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
-}
-
-.nav-item.active {
-  background: #8a5a33;
-  color: white;
-}
-
-/* Main Content */
-.admin-main {
-  padding: 40px;
-  overflow-y: auto;
-}
-
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.summary-card {
-  background: white;
-  padding: 25px;
-  border-radius: 15px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-  display: flex;
-  flex-direction: column;
-}
-
-.summary-card .label { font-size: 14px; font-weight: bold; color: #8a5a33; }
-.summary-card .value { font-size: 48px; font-weight: bold; }
-
-/* El Donut Corregido */
-.donut-wrap { width: 100px; height: 100px; margin: 0 auto; }
-.donut-svg { transform: rotate(-90deg); }
-.donut-bg { fill: none; stroke: #eee; stroke-width: 4; }
-.donut-segment { fill: none; stroke-width: 4; stroke-dasharray: 0 100; transition: 0.5s; }
-.donut-green { stroke: #3f8a3d; }
-.donut-gold { stroke: #d8ad43; }
-
-.admin-sidebar.collapsed {
-    margin-left: -250px;
-}
-.table-header-admin {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
-    background: #8a5a33;
-    color: white;
-    padding: 15px;
-    border-radius: 10px 10px 0 0;
-    font-weight: bold;
-    font-size: 14px;
-}
-.summary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-}
-/* Barra Lateral Colapsable */
-.admin-sidebar {
-    transition: margin-left 0.3s ease;
-    min-width: 250px;
-}
-.admin-sidebar.collapsed {
-    margin-left: -250px;
-}
-.btn-open-sidebar {
-    background: #8a5a33;
-    color: white;
-    border: none;
-    padding: 10px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-/* Cabecera Estilo Imagen 3 */
-.table-header-admin {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
-    background: #eaddca;
-    padding: 15px;
-    font-weight: bold;
-    border-radius: 8px 8px 0 0;
-    border-bottom: 2px solid #8a5a33;
-    margin-top: 20px;
-}
-
-/* Botones de Acción Mini */
-.admin-actions-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-}
-.btn-mini {
-    padding: 5px 10px;
-    font-size: 12px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-left: 5px;
-}
+/* BOTONES ACCION */
+.admin-actions-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #f0f0f0; align-items: center; }
+.btn-mini { padding: 6px 12px; font-size: 11px; border-radius: 6px; cursor: pointer; border: none; margin-left: 5px; font-weight: bold; }
+.btn-valid { background: #dcfce7; color: #166534; border: 1px solid #166534; }
 .btn-edit { background: #fef9c3; color: #854d0e; border: 1px solid #d8ad43; }
 .btn-delete { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+
+/* DONUT */
+.donut-wrap { width: 80px; height: 80px; margin: 0 auto; }
+.donut-bg { fill: none; stroke: #eee; stroke-width: 4; }
+.donut-segment { fill: none; stroke-width: 4; stroke-dasharray: 0 100; transform: rotate(-90deg); transform-origin: center; transition: 0.5s; }
+.donut-green { stroke: #3f8a3d; }
+.donut-gold { stroke: #d8ad43; }

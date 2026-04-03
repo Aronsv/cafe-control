@@ -229,11 +229,30 @@ window.switchSubTab = (btn, tab, userId) => {
     if (tab === 'finanzas') contentDiv.innerHTML = renderFinanzasTab(userId);
 };
 
-function renderAsistenciaTab(regs) {
+// --- LÓGICA DE LA BARRA LATERAL ---
+document.getElementById("btnToggleSidebar")?.addEventListener("click", () => {
+    document.getElementById("sidebar").classList.add("collapsed");
+    document.getElementById("btnOpenSidebar").classList.remove("hidden");
+});
+
+document.getElementById("btnOpenSidebar")?.addEventListener("click", () => {
+    document.getElementById("sidebar").classList.remove("collapsed");
+    document.getElementById("btnOpenSidebar").classList.add("hidden");
+});
+
+// --- RENDERIZADO DE ASISTENCIA CON EDITAR Y BORRAR ---
+function renderAsistenciaTab(regs, userId) {
     return regs.map(r => `
-        <div class="detail-row" style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;">
-            <span>${r.tipo.toUpperCase()} - ${r.horaServidor ? new Date(r.horaServidor.seconds * 1000).toLocaleTimeString() : '...'}</span>
-            <button class="btn-mini btn-accept" onclick="alert('Validado')">Validar ✅</button>
+        <div class="detail-row admin-actions-row">
+            <div class="row-info">
+                <strong>${r.tipo.toUpperCase()}</strong> 
+                <span>${r.horaServidor ? new Date(r.horaServidor.seconds * 1000).toLocaleTimeString() : '...'}</span>
+            </div>
+            <div class="detail-actions">
+                <button class="btn-mini btn-accept" onclick="alert('Validado ✅')">Validar</button>
+                <button class="btn-mini btn-edit" onclick="editarRegistro('${r.id}')">Editar</button>
+                <button class="btn-mini btn-delete" onclick="borrarRegistro('${r.id}', '${userId}')">Borrar</button>
+            </div>
         </div>
     `).join("") || '<p>Sin registros hoy</p>';
 }
@@ -247,31 +266,22 @@ function renderFinanzasTab(userId) {
     `;
 }
 
-// EDITAR REGISTRO
-window.editarRegistro = async (id, userId) => {
-    const nuevaHora = prompt("Ingresa la nueva hora (Formato HH:mm:ss, ej: 08:30:00)");
-    if (!nuevaHora) return;
-
-    // Actualizamos el registro en attendance
-    await updateDoc(doc(db, "attendance", id), {
-        horaManual: nuevaHora,
-        editado: true
-    });
-    alert("Registro actualizado. El sistema usará esta hora para el cálculo.");
+// --- FUNCIONES DE AUDITORÍA ---
+window.borrarRegistro = async (id, userId) => {
+    if (!confirm("¿Seguro que quieres borrar este registro? El estado del staff se actualizará.")) return;
+    try {
+        await deleteDoc(doc(db, "attendance", id));
+        // Sincronizar estado del usuario tras borrar
+        const q = query(collection(db, "attendance"), where("userId", "==", userId), orderBy("horaServidor", "desc"), limit(1));
+        const snap = await getDocs(q);
+        const nuevoEstado = snap.empty ? "inicio" : snap.docs[0].data().tipo;
+        await updateDoc(doc(db, "users", userId), { estado: nuevoEstado });
+    } catch (e) { alert("Error al borrar: " + e.message); }
 };
 
-// BORRAR REGISTRO
-window.borrarRegistro = async (id, userId) => {
-    if (!confirm("¿Estás seguro de borrar esta acción? Esto puede afectar el estado actual del trabajador.")) return;
-
-    await deleteDoc(doc(db, "attendance", id));
-    
-    // Si borramos la última acción, debemos resetear el 'estado' del usuario en Firebase
-    // para que su botón en el celular vuelva a habilitarse correctamente.
-    const q = query(collection(db, "attendance"), where("userId", "==", userId), orderBy("horaServidor", "desc"), limit(1));
-    const snap = await getDocs(q);
-    const nuevoEstado = snap.empty ? "inicio" : snap.docs[0].data().tipo;
-    
-    await updateDoc(doc(db, "users", userId), { estado: nuevoEstado });
-    alert("Acción eliminada y estado del usuario sincronizado.");
+window.editarRegistro = async (id) => {
+    const nueva = prompt("Nueva hora (HH:MM:SS)");
+    if (nueva) {
+        await updateDoc(doc(db, "attendance", id), { horaManual: nueva, editado: true });
+    }
 };

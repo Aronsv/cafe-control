@@ -246,3 +246,32 @@ function renderFinanzasTab(userId) {
         </div>
     `;
 }
+
+// EDITAR REGISTRO
+window.editarRegistro = async (id, userId) => {
+    const nuevaHora = prompt("Ingresa la nueva hora (Formato HH:mm:ss, ej: 08:30:00)");
+    if (!nuevaHora) return;
+
+    // Actualizamos el registro en attendance
+    await updateDoc(doc(db, "attendance", id), {
+        horaManual: nuevaHora,
+        editado: true
+    });
+    alert("Registro actualizado. El sistema usará esta hora para el cálculo.");
+};
+
+// BORRAR REGISTRO
+window.borrarRegistro = async (id, userId) => {
+    if (!confirm("¿Estás seguro de borrar esta acción? Esto puede afectar el estado actual del trabajador.")) return;
+
+    await deleteDoc(doc(db, "attendance", id));
+    
+    // Si borramos la última acción, debemos resetear el 'estado' del usuario en Firebase
+    // para que su botón en el celular vuelva a habilitarse correctamente.
+    const q = query(collection(db, "attendance"), where("userId", "==", userId), orderBy("horaServidor", "desc"), limit(1));
+    const snap = await getDocs(q);
+    const nuevoEstado = snap.empty ? "inicio" : snap.docs[0].data().tipo;
+    
+    await updateDoc(doc(db, "users", userId), { estado: nuevoEstado });
+    alert("Acción eliminada y estado del usuario sincronizado.");
+};

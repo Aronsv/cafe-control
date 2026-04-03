@@ -250,3 +250,49 @@ input, .input-obs {
     gap: 15px;
     margin-bottom: 20px;
 }
+/* Barra Lateral Colapsable */
+.admin-sidebar {
+    transition: margin-left 0.3s ease;
+    min-width: 250px;
+}
+.admin-sidebar.collapsed {
+    margin-left: -250px;
+}
+.btn-open-sidebar {
+    background: #8a5a33;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Cabecera Estilo Imagen 3 */
+.table-header-admin {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+    background: #eaddca;
+    padding: 15px;
+    font-weight: bold;
+    border-radius: 8px 8px 0 0;
+    border-bottom: 2px solid #8a5a33;
+    margin-top: 20px;
+}
+
+/* Botones de Acción Mini */
+.admin-actions-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+.btn-mini {
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 5px;
+}
+.btn-edit { background: #fef9c3; color: #854d0e; border: 1px solid #d8ad43; }
+.btn-delete { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }

@@ -24,57 +24,57 @@
     </div>
   </section>
 
-  <section id="staffView" class="screen hidden">
-    <div class="staff-shell">
-      <div class="card staff-card">
-        <h1 class="logo">6:30 Specialty Coffee</h1>
-        <div class="mensaje-wrap">
-          <p id="mensajeStaff">Cargando estado...</p>
-        </div>
-        <div class="botones-wrap">
-          <button id="btnAsistencia" class="btn">Registrar ingreso</button>
-          <button id="btnBreak" class="btn" disabled>Iniciar break</button>
-          <textarea id="obsDia" placeholder="Observación del día (opcional)" class="input-obs"></textarea>
-          <button id="btnLogoutStaff" class="btn btn-dark">Cerrar sesión</button>
-        </div>
-      </div>
-      <nav class="staff-bottom-nav">
-        <button class="nav-tab active"><span>📋</span><span>Asistencia</span></button>
-        <button class="nav-tab"><span>✅</span><span>Tareas</span></button>
-        <button class="nav-tab"><span>🛒</span><span>Inventario</span></button>
-      </nav>
-    </div>
-  </section>
-
 <section id="adminView" class="screen hidden">
   <div class="admin-layout" id="adminLayout">
     <aside class="admin-sidebar" id="sidebar">
       <div class="sidebar-header">
         <span class="brand">6:30</span>
-        <button id="toggleSidebar" class="icon-btn">☰</button>
+        <button id="btnToggleSidebar" class="icon-btn">☰</button>
       </div>
       <nav class="sidebar-nav">
         <button class="nav-item active">📊 Dashboard</button>
-        <button class="nav-item">👥 Empleados (Historial)</button>
+        <button class="nav-item">👥 Empleados</button>
         <button id="btnLogoutAdmin" class="nav-item logout">Cerrar Sesión</button>
       </nav>
     </aside>
 
     <main class="admin-main">
       <header class="main-header">
-        <button id="openSidebar" class="btn-open-sidebar hidden">☰</button>
+        <button id="btnOpenSidebar" class="icon-btn hidden">☰</button>
         <h1>ESTADO EN VIVO</h1>
+        <p>Panel de Control - 6:30 Specialty Coffee</p>
       </header>
 
       <section class="summary-grid">
-        <div class="summary-card"><div class="label">EMPLEADOS EN TURNO</div><div id="countTrabajando" class="value">0</div></div>
-        <div class="summary-card"><div class="label">EMPLEADOS EN BREAK</div><div id="countBreak" class="value">0</div></div>
-        <div class="summary-card"><div class="label">PENDIENTES INGRESO</div><div id="countInicio" class="value">0</div></div>
-        <div class="summary-card"><div class="label">TOTAL TRABAJADORES</div><div id="countTotal" class="value">0</div></div>
+        <div class="summary-card">
+          <span class="label">EMPLEADOS EN TURNO</span>
+          <span id="countTrabajando" class="value">0</span>
+        </div>
+        <div class="summary-card">
+          <span class="label">EMPLEADOS EN BREAK</span>
+          <span id="countBreak" class="value">0</span>
+        </div>
+        <div class="summary-card">
+          <span class="label">PENDIENTES INGRESO</span>
+          <span id="countInicio" class="value">0</span>
+        </div>
+        <div class="summary-card donut-card">
+          <div class="donut-wrap">
+            <svg viewBox="0 0 42 42" class="donut-svg">
+              <circle class="donut-bg" cx="21" cy="21" r="15.9155"></circle>
+              <circle id="arcTrabajando" class="donut-segment donut-green" cx="21" cy="21" r="15.9155"></circle>
+              <circle id="arcBreak" class="donut-segment donut-gold" cx="21" cy="21" r="15.9155"></circle>
+            </svg>
+          </div>
+        </div>
       </section>
 
       <div class="table-header-admin">
-        <span>NOMBRE</span><span>TURNO</span><span>ESTADO</span><span>BREAKS</span><span>HISTORIAL</span>
+        <span>NOMBRE</span>
+        <span>TURNO</span>
+        <span>ESTADO</span>
+        <span>BREAKS</span>
+        <span>ACCIONES</span>
       </div>
       <div id="adminHistoryList" class="history-list"></div>
     </main>

@@ -157,6 +157,8 @@ input, .input-obs {
   width: 100vw;
   height: 100vh;
   background: #f5f1e8;
+  display: flex;
+  transition: all 0.3s;
 }
 
 .admin-sidebar {
@@ -228,3 +230,23 @@ input, .input-obs {
 .donut-segment { fill: none; stroke-width: 4; stroke-dasharray: 0 100; transition: 0.5s; }
 .donut-green { stroke: #3f8a3d; }
 .donut-gold { stroke: #d8ad43; }
+
+.admin-sidebar.collapsed {
+    margin-left: -250px;
+}
+.table-header-admin {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+    background: #8a5a33;
+    color: white;
+    padding: 15px;
+    border-radius: 10px 10px 0 0;
+    font-weight: bold;
+    font-size: 14px;
+}
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}

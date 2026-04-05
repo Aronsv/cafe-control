@@ -1202,7 +1202,12 @@ window.cargarPersonal = async function() {
   });
 
   const lista = document.getElementById('personal-lista');
-  if (lista) lista.innerHTML = html || '<div style="text-align:center;padding:24px;font-size:13px;color:var(--text3)">Sin personal registrado</div>';
+  if (lista) {
+    lista.innerHTML = html || '<div style="text-align:center;padding:24px;font-size:13px;color:var(--text3)">Sin personal registrado</div>';
+    lista.style.display = 'flex';
+    lista.style.flexDirection = 'column';
+    lista.style.gap = '8px';
+  }
 };
 
 window.abrirModalPersonal = async (uid) => {

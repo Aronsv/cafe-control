@@ -417,10 +417,89 @@
 
       <!-- ===== SECCIÓN: TAREAS ADMIN ===== -->
       <div id="admin-sec-tareas-admin" class="admin-sec">
-        <div class="placeholder-screen" style="padding-bottom:0">
-          <div class="placeholder-icon">📋</div>
-          <div class="placeholder-txt">Tareas</div>
-          <div class="placeholder-sub">Próximamente</div>
+        <div class="tabs-finanzas">
+          <div class="tab-fin activo" id="tab-ta-gestion" onclick="showTabTareasAdmin('gestion')">Gestión</div>
+          <div class="tab-fin" id="tab-ta-seguimiento" onclick="showTabTareasAdmin('seguimiento')">Seguimiento hoy</div>
+        </div>
+
+        <!-- GESTIÓN -->
+        <div id="panel-ta-gestion" style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn-admin-val" style="width:100%" onclick="toggleFormTarea()">+ Nueva tarea</button>
+
+          <!-- Formulario nueva tarea -->
+          <div id="form-nueva-tarea" style="display:none;background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:12px;flex-direction:column;gap:8px">
+            <div class="edit-reg-lbl">Nombre de la tarea</div>
+            <input class="edit-reg-inp" id="nt-nombre" placeholder="Ej: limpiar mampara de entrada">
+            <div style="display:flex;gap:8px">
+              <div style="flex:1">
+                <div class="edit-reg-lbl">Área</div>
+                <select class="edit-reg-inp" id="nt-area">
+                  <option value="cocina">Cocina</option>
+                  <option value="barra">Barra</option>
+                  <option value="sala">Sala</option>
+                  <option value="banos">Baños</option>
+                  <option value="general">General</option>
+                </select>
+              </div>
+              <div style="flex:1">
+                <div class="edit-reg-lbl">Turno</div>
+                <select class="edit-reg-inp" id="nt-turno">
+                  <option value="ambos">Ambos</option>
+                  <option value="manana">Mañana</option>
+                  <option value="tarde">Tarde</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <div class="edit-reg-lbl">Tipo</div>
+              <div style="display:flex;gap:6px">
+                <div class="tipo-tarea-btn activo" data-tipo="normal" onclick="setTipoTarea('normal')">Normal</div>
+                <div class="tipo-tarea-btn" data-tipo="recurrente" onclick="setTipoTarea('recurrente')">Recurrente</div>
+                <div class="tipo-tarea-btn" data-tipo="turno" onclick="setTipoTarea('turno')">Por turno</div>
+              </div>
+            </div>
+            <div id="nt-rep-wrap" style="display:none;background:var(--bg3);border-radius:8px;padding:8px">
+              <div class="edit-reg-lbl">Repetir cada</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+                <input class="edit-reg-inp" id="nt-rep-horas" type="number" value="2" min="1" max="12" style="width:60px;text-align:center">
+                <span style="font-size:12px;color:var(--text3)">horas — reaparece al marcar</span>
+              </div>
+            </div>
+            <div>
+              <div class="edit-reg-lbl">¿Compartida?</div>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer">
+                <input type="checkbox" id="nt-compartida"> El primero que la marque la completa para todos
+              </label>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn-edit-save" onclick="guardarNuevaTarea()">Guardar tarea</button>
+              <button class="btn-edit-cancel" onclick="toggleFormTarea()">Cancelar</button>
+            </div>
+          </div>
+
+          <!-- Lista de tareas configuradas -->
+          <div>
+            <div class="edit-reg-lbl" style="margin-bottom:6px">Tareas configuradas</div>
+            <div id="lista-tareas-config"></div>
+          </div>
+        </div>
+
+        <!-- SEGUIMIENTO -->
+        <div id="panel-ta-seguimiento" style="display:none;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--green-light);animation:pulse 2s infinite"></div>
+            <span style="font-size:12px;color:var(--text2)">En vivo</span>
+          </div>
+          <!-- Asignar urgente -->
+          <div style="background:var(--red-bg);border:0.5px solid #4a1800;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px">
+            <div style="font-size:12px;font-weight:500;color:var(--red)">⚡ Asignar tarea urgente ahora</div>
+            <select class="edit-reg-inp" id="sel-urgente-staff">
+              <option value="">Selecciona persona...</option>
+            </select>
+            <input class="edit-reg-inp" id="inp-urgente-tarea" placeholder="Describe la tarea urgente...">
+            <button class="btn-admin-del" style="width:100%" onclick="asignarUrgente()">Asignar ahora</button>
+          </div>
+          <div id="seguimiento-lista"></div>
         </div>
       </div>
 

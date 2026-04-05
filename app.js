@@ -157,6 +157,7 @@ function iniciarStaff() {
   iniciarTareas();
   iniciarInsumos();
   iniciarFinanzas();
+  iniciarHistorial();
   if (unsuscribeAsistencia) unsuscribeAsistencia();
   unsuscribeAsistencia = onSnapshot(
     doc(db, 'asistencias', usuarioActual.uid + '_' + getFechaHoy()),
@@ -730,6 +731,91 @@ window.showTabFin = (tab) => {
   document.getElementById('tab-cobros').classList.toggle('activo', tab === 'cobros');
   document.getElementById('panel-registros').style.display = tab === 'registros' ? 'flex' : 'none';
   document.getElementById('panel-cobros').style.display = tab === 'cobros' ? 'flex' : 'none';
+};
+
+// ===== MÓDULO: HISTORIAL ASISTENCIAS (CALENDARIO) =====
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+let calFiltroActivo = null;
+let calDatos = {};
+
+async function iniciarHistorial() {
+  await cargarCalendario();
+  document.getElementById('cal-prev').addEventListener('click', () => { calMonth--; if(calMonth<0){calMonth=11;calYear--;} cargarCalendario(); });
+  document.getElementById('cal-next').addEventListener('click', () => { calMonth++; if(calMonth>11){calMonth=0;calYear++;} cargarCalendario(); });
+}
+
+async function cargarCalendario() {
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  document.getElementById('cal-mes-label').textContent = meses[calMonth] + ' ' + calYear;
+
+  const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const mesStr = calYear + '-' + String(calMonth+1).padStart(2,'0');
+  const snap = await getDocs(query(collection(db, 'asistencias'), where('uid','==',usuarioActual.uid)));
+  calDatos = {};
+  snap.docs.forEach(d => {
+    const data = d.data();
+    if (data.fecha && data.fecha.startsWith(mesStr)) {
+      calDatos[data.fecha] = data.estado || calcularEstado(data.registros || []);
+    }
+  });
+  renderCalendario();
+}
+
+function calcularEstado(registros) {
+  if (!registros.length) return null;
+  const ingreso = registros.find(r => r.tipo && r.tipo.startsWith('Ingreso'));
+  if (!ingreso) return null;
+  const hora = ingreso.hora || '00:00';
+  const [h, m] = hora.split(':').map(Number);
+  const minutos = h * 60 + m;
+  return minutos > 8 * 60 + 10 ? 'tardanza' : 'atiempo';
+}
+
+function renderCalendario() {
+  const grid = document.getElementById('cal-grid');
+  const hoy = new Date();
+  const primer = new Date(calYear, calMonth, 1).getDay();
+  const offset = primer === 0 ? 6 : primer - 1;
+  const dias = new Date(calYear, calMonth + 1, 0).getDate();
+  let html = '';
+  let cnt = { atiempo: 0, tardanza: 0, falta: 0, permiso: 0 };
+
+  for (let i = 0; i < offset; i++) html += '<div></div>';
+
+  for (let d = 1; d <= dias; d++) {
+    const fecha = calYear + '-' + String(calMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    const estado = calDatos[fecha] || null;
+    const esHoy = hoy.getFullYear()===calYear && hoy.getMonth()===calMonth && hoy.getDate()===d;
+    const esPasado = new Date(calYear, calMonth, d) <= hoy;
+    let cls = 'cal-dia';
+    if (estado) { cls += ' ' + estado; if (cnt[estado] !== undefined) cnt[estado]++; }
+    else if (esPasado) cls += ' libre';
+    if (esHoy) cls += ' hoy';
+    if (calFiltroActivo && estado !== calFiltroActivo && !(calFiltroActivo === 'libre' && !estado && esPasado)) cls += ' atenuado';
+    html += '<div class="' + cls + '">' + d + '</div>';
+  }
+  grid.innerHTML = html;
+
+  document.getElementById('resumen-cal').innerHTML =
+    '<div class="resumen-cal-titulo">Resumen del mes</div>' +
+    '<div class="resumen-cal-row">' +
+    '<div class="resumen-cal-item"><div class="resumen-cal-num" style="color:#5DCAA5">' + cnt.atiempo + '</div><div class="resumen-cal-lbl">A tiempo</div></div>' +
+    '<div class="resumen-cal-item"><div class="resumen-cal-num" style="color:#EF9F27">' + cnt.tardanza + '</div><div class="resumen-cal-lbl">Tardanzas</div></div>' +
+    '<div class="resumen-cal-item"><div class="resumen-cal-num" style="color:#E24B4A">' + cnt.falta + '</div><div class="resumen-cal-lbl">Faltas</div></div>' +
+    '<div class="resumen-cal-item"><div class="resumen-cal-num" style="color:#7F77DD">' + cnt.permiso + '</div><div class="resumen-cal-lbl">Permisos</div></div>' +
+    '</div>';
+}
+
+window.toggleCalFiltro = (estado, el) => {
+  if (calFiltroActivo === estado) {
+    calFiltroActivo = null;
+    document.querySelectorAll('.cal-chip').forEach(c => c.classList.add('on'));
+  } else {
+    calFiltroActivo = estado;
+    document.querySelectorAll('.cal-chip').forEach(c => c.classList.toggle('on', c.dataset.estado === estado));
+  }
+  renderCalendario();
 };
 
 // ===== LOGOUT =====

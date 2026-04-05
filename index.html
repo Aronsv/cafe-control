@@ -141,7 +141,7 @@
         <div class="topbar-role">Marca lo que hay que pedir</div>
       </div>
     </div>
-    <button id="btn-ver-lista" class="btn-ver-lista">Ver lista ↗</button>
+    <span style="font-size:11px;color:var(--text3)" id="insumos-contador">0 seleccionados</span>
   </div>
 
   <div class="chips-scroll" id="insumos-chips">
@@ -154,10 +154,17 @@
 
   <div class="tareas-scroll" id="insumos-lista"></div>
 
-  <div class="resumen-whatsapp" id="resumen-whatsapp" style="display:none">
-    <div class="resumen-titulo">Lista para WhatsApp</div>
-    <div id="resumen-items"></div>
-    <button id="btn-copiar-lista" class="btn-copiar-lista">Copiar y pegar en WhatsApp</button>
+  <div class="msg-libre-wrap" id="resumen-pie">
+    <div class="msg-libre-header" id="btn-toggle-resumen">
+      <span id="resumen-pie-label">Lista para WhatsApp (0 items)</span>
+      <span id="resumen-pie-arrow">▼</span>
+    </div>
+    <div class="msg-libre-body" id="resumen-whatsapp" style="display:none">
+      <div class="resumen-whatsapp-inner">
+        <div id="resumen-items"></div>
+      </div>
+      <button id="btn-copiar-lista" class="btn-copiar-lista">Copiar y pegar en WhatsApp</button>
+    </div>
   </div>
 
   <nav class="bottom-nav">

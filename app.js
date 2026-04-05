@@ -950,7 +950,11 @@ function iniciarAdmin() {
       if (sec === 'tareas-admin') iniciarTareasAdmin();
       if (sec === 'finanzas-admin') iniciarFinanzasAdmin();
       if (sec === 'insumos-admin') iniciarInsumosAdmin();
-      if (sec === 'personal') cargarPersonal();
+      if (sec === 'personal') {
+        const secEl = document.getElementById('admin-sec-personal');
+        secEl.style.display = 'flex';
+        cargarPersonal();
+      }
     });
   });
 

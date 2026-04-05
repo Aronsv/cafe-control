@@ -1322,3 +1322,115 @@ body.tema-claro .clock-big { color: #1a1a1a; }
 .badge-trabajo { color: var(--green-light); }
 .badge-libre { color: var(--text3); }
 .badge-permiso { color: var(--purple); }
+
+/* ===== TAREAS ADMIN ===== */
+.tipo-tarea-btn {
+  flex: 1;
+  padding: 7px 4px;
+  border-radius: 7px;
+  border: 0.5px solid var(--border2);
+  background: var(--bg3);
+  font-size: 11px;
+  color: var(--text3);
+  cursor: pointer;
+  text-align: center;
+  transition: all .15s;
+}
+.tipo-tarea-btn.activo {
+  background: var(--purple-bg);
+  color: var(--purple);
+  border-color: var(--purple);
+}
+
+.tarea-config-card {
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.tarea-config-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.tarea-config-nombre {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+}
+.tarea-config-meta {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 2px;
+}
+.tarea-config-btns {
+  display: flex;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.seguimiento-card {
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.seguimiento-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+.seg-prog {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+}
+.seg-prog-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--bg3);
+  border-radius: 2px;
+}
+.seg-prog-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+.seguimiento-body {
+  border-top: 0.5px solid var(--border);
+  padding: 8px 12px;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+}
+.seguimiento-body.abierto { display: flex; }
+.seg-tarea-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 6px;
+  background: var(--bg3);
+  border-radius: 6px;
+  gap: 8px;
+}
+.seg-tarea-nombre { font-size: 12px; color: var(--text2); flex: 1; }
+.seg-estado {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+.seg-ok { background: var(--green-bg); color: var(--green-light); }
+.seg-np { background: var(--red-bg); color: var(--red); }
+.seg-yh { background: var(--bg3); color: var(--text3); }
+.seg-pend { background: var(--bg3); color: var(--text3); border: 0.5px solid var(--border2); }

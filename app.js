@@ -155,6 +155,7 @@ function iniciarStaff() {
   mostrarPantalla('asistencia');
   iniciarNav();
   iniciarTareas();
+  iniciarInsumos();
   if (unsuscribeAsistencia) unsuscribeAsistencia();
   unsuscribeAsistencia = onSnapshot(
     doc(db, 'asistencias', usuarioActual.uid + '_' + getFechaHoy()),
@@ -461,6 +462,161 @@ window.enviarNopude = async (id) => {
   nopudeAbierto[id] = false;
   alert('Motivo enviado al admin. La tarea quedará pendiente para el siguiente turno.');
 };
+
+// ===== MÓDULO: INSUMOS =====
+let insumosData = [];
+let catActualIns = 'todos';
+let insumosSeleccionados = {};
+let gruposColapsados = {};
+
+async function iniciarInsumos() {
+  const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const snap = await getDocs(query(collection(db, 'insumos'), where('activo', '==', true)));
+  insumosData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  insumosSeleccionados = {};
+  renderInsumos();
+
+  document.querySelectorAll('[data-cat-ins]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      catActualIns = chip.dataset.catIns;
+      document.querySelectorAll('[data-cat-ins]').forEach(c => c.classList.remove('activo'));
+      chip.classList.add('activo');
+      renderInsumos();
+    });
+  });
+
+  document.getElementById('btn-ver-lista').addEventListener('click', () => {
+    actualizarResumen();
+  });
+
+  document.getElementById('btn-copiar-lista').addEventListener('click', () => {
+    copiarLista();
+  });
+}
+
+function getInsumosFiltrados() {
+  if (catActualIns === 'todos') return insumosData;
+  return insumosData.filter(i => i.categoria === catActualIns);
+}
+
+function renderInsumos() {
+  const lista = document.getElementById('insumos-lista');
+  const items = getInsumosFiltrados();
+  const prioOrden = { urgente: 0, importante: 1, normal: 2 };
+  const grupos = {};
+
+  items.forEach(i => {
+    const key = i.categoria + '::' + i.subgrupo;
+    if (!grupos[key]) grupos[key] = { cat: i.categoria, sub: i.subgrupo, items: [] };
+    grupos[key].items.push(i);
+  });
+
+  Object.values(grupos).forEach(g => {
+    g.items.sort((a, b) => (prioOrden[a.prioridad] || 2) - (prioOrden[b.prioridad] || 2));
+  });
+
+  const catLabels = { cocina: 'Cocina', barra: 'Barra', limpieza: 'Limpieza', cristaleria: 'Cristalería' };
+  let html = '';
+
+  Object.keys(grupos).forEach(key => {
+    const g = grupos[key];
+    const isCol = gruposColapsados[key];
+    html += '<div class="insumo-grupo-header" onclick="toggleGrupoIns(\'' + key + '\')">';
+    html += '<span class="insumo-grupo-nombre">' + (catLabels[g.cat] || g.cat) + ' · ' + g.sub + '</span>';
+    html += '<span class="insumo-grupo-arrow">' + (isCol ? '▶' : '▼') + '</span></div>';
+    if (!isCol) {
+      html += '<div class="col-headers-ins"><span class="col-h-ins">Producto</span><span class="col-h-ins">Mín.</span><span class="col-h-ins">Pedir</span><span class="col-h-ins"></span></div>';
+      g.items.forEach(i => {
+        const sel = insumosSeleccionados[i.id];
+        const qty = sel ? sel.qty : '';
+        html += '<div class="insumo-row ' + (i.prioridad || 'normal') + (qty ? ' seleccionado' : '') + '">';
+        html += '<div class="insumo-nombre">' + i.nombre + '</div>';
+        html += '<div class="insumo-min">' + i.minimo + '</div>';
+        html += '<input class="insumo-qty-inp' + (qty ? ' tiene-valor' : '') + '" type="text" value="' + qty + '" placeholder="—" data-id="' + i.id + '" oninput="setQtyIns(\'' + i.id + '\',this.value)">';
+        html += '<div class="insumo-chk' + (qty ? ' on' : '') + '" onclick="toggleChkIns(\'' + i.id + '\')"></div>';
+        html += '</div>';
+      });
+    }
+  });
+
+  lista.innerHTML = html;
+}
+
+window.toggleGrupoIns = (key) => {
+  gruposColapsados[key] = !gruposColapsados[key];
+  renderInsumos();
+};
+
+window.setQtyIns = (id, val) => {
+  const ins = insumosData.find(i => i.id === id);
+  if (!ins) return;
+  if (val.trim()) {
+    insumosSeleccionados[id] = { nombre: ins.nombre, qty: val.trim(), cat: ins.categoria };
+  } else {
+    delete insumosSeleccionados[id];
+  }
+  const inp = document.querySelector('[data-id="' + id + '"]');
+  if (inp) {
+    inp.classList.toggle('tiene-valor', !!val.trim());
+    const chk = inp.nextElementSibling;
+    if (chk) chk.classList.toggle('on', !!val.trim());
+  }
+  actualizarResumen();
+};
+
+window.toggleChkIns = (id) => {
+  const ins = insumosData.find(i => i.id === id);
+  if (!ins) return;
+  if (insumosSeleccionados[id]) {
+    delete insumosSeleccionados[id];
+  } else {
+    insumosSeleccionados[id] = { nombre: ins.nombre, qty: '', cat: ins.categoria };
+  }
+  renderInsumos();
+  actualizarResumen();
+};
+
+function actualizarResumen() {
+  const sel = Object.values(insumosSeleccionados).filter(i => i.qty);
+  const box = document.getElementById('resumen-whatsapp');
+  if (!sel.length) { box.style.display = 'none'; return; }
+  box.style.display = 'flex';
+  const catLabels = { cocina: 'Cocina', barra: 'Barra', limpieza: 'Limpieza', cristaleria: 'Cristalería' };
+  const byCat = {};
+  sel.forEach(i => {
+    const cl = catLabels[i.cat] || i.cat;
+    if (!byCat[cl]) byCat[cl] = [];
+    byCat[cl].push('- ' + i.nombre + ': ' + i.qty);
+  });
+  let html = '';
+  Object.keys(byCat).forEach(cl => {
+    html += '<div class="resumen-cat">' + cl + '</div>';
+    byCat[cl].forEach(line => { html += '<div class="resumen-item">' + line + '</div>'; });
+  });
+  document.getElementById('resumen-items').innerHTML = html;
+}
+
+function copiarLista() {
+  const sel = Object.values(insumosSeleccionados).filter(i => i.qty);
+  if (!sel.length) return;
+  const catLabels = { cocina: 'Cocina', barra: 'Barra', limpieza: 'Limpieza', cristaleria: 'Cristalería' };
+  let txt = 'Lista de compras\n';
+  const byCat = {};
+  sel.forEach(i => {
+    const cl = catLabels[i.cat] || i.cat;
+    if (!byCat[cl]) byCat[cl] = [];
+    byCat[cl].push('- ' + i.nombre + ': ' + i.qty);
+  });
+  Object.keys(byCat).forEach(cl => {
+    txt += '\n' + cl + '\n';
+    byCat[cl].forEach(line => { txt += line + '\n'; });
+  });
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(txt).then(() => alert('Lista copiada. Pégala en WhatsApp.'));
+  } else {
+    alert('Copia esto:\n\n' + txt);
+  }
+}
 
 // ===== LOGOUT =====
 const btnLogout = document.getElementById('btn-logout');

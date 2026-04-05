@@ -939,13 +939,13 @@ function iniciarAdmin() {
 
   // Navegación de fechas
   document.getElementById('btn-fecha-prev').addEventListener('click', () => {
-    const d = new Date(adminFechaActual);
+    const d = new Date(adminFechaActual + 'T12:00:00');
     d.setDate(d.getDate() - 1);
     adminFechaActual = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     cargarAsistenciasAdmin();
   });
   document.getElementById('btn-fecha-next').addEventListener('click', () => {
-    const d = new Date(adminFechaActual);
+    const d = new Date(adminFechaActual + 'T12:00:00');
     d.setDate(d.getDate() + 1);
     adminFechaActual = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     cargarAsistenciasAdmin();

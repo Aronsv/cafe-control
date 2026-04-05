@@ -540,7 +540,7 @@ function renderInsumos() {
         html += '<div class="insumo-row ' + (i.prioridad || 'normal') + (qty ? ' seleccionado' : '') + '">';
         html += '<div class="insumo-nombre">' + i.nombre + '</div>';
         html += '<div class="insumo-min">' + i.minimo + '</div>';
-        html += '<input class="insumo-qty-inp' + (qty ? ' tiene-valor' : '') + '" type="text" value="' + qty + '" placeholder="—" data-id="' + i.id + '" oninput="setQtyIns(\'' + i.id + '\',this.value)">';
+       html += '<input class="insumo-qty-inp' + (qty ? ' tiene-valor' : '') + '" type="number" inputmode="numeric" pattern="[0-9]*" value="' + qty + '" placeholder="—" data-id="' + i.id + '" oninput="setQtyIns(\'' + i.id + '\',this.value)">';
         html += '<div class="insumo-chk' + (qty ? ' on' : '') + '" onclick="toggleChkIns(\'' + i.id + '\')"></div>';
         html += '</div>';
       });

@@ -790,15 +790,18 @@ html, body {
 .insumo-chk.on { background: var(--green); border-color: var(--green); }
 
 .resumen-whatsapp {
-  margin: 8px 14px;
-  background: #0e1e16;
-  border: 0.5px solid #1a3a24;
-  border-radius: 10px;
-  padding: 12px;
+  padding: 0 14px 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: calc(var(--nav-h) + 16px);
+}
+.resumen-whatsapp-inner {
+  background: #0e1e16;
+  border: 0.5px solid #1a3a24;
+  border-radius: 10px;
+  padding: 10px 12px;
+  max-height: 200px;
+  overflow-y: auto;
 }
 .resumen-titulo { font-size: 11px; font-weight: 500; color: var(--green-light); }
 .resumen-cat { font-size: 10px; color: var(--green-light); margin-top: 4px; margin-bottom: 2px; font-weight: 500; }

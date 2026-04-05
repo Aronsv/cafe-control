@@ -154,6 +154,7 @@ function iniciarStaff() {
   $('staff-area').textContent = datosUsuario.area || '—';
   mostrarPantalla('asistencia');
   iniciarNav();
+  iniciarTema();
   iniciarTareas();
   iniciarInsumos();
   iniciarFinanzas();
@@ -860,6 +861,20 @@ window.toggleCalFiltro = (estado, el) => {
   }
   renderCalendario();
 };
+
+// ===== TEMA CLARO/OSCURO =====
+function iniciarTema() {
+  const temaGuardado = localStorage.getItem('tema') || 'oscuro';
+  if (temaGuardado === 'claro') document.body.classList.add('tema-claro');
+  const btn = document.getElementById('btn-tema');
+  if (!btn) return;
+  btn.textContent = temaGuardado === 'claro' ? '🌙' : '☀️';
+  btn.addEventListener('click', () => {
+    const esClaro = document.body.classList.toggle('tema-claro');
+    localStorage.setItem('tema', esClaro ? 'claro' : 'oscuro');
+    btn.textContent = esClaro ? '🌙' : '☀️';
+  });
+}
 
 // ===== LOGOUT =====
 const btnLogout = document.getElementById('btn-logout');

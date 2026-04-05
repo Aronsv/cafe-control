@@ -1254,3 +1254,71 @@ body.tema-claro .clock-big { color: #1a1a1a; }
   }
   .btn-hamburguesa { display: none; }
 }
+
+/* ===== HORARIOS ADMIN ===== */
+.semana-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.semana-dia {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  gap: 10px;
+}
+.semana-dia-nombre {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  min-width: 80px;
+}
+.semana-dia-info { flex: 1; }
+.semana-dia-tipo {
+  font-size: 12px;
+  color: var(--text);
+}
+.semana-dia-horas {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+.btn-asignar-horario {
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 0.5px solid var(--green);
+  background: var(--green-bg);
+  font-size: 11px;
+  color: var(--green-light);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.horario-dia-card {
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.horario-dia-nombre {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+.horario-dia-info {
+  flex: 1;
+  text-align: right;
+}
+.horario-dia-tipo { font-size: 12px; color: var(--text2); }
+.horario-dia-horas { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.badge-trabajo { color: var(--green-light); }
+.badge-libre { color: var(--text3); }
+.badge-permiso { color: var(--purple); }

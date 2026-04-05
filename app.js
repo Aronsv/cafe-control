@@ -154,6 +154,7 @@ function iniciarStaff() {
   $('staff-area').textContent = datosUsuario.area || '—';
   mostrarPantalla('asistencia');
   iniciarNav();
+  iniciarTareas();
   if (unsuscribeAsistencia) unsuscribeAsistencia();
   unsuscribeAsistencia = onSnapshot(
     doc(db, 'asistencias', usuarioActual.uid + '_' + getFechaHoy()),

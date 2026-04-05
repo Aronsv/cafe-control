@@ -743,7 +743,8 @@ async function iniciarHistorial() {
   await cargarCalendario();
   document.getElementById('cal-prev').addEventListener('click', () => { calMonth--; if(calMonth<0){calMonth=11;calYear--;} cargarCalendario(); });
   document.getElementById('cal-next').addEventListener('click', () => { calMonth++; if(calMonth>11){calMonth=0;calYear++;} cargarCalendario(); });
-}
+  renderCalendario();
+  }
 
 async function cargarCalendario() {
   const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];

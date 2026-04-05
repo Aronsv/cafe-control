@@ -267,3 +267,7 @@ $('btn-ver-historial').addEventListener('click', () => {
   lista.style.flexDirection = 'column';
   $('btn-ver-historial').querySelector('span').textContent = visible ? '▼' : '▲';
 });
+
+// LOGOUT
+const btnLogout = document.getElementById('btn-logout');
+if (btnLogout) btnLogout.addEventListener('click', () => signOut(auth));

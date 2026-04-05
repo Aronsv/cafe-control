@@ -1204,7 +1204,7 @@ async function cargarCobrosAdmin() {
 
     if (consumos.length) {
       html += '<div class="edit-reg-lbl" style="margin-top:4px">Consumos</div>';
-      consumos.forEach(c => { html += renderCobro Admin(c, p.usuario.id); });
+      consumos.forEach(c => { html += renderCobroAdmin(c, p.usuario.id); });
     }
     if (danos.length) {
       html += '<div class="edit-reg-lbl" style="margin-top:4px">Daños y mermas</div>';

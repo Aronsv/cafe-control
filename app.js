@@ -938,7 +938,7 @@ function iniciarAdmin() {
       if (sec === 'tareas-admin') iniciarTareasAdmin();
       if (sec === 'finanzas-admin') iniciarFinanzasAdmin();
       if (sec === 'insumos-admin') iniciarInsumosAdmin();
-      if (sec === 'personal') iniciarPersonal();
+      if (sec === 'personal') cargarPersonal();
     });
   });
 
@@ -957,7 +957,6 @@ function iniciarAdmin() {
   });
 
   cargarAsistenciasAdmin();
-  iniciarPersonal();
 }
 
 async function cargarAsistenciasAdmin() {

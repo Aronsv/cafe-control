@@ -341,12 +341,72 @@
         <div id="admin-asist-lista" class="admin-lista"></div>
       </div>
 
-      <!-- ===== SECCIÓN: HORARIOS ADMIN ===== -->
+<!-- ===== SECCIÓN: HORARIOS ADMIN ===== -->
       <div id="admin-sec-horarios" class="admin-sec">
-        <div class="placeholder-screen" style="padding-bottom:0">
-          <div class="placeholder-icon">🗓️</div>
-          <div class="placeholder-txt">Horarios</div>
-          <div class="placeholder-sub">Próximamente</div>
+        <div class="tabs-finanzas">
+          <div class="tab-fin activo" id="tab-horarios-persona" onclick="showTabHorarios('persona')">Por persona</div>
+          <div class="tab-fin" id="tab-horarios-dia" onclick="showTabHorarios('dia')">Por día</div>
+        </div>
+
+        <!-- Por persona -->
+        <div id="panel-horarios-persona">
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="sel-persona-horario" class="edit-reg-inp" style="flex:1">
+              <option value="">Selecciona persona...</option>
+            </select>
+          </div>
+          <div id="horarios-semana-wrap"></div>
+        </div>
+
+        <!-- Por día -->
+        <div id="panel-horarios-dia" style="display:none">
+          <div class="admin-fecha-nav" style="margin-bottom:8px">
+            <button class="btn-fecha-nav" id="btn-horario-prev">‹</button>
+            <span id="horario-dia-label">Hoy</span>
+            <button class="btn-fecha-nav" id="btn-horario-next">›</button>
+          </div>
+          <div id="horarios-dia-lista"></div>
+        </div>
+
+        <!-- Modal agregar/editar horario -->
+        <div id="modal-horario" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:center;justify-content:center">
+          <div style="background:var(--bg2);border-radius:16px;padding:20px;width:90%;max-width:340px;display:flex;flex-direction:column;gap:12px">
+            <div style="font-size:15px;font-weight:500;color:var(--text)" id="modal-horario-titulo">Asignar horario</div>
+            <input type="hidden" id="modal-uid">
+            <input type="hidden" id="modal-fecha">
+            <div>
+              <div class="edit-reg-lbl">Tipo de día</div>
+              <select class="edit-reg-inp" id="modal-tipo-dia">
+                <option value="trabajo">Trabajo</option>
+                <option value="libre">Libre</option>
+                <option value="permiso">Permiso</option>
+              </select>
+            </div>
+            <div id="modal-horas-wrap">
+              <div style="display:flex;gap:8px">
+                <div style="flex:1">
+                  <div class="edit-reg-lbl">Entrada</div>
+                  <input class="edit-reg-inp" type="time" id="modal-hora-entrada" value="08:00">
+                </div>
+                <div style="flex:1">
+                  <div class="edit-reg-lbl">Salida</div>
+                  <input class="edit-reg-inp" type="time" id="modal-hora-salida" value="13:00">
+                </div>
+              </div>
+              <div style="margin-top:8px">
+                <div class="edit-reg-lbl">Turno</div>
+                <select class="edit-reg-inp" id="modal-turno">
+                  <option value="mañana">Mañana</option>
+                  <option value="tarde">Tarde</option>
+                  <option value="completo">Completo</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn-edit-save" onclick="guardarHorario()">Guardar</button>
+              <button class="btn-edit-cancel" onclick="cerrarModalHorario()">Cancelar</button>
+            </div>
+          </div>
         </div>
       </div>
 

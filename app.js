@@ -1198,9 +1198,11 @@ async function cargarListaMaestra() {
   if (lista) lista.innerHTML = html || '<div style="text-align:center;padding:16px;font-size:13px;color:var(--text3)">Sin insumos</div>';
 }
 
+let historialFecha = getFechaHoy();
+
 async function cargarHistorialInsumos() {
-  const { getDocs, collection, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
-  const snap = await getDocs(collection(db, 'listas_mercado'));
+  const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const snap = await getDocs(query(collection(db, 'listas_mercado'), where('fecha','==',historialFecha)));
   const listas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   listas.sort((a,b) => b.timestamp > a.timestamp ? 1 : -1);
   const catLbl = { cocina:'Cocina', barra:'Barra', limpieza:'Limpieza', cristaleria:'Cristalería' };
@@ -1234,8 +1236,34 @@ window.showTabInsAdmin = (tab) => {
   document.getElementById('panel-ia-lista').style.flexDirection = tab==='lista'?'column':'';
   document.getElementById('panel-ia-historial').style.display = tab==='historial'?'flex':'none';
   document.getElementById('panel-ia-historial').style.flexDirection = tab==='historial'?'column':'';
-  if (tab==='historial') cargarHistorialInsumos();
+  if (tab==='historial') {
+    cargarHistorialInsumos();
+    document.getElementById('btn-hist-ins-prev').addEventListener('click', () => {
+      const d = new Date(historialFecha + 'T12:00:00');
+      d.setDate(d.getDate()-1);
+      historialFecha = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      actualizarLabelHistIns();
+      cargarHistorialInsumos();
+    });
+    document.getElementById('btn-hist-ins-next').addEventListener('click', () => {
+      const d = new Date(historialFecha + 'T12:00:00');
+      d.setDate(d.getDate()+1);
+      historialFecha = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      actualizarLabelHistIns();
+      cargarHistorialInsumos();
+    });
+    actualizarLabelHistIns();
+  }
 };
+
+function actualizarLabelHistIns() {
+  const hoy = getFechaHoy();
+  const d = new Date(historialFecha + 'T12:00:00');
+  const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const label = document.getElementById('hist-ins-fecha-label');
+  if (label) label.textContent = historialFecha===hoy ? 'Hoy' : dias[d.getDay()]+' '+d.getDate()+' '+meses[d.getMonth()];
+}
 
 window.toggleFormInsumo = () => {
   const f = document.getElementById('form-nuevo-insumo');

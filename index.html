@@ -613,10 +613,49 @@
 
       <!-- ===== SECCIÓN: PERSONAL ===== -->
       <div id="admin-sec-personal" class="admin-sec">
-        <div class="placeholder-screen" style="padding-bottom:0">
-          <div class="placeholder-icon">👥</div>
-          <div class="placeholder-txt">Personal</div>
-          <div class="placeholder-sub">Próximamente</div>
+        <div id="personal-lista" style="display:flex;flex-direction:column;gap:8px"></div>
+
+        <!-- Modal editar personal -->
+        <div id="modal-personal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:center;justify-content:center">
+          <div style="background:var(--bg2);border-radius:16px;padding:20px;width:90%;max-width:340px;display:flex;flex-direction:column;gap:12px">
+            <div style="font-size:15px;font-weight:500;color:var(--text)">Editar personal</div>
+            <input type="hidden" id="mp-uid">
+            <div>
+              <div class="edit-reg-lbl">Nombre completo</div>
+              <input class="edit-reg-inp" id="mp-nombre" placeholder="Nombre completo">
+            </div>
+            <div style="display:flex;gap:8px">
+              <div style="flex:1">
+                <div class="edit-reg-lbl">Área</div>
+                <select class="edit-reg-inp" id="mp-area">
+                  <option value="cocina">Cocina</option>
+                  <option value="barra">Barra</option>
+                  <option value="sala">Sala</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div style="flex:1">
+                <div class="edit-reg-lbl">Rol</div>
+                <select class="edit-reg-inp" id="mp-rol">
+                  <option value="staff">Staff</option>
+                  <option value="admin">Admin</option>
+                  <option value="superadmin">Superadmin</option>
+                  <option value="dueno">Dueño</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <div class="edit-reg-lbl">Estado</div>
+              <select class="edit-reg-inp" id="mp-activo">
+                <option value="true">Activo</option>
+                <option value="false">Inactivo</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn-edit-save" onclick="guardarPersonal()">Guardar</button>
+              <button class="btn-edit-cancel" onclick="cerrarModalPersonal()">Cancelar</button>
+            </div>
+          </div>
         </div>
       </div>
 

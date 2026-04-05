@@ -934,6 +934,7 @@ function iniciarAdmin() {
       document.getElementById('admin-titulo-seccion').textContent = item.querySelector('span').textContent;
       document.getElementById('sidebar-panel').classList.remove('abierto');
       document.getElementById('sidebar-overlay').classList.remove('visible');
+      if (sec === 'horarios') iniciarHorarios();
     });
   });
 
@@ -1140,6 +1141,172 @@ window.borrarRegAdmin = async (uid, idx) => {
   await updateDoc(docRef, { registros: regs });
   mostrarToast('Registro eliminado', '#E24B4A');
   cargarAsistenciasAdmin();
+};
+
+// ===== MÓDULO: HORARIOS ADMIN =====
+let horarioFechaActual = getFechaHoy();
+let usuariosStaff = [];
+let horariosCache = {};
+
+async function iniciarHorarios() {
+  const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const snap = await getDocs(collection(db, 'usuarios'));
+  usuariosStaff = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.rol === 'staff');
+
+  const sel = document.getElementById('sel-persona-horario');
+  usuariosStaff.forEach(u => {
+    const opt = document.createElement('option');
+    opt.value = u.id;
+    opt.textContent = u.nombre + ' · ' + (u.area || '—');
+    sel.appendChild(opt);
+  });
+
+  sel.addEventListener('change', () => {
+    if (sel.value) cargarSemanaPersona(sel.value);
+  });
+
+  document.getElementById('btn-horario-prev').addEventListener('click', () => {
+    const d = new Date(horarioFechaActual + 'T12:00:00');
+    d.setDate(d.getDate() - 1);
+    horarioFechaActual = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    cargarHorariosDia();
+  });
+  document.getElementById('btn-horario-next').addEventListener('click', () => {
+    const d = new Date(horarioFechaActual + 'T12:00:00');
+    d.setDate(d.getDate() + 1);
+    horarioFechaActual = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    cargarHorariosDia();
+  });
+
+  document.getElementById('modal-tipo-dia').addEventListener('change', function() {
+    document.getElementById('modal-horas-wrap').style.display = this.value === 'trabajo' ? 'flex' : 'none';
+    document.getElementById('modal-horas-wrap').style.flexDirection = 'column';
+  });
+
+  cargarHorariosDia();
+}
+
+async function cargarSemanaPersona(uid) {
+  const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const hoy = new Date(getFechaHoy() + 'T12:00:00');
+  const lunes = new Date(hoy);
+  lunes.setDate(hoy.getDate() - (hoy.getDay() === 0 ? 6 : hoy.getDay() - 1));
+
+  const fechas = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(lunes);
+    d.setDate(lunes.getDate() + i);
+    fechas.push(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'));
+  }
+
+  const snap = await getDocs(query(collection(db, 'horarios'), where('uid', '==', uid)));
+  const hMap = {};
+  snap.docs.forEach(d => { hMap[d.data().fecha] = { id: d.id, ...d.data() }; });
+
+  const dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+  let html = '<div class="semana-grid">';
+  fechas.forEach((fecha, i) => {
+    const h = hMap[fecha];
+    const tipoCls = h ? (h.tipo_dia === 'libre' ? 'badge-libre' : h.tipo_dia === 'permiso' ? 'badge-permiso' : 'badge-trabajo') : 'badge-libre';
+    const tipoTxt = h ? h.tipo_dia.charAt(0).toUpperCase() + h.tipo_dia.slice(1) : 'Sin asignar';
+    const horasTxt = h && h.tipo_dia === 'trabajo' ? (h.hora_entrada || '—') + ' → ' + (h.hora_salida || '—') : '';
+    html += '<div class="semana-dia">';
+    html += '<div class="semana-dia-nombre">' + dias[i] + '<div style="font-size:10px;color:var(--text3)">' + fecha.slice(5).replace('-','/') + '</div></div>';
+    html += '<div class="semana-dia-info"><div class="semana-dia-tipo ' + tipoCls + '">' + tipoTxt + '</div>' + (horasTxt ? '<div class="semana-dia-horas">' + horasTxt + '</div>' : '') + '</div>';
+    html += '<button class="btn-asignar-horario" onclick="abrirModalHorario(\'' + uid + '\',\'' + fecha + '\',' + JSON.stringify(h||null).replace(/"/g,'&quot;') + ')">Editar</button>';
+    html += '</div>';
+  });
+  html += '</div>';
+  document.getElementById('horarios-semana-wrap').innerHTML = html;
+}
+
+async function cargarHorariosDia() {
+  const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const d = new Date(horarioFechaActual + 'T12:00:00');
+  const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  document.getElementById('horario-dia-label').textContent = dias[d.getDay()] + ' ' + d.getDate() + ' ' + meses[d.getMonth()];
+
+  const snap = await getDocs(query(collection(db, 'horarios'), where('fecha', '==', horarioFechaActual)));
+  const hMap = {};
+  snap.docs.forEach(doc => { hMap[doc.data().uid] = { id: doc.id, ...doc.data() }; });
+
+  let html = '';
+  usuariosStaff.forEach(u => {
+    const h = hMap[u.id];
+    const tipoCls = h ? (h.tipo_dia === 'libre' ? 'badge-libre' : h.tipo_dia === 'permiso' ? 'badge-permiso' : 'badge-trabajo') : '';
+    const tipoTxt = h ? h.tipo_dia.charAt(0).toUpperCase() + h.tipo_dia.slice(1) : 'Sin asignar';
+    const horasTxt = h && h.tipo_dia === 'trabajo' ? (h.hora_entrada || '—') + ' → ' + (h.hora_salida || '—') : '';
+    html += '<div class="horario-dia-card">';
+    html += '<div><div class="horario-dia-nombre">' + u.nombre + '</div><div style="font-size:11px;color:var(--text3)">' + (u.area||'—') + '</div></div>';
+    html += '<div class="horario-dia-info"><div class="horario-dia-tipo ' + tipoCls + '">' + tipoTxt + '</div>' + (horasTxt ? '<div class="horario-dia-horas">' + horasTxt + '</div>' : '') + '</div>';
+    html += '<button class="btn-asignar-horario" onclick="abrirModalHorario(\'' + u.id + '\',\'' + horarioFechaActual + '\',' + JSON.stringify(h||null).replace(/"/g,'&quot;') + ')">Editar</button>';
+    html += '</div>';
+  });
+  document.getElementById('horarios-dia-lista').innerHTML = html || '<div style="text-align:center;padding:24px;font-size:13px;color:var(--text3)">Sin personal</div>';
+}
+
+window.showTabHorarios = (tab) => {
+  document.getElementById('tab-horarios-persona').classList.toggle('activo', tab === 'persona');
+  document.getElementById('tab-horarios-dia').classList.toggle('activo', tab === 'dia');
+  document.getElementById('panel-horarios-persona').style.display = tab === 'persona' ? 'flex' : 'none';
+  document.getElementById('panel-horarios-persona').style.flexDirection = tab === 'persona' ? 'column' : '';
+  document.getElementById('panel-horarios-dia').style.display = tab === 'dia' ? 'flex' : 'none';
+  document.getElementById('panel-horarios-dia').style.flexDirection = tab === 'dia' ? 'column' : '';
+};
+
+window.abrirModalHorario = (uid, fecha, horarioExistente) => {
+  document.getElementById('modal-uid').value = uid;
+  document.getElementById('modal-fecha').value = fecha;
+  const d = new Date(fecha + 'T12:00:00');
+  const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const u = usuariosStaff.find(x => x.id === uid);
+  document.getElementById('modal-horario-titulo').textContent = (u ? u.nombre : '') + ' — ' + dias[d.getDay()] + ' ' + fecha.slice(8) + '/' + fecha.slice(5,7);
+  if (horarioExistente) {
+    document.getElementById('modal-tipo-dia').value = horarioExistente.tipo_dia || 'trabajo';
+    document.getElementById('modal-hora-entrada').value = horarioExistente.hora_entrada || '08:00';
+    document.getElementById('modal-hora-salida').value = horarioExistente.hora_salida || '13:00';
+    document.getElementById('modal-turno').value = horarioExistente.turno || 'mañana';
+  } else {
+    document.getElementById('modal-tipo-dia').value = 'trabajo';
+    document.getElementById('modal-hora-entrada').value = '08:00';
+    document.getElementById('modal-hora-salida').value = '13:00';
+    document.getElementById('modal-turno').value = 'mañana';
+  }
+  document.getElementById('modal-horas-wrap').style.display = document.getElementById('modal-tipo-dia').value === 'trabajo' ? 'flex' : 'none';
+  document.getElementById('modal-horas-wrap').style.flexDirection = 'column';
+  document.getElementById('modal-horario').style.display = 'flex';
+};
+
+window.cerrarModalHorario = () => {
+  document.getElementById('modal-horario').style.display = 'none';
+};
+
+window.guardarHorario = async () => {
+  const uid = document.getElementById('modal-uid').value;
+  const fecha = document.getElementById('modal-fecha').value;
+  const tipo_dia = document.getElementById('modal-tipo-dia').value;
+  const hora_entrada = document.getElementById('modal-hora-entrada').value;
+  const hora_salida = document.getElementById('modal-hora-salida').value;
+  const turno = document.getElementById('modal-turno').value;
+  const { getDocs, collection, query, where, addDoc, updateDoc, doc: fd } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+
+  const snap = await getDocs(query(collection(db, 'horarios'), where('uid','==',uid), where('fecha','==',fecha)));
+  const datos = { uid, fecha, tipo_dia, turno, ultimaActualizacion: new Date().toISOString() };
+  if (tipo_dia === 'trabajo') { datos.hora_entrada = hora_entrada; datos.hora_salida = hora_salida; }
+  else { datos.hora_entrada = ''; datos.hora_salida = ''; }
+
+  if (!snap.empty) {
+    await updateDoc(fd(db, 'horarios', snap.docs[0].id), datos);
+  } else {
+    await addDoc(collection(db, 'horarios'), datos);
+  }
+
+  cerrarModalHorario();
+  mostrarToast('Horario guardado ✓');
+  const tabActivo = document.getElementById('tab-horarios-persona').classList.contains('activo') ? 'persona' : 'dia';
+  if (tabActivo === 'persona') cargarSemanaPersona(uid);
+  else cargarHorariosDia();
 };
 
 // ===== LOGOUT =====

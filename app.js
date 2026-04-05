@@ -938,6 +938,7 @@ function iniciarAdmin() {
       if (sec === 'tareas-admin') iniciarTareasAdmin();
       if (sec === 'finanzas-admin') iniciarFinanzasAdmin();
       if (sec === 'insumos-admin') iniciarInsumosAdmin();
+      if (sec === 'personal') iniciarPersonal();
     });
   });
 
@@ -1144,6 +1145,77 @@ window.borrarRegAdmin = async (uid, idx) => {
   await updateDoc(docRef, { registros: regs });
   mostrarToast('Registro eliminado', '#E24B4A');
   cargarAsistenciasAdmin();
+};
+
+// ===== MÓDULO: PERSONAL ADMIN =====
+async function iniciarPersonal() {
+  await cargarPersonal();
+}
+
+async function cargarPersonal() {
+  const { getDocs, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const snap = await getDocs(collection(db, 'usuarios'));
+  const usuarios = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  usuarios.sort((a,b) => (a.nombre||'').localeCompare(b.nombre||''));
+
+  const rolColores = {
+    superadmin: 'color:var(--purple);background:var(--purple-bg)',
+    admin: 'color:#5DAAE8;background:#001828',
+    dueno: 'color:var(--amber);background:var(--amber-bg)',
+    staff: 'color:var(--green-light);background:var(--green-bg)'
+  };
+
+  let html = '';
+  usuarios.forEach(u => {
+    const iniciales = (u.nombre||'XX').split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+    const activo = u.activo !== false;
+    const rolCls = rolColores[u.rol] || rolColores.staff;
+    html += '<div class="admin-staff-card" style="' + (!activo?'opacity:.5':'') + '">';
+    html += '<div class="admin-card-top" style="cursor:default">';
+    html += '<div class="avatar av-teal" style="' + (!activo?'filter:grayscale(1)':'') + '">' + iniciales + '</div>';
+    html += '<div class="admin-card-info">';
+    html += '<div class="admin-card-name">' + (u.nombre||'Sin nombre') + (activo?'':' <span style="font-size:10px;color:var(--text3)">(inactivo)</span>') + '</div>';
+    html += '<div class="admin-card-sub">' + (u.area||'—') + ' · ' + (u.email||'—') + '</div>';
+    html += '<div style="margin-top:4px"><span style="font-size:10px;padding:2px 8px;border-radius:20px;' + rolCls + '">' + (u.rol||'staff') + '</span></div>';
+    html += '</div>';
+    html += '<button class="btn-asignar-horario" onclick="abrirModalPersonal(\'' + u.id + '\')">Editar</button>';
+    html += '</div></div>';
+  });
+
+  const lista = document.getElementById('personal-lista');
+  if (lista) lista.innerHTML = html || '<div style="text-align:center;padding:24px;font-size:13px;color:var(--text3)">Sin personal registrado</div>';
+}
+
+window.abrirModalPersonal = (uid) => {
+  const { getDoc, doc: fd } = import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(async ({ getDoc, doc: fd }) => {
+    const snap = await getDoc(fd(db, 'usuarios', uid));
+    if (!snap.exists()) return;
+    const u = snap.data();
+    document.getElementById('mp-uid').value = uid;
+    document.getElementById('mp-nombre').value = u.nombre || '';
+    document.getElementById('mp-area').value = u.area || 'barra';
+    document.getElementById('mp-rol').value = u.rol || 'staff';
+    document.getElementById('mp-activo').value = u.activo !== false ? 'true' : 'false';
+    document.getElementById('modal-personal').style.display = 'flex';
+  });
+};
+
+window.cerrarModalPersonal = () => {
+  document.getElementById('modal-personal').style.display = 'none';
+};
+
+window.guardarPersonal = async () => {
+  const uid = document.getElementById('mp-uid').value;
+  const nombre = document.getElementById('mp-nombre').value.trim();
+  const area = document.getElementById('mp-area').value;
+  const rol = document.getElementById('mp-rol').value;
+  const activo = document.getElementById('mp-activo').value === 'true';
+  if (!nombre) { mostrarToast('Escribe el nombre', '#E24B4A'); return; }
+  const { doc: fd, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  await updateDoc(fd(db, 'usuarios', uid), { nombre, area, rol, activo });
+  cerrarModalPersonal();
+  mostrarToast('Datos actualizados ✓');
+  cargarPersonal();
 };
 
 // ===== MÓDULO: INSUMOS ADMIN =====

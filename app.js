@@ -244,7 +244,7 @@ async function registrar(tipo) {
       regs.push(nuevoReg);
       await updateDoc(docRef, { registros: regs, ultimaActualizacion: new Date().toISOString() });
     } else {
-      await setDoc(docRef, { uid: usuarioActual.uid, fecha, registros: [nuevoReg], ultimaActualizacion: serverTimestamp() });
+      await setDoc(docRef, { uid: usuarioActual.uid, fecha, registros: [nuevoReg], ultimaActualizacion: new Date().toISOString() });
     }
     $('obs-input').value = '';
   } catch (err) {

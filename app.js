@@ -913,8 +913,18 @@ function iniciarAdmin() {
   document.getElementById('sidebar-role').textContent = rol;
   document.getElementById('admin-role-badge').textContent = rol;
 
+  // Resetear sidebar al módulo inicial
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('activo'));
+  document.querySelectorAll('.admin-sec').forEach(s => s.classList.remove('activa'));
+  document.querySelector('.sidebar-item[data-admin-sec="asistencias"]').classList.add('activo');
+  document.getElementById('admin-sec-asistencias').classList.add('activa');
+  document.getElementById('admin-titulo-seccion').textContent = 'Asistencias';
+
   // Menú hamburguesa
-  document.getElementById('btn-menu-admin').addEventListener('click', () => {
+  const btnMenu = document.getElementById('btn-menu-admin');
+  const btnMenuNuevo = btnMenu.cloneNode(true);
+  btnMenu.parentNode.replaceChild(btnMenuNuevo, btnMenu);
+  btnMenuNuevo.addEventListener('click', () => {
     document.getElementById('sidebar-panel').classList.toggle('abierto');
     document.getElementById('sidebar-overlay').classList.toggle('visible');
   });
@@ -925,13 +935,15 @@ function iniciarAdmin() {
 
   // Navegación sidebar
   document.querySelectorAll('.sidebar-item').forEach(item => {
-    item.addEventListener('click', () => {
-      const sec = item.dataset.adminSec;
+    const nuevoItem = item.cloneNode(true);
+    item.parentNode.replaceChild(nuevoItem, item);
+    nuevoItem.addEventListener('click', () => {
+      const sec = nuevoItem.dataset.adminSec;
       document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('activo'));
-      item.classList.add('activo');
+      nuevoItem.classList.add('activo');
       document.querySelectorAll('.admin-sec').forEach(s => s.classList.remove('activa'));
       document.getElementById('admin-sec-' + sec).classList.add('activa');
-      document.getElementById('admin-titulo-seccion').textContent = item.querySelector('span').textContent;
+      document.getElementById('admin-titulo-seccion').textContent = nuevoItem.querySelector('span').textContent;
       document.getElementById('sidebar-panel').classList.remove('abierto');
       document.getElementById('sidebar-overlay').classList.remove('visible');
       if (sec === 'horarios') iniciarHorarios();
@@ -942,20 +954,27 @@ function iniciarAdmin() {
     });
   });
 
-  // Navegación de fechas
-  document.getElementById('btn-fecha-prev').addEventListener('click', () => {
+  // Navegación de fechas asistencias
+  const btnPrev = document.getElementById('btn-fecha-prev');
+  const btnNext = document.getElementById('btn-fecha-next');
+  const btnPrevNuevo = btnPrev.cloneNode(true);
+  const btnNextNuevo = btnNext.cloneNode(true);
+  btnPrev.parentNode.replaceChild(btnPrevNuevo, btnPrev);
+  btnNext.parentNode.replaceChild(btnNextNuevo, btnNext);
+  btnPrevNuevo.addEventListener('click', () => {
     const d = new Date(adminFechaActual + 'T12:00:00');
     d.setDate(d.getDate() - 1);
     adminFechaActual = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     cargarAsistenciasAdmin();
   });
-  document.getElementById('btn-fecha-next').addEventListener('click', () => {
+  btnNextNuevo.addEventListener('click', () => {
     const d = new Date(adminFechaActual + 'T12:00:00');
     d.setDate(d.getDate() + 1);
     adminFechaActual = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     cargarAsistenciasAdmin();
   });
 
+  adminFechaActual = getFechaHoy();
   cargarAsistenciasAdmin();
 }
 

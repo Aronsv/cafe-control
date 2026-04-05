@@ -1,6 +1,6 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
  
 const app = initializeApp({
   apiKey: "AIzaSyB-L09L2xGVWtsJO1XE3CCj6F5p4XN2VPo",
@@ -238,11 +238,11 @@ async function registrar(tipo) {
   const docRef = doc(db, 'asistencias', usuarioActual.uid + '_' + fecha);
   try {
     const snap = await getDoc(docRef);
-    const nuevoReg = { tipo: tipoLabel, hora: getHoraAhora(), observacion: obs, validado: false, timestamp: serverTimestamp() };
+    const nuevoReg = { tipo: tipoLabel, hora: getHoraAhora(), observacion: obs, validado: false, timestamp: new Date().toISOString() };
     if (snap.exists()) {
       const regs = snap.data().registros || [];
       regs.push(nuevoReg);
-      await updateDoc(docRef, { registros: regs, ultimaActualizacion: serverTimestamp() });
+      await updateDoc(docRef, { registros: regs, ultimaActualizacion: new Date().toISOString() });
     } else {
       await setDoc(docRef, { uid: usuarioActual.uid, fecha, registros: [nuevoReg], ultimaActualizacion: serverTimestamp() });
     }

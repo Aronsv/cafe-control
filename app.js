@@ -1025,6 +1025,7 @@ function renderListaAsistencias(usuarios, asistMap) {
 
     html += '<div class="admin-card-body' + (isAbierto ? ' abierto' : '') + '">';
     if (tieneAlerta) html += '<div class="alerta-admin">⚠ Sin registros este día</div>';
+    html += '<button class="btn-admin-val" style="width:100%;margin-bottom:6px" onclick="agregarRegAdmin(\'' + u.id + '\')">+ Agregar registro</button>';
     if (!registros.length) {
       html += '<div style="font-size:12px;color:var(--text3);text-align:center;padding:8px 0">Sin registros</div>';
     } else {
@@ -1060,6 +1061,29 @@ function renderListaAsistencias(usuarios, asistMap) {
 
   lista.innerHTML = html || '<div style="text-align:center;padding:24px;font-size:13px;color:var(--text3)">Sin personal registrado</div>';
 }
+
+window.agregarRegAdmin = async (uid) => {
+  const tipo = prompt('Tipo de registro:\n1. Ingreso T1\n2. Inicio break\n3. Vuelta break\n4. Salida T1\n5. Ingreso T2\n6. Salida T2\n\nEscribe el número:');
+  const tipos = {'1':'Ingreso T1','2':'Inicio break','3':'Vuelta break','4':'Salida T1','5':'Ingreso T2','6':'Salida T2'};
+  if (!tipo || !tipos[tipo]) return;
+  const hora = prompt('Hora del registro (formato HH:MM):', '08:00');
+  if (!hora) return;
+  const obs = prompt('Observación (opcional, Enter para omitir):', '') || '';
+  const { getDoc, doc: fd, updateDoc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const docRef = fd(db, 'asistencias', uid + '_' + adminFechaActual);
+  const snap = await getDoc(docRef);
+  const nuevoReg = { tipo: tipos[tipo], hora, observacion: obs, validado: true, timestamp: new Date().toISOString() };
+  if (snap.exists()) {
+    const regs = snap.data().registros || [];
+    regs.push(nuevoReg);
+    regs.sort((a, b) => a.hora.localeCompare(b.hora));
+    await updateDoc(docRef, { registros: regs, ultimaActualizacion: new Date().toISOString() });
+  } else {
+    await setDoc(docRef, { uid, fecha: adminFechaActual, registros: [nuevoReg], ultimaActualizacion: new Date().toISOString() });
+  }
+  mostrarToast('Registro agregado ✓');
+  cargarAsistenciasAdmin();
+};
 
 window.toggleAdminCard = (uid) => {
   adminCardsAbiertas[uid] = !adminCardsAbiertas[uid];

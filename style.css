@@ -931,3 +931,50 @@ html, body {
   font-size: 13px;
   color: var(--text2);
 }
+/* ===== CALENDARIO ASISTENCIAS ===== */
+.cal-dia {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text3);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+}
+.cal-dia.atiempo { background:#0f2e1e; color:#5DCAA5; border-color:#1D9E75; }
+.cal-dia.tardanza { background:#2e1e00; color:#EF9F27; border-color:#BA7517; }
+.cal-dia.falta { background:#2e0f0f; color:#E24B4A; border-color:#A32D2D; }
+.cal-dia.permiso { background:#1a1a2e; color:#7F77DD; border-color:#534AB7; }
+.cal-dia.libre { background:#1e1e1e; color:#555; border-color:#2e2e2e; }
+.cal-dia.hoy { box-shadow: 0 0 0 2px var(--green-light); }
+.cal-dia.atenuado { opacity: .25; }
+
+.cal-chip {
+  display: flex; align-items: center; gap:5px;
+  padding: 5px 10px; border-radius: 20px;
+  font-size: 11px; cursor: pointer;
+  border: 0.5px solid transparent;
+  user-select: none;
+}
+.cal-chip.on { opacity: 1; }
+.cal-chip:not(.on) { opacity: .35; }
+.cal-chip[data-estado="atiempo"] { background:#0f2e1e; color:#5DCAA5; border-color:#1D9E75; }
+.cal-chip[data-estado="tardanza"] { background:#2e1e00; color:#EF9F27; border-color:#BA7517; }
+.cal-chip[data-estado="falta"] { background:#2e0f0f; color:#E24B4A; border-color:#A32D2D; }
+.cal-chip[data-estado="permiso"] { background:#1a1a2e; color:#7F77DD; border-color:#534AB7; }
+.cal-chip[data-estado="libre"] { background:#1e1e1e; color:#666; border-color:#2e2e2e; }
+
+.resumen-cal {
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 8px;
+}
+.resumen-cal-titulo { font-size: 12px; color: var(--text2); margin-bottom: 10px; }
+.resumen-cal-row { display: flex; gap: 0; }
+.resumen-cal-item { flex: 1; text-align: center; }
+.resumen-cal-num { font-size: 22px; font-weight: 500; }
+.resumen-cal-lbl { font-size: 10px; color: var(--text3); margin-top: 2px; }

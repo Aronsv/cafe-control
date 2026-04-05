@@ -505,10 +505,46 @@
 
       <!-- ===== SECCIÓN: FINANZAS ADMIN ===== -->
       <div id="admin-sec-finanzas-admin" class="admin-sec">
-        <div class="placeholder-screen" style="padding-bottom:0">
-          <div class="placeholder-icon">💰</div>
-          <div class="placeholder-txt">Finanzas</div>
-          <div class="placeholder-sub">Próximamente</div>
+        <div class="tabs-finanzas">
+          <div class="tab-fin activo" id="tab-fa-cobros" onclick="showTabFinAdmin('cobros')">Cobros</div>
+          <div class="tab-fin" id="tab-fa-dano" onclick="showTabFinAdmin('dano')">Registrar daño</div>
+          <div class="tab-fin" id="tab-fa-resumen" onclick="showTabFinAdmin('resumen')">Resumen</div>
+        </div>
+
+        <!-- COBROS -->
+        <div id="panel-fa-cobros" style="display:flex;flex-direction:column;gap:8px">
+          <div id="fa-banner-pend"></div>
+          <div id="fa-cobros-lista"></div>
+        </div>
+
+        <!-- REGISTRAR DAÑO -->
+        <div id="panel-fa-dano" style="display:none;flex-direction:column;gap:10px">
+          <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px">
+            <div style="font-size:12px;font-weight:500;color:var(--red)">Registrar daño o merma</div>
+            <div class="edit-reg-lbl">¿Qué se rompió o dañó?</div>
+            <input class="edit-reg-inp" id="fa-dano-desc" placeholder="Ej: infusionera rota, alicates malogrados...">
+            <div style="display:flex;gap:8px">
+              <div style="flex:1">
+                <div class="edit-reg-lbl">Monto (S/)</div>
+                <input class="edit-reg-inp" id="fa-dano-monto" type="number" placeholder="0.00" inputmode="decimal">
+              </div>
+              <div style="flex:1">
+                <div class="edit-reg-lbl">Asignar a</div>
+                <select class="edit-reg-inp" id="fa-dano-staff">
+                  <option value="">Selecciona...</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn-admin-del" style="width:100%" onclick="registrarDanoAdmin()">Registrar daño</button>
+          </div>
+          <div class="edit-reg-lbl">Daños del mes</div>
+          <div id="fa-danos-lista"></div>
+        </div>
+
+        <!-- RESUMEN -->
+        <div id="panel-fa-resumen" style="display:none;flex-direction:column;gap:8px">
+          <div class="admin-stats" id="fa-stats-globales"></div>
+          <div id="fa-resumen-lista"></div>
         </div>
       </div>
 

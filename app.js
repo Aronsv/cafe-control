@@ -1186,18 +1186,17 @@ async function cargarPersonal() {
   if (lista) lista.innerHTML = html || '<div style="text-align:center;padding:24px;font-size:13px;color:var(--text3)">Sin personal registrado</div>';
 }
 
-window.abrirModalPersonal = (uid) => {
-  const { getDoc, doc: fd } = import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(async ({ getDoc, doc: fd }) => {
-    const snap = await getDoc(fd(db, 'usuarios', uid));
-    if (!snap.exists()) return;
-    const u = snap.data();
-    document.getElementById('mp-uid').value = uid;
-    document.getElementById('mp-nombre').value = u.nombre || '';
-    document.getElementById('mp-area').value = u.area || 'barra';
-    document.getElementById('mp-rol').value = u.rol || 'staff';
-    document.getElementById('mp-activo').value = u.activo !== false ? 'true' : 'false';
-    document.getElementById('modal-personal').style.display = 'flex';
-  });
+window.abrirModalPersonal = async (uid) => {
+  const { getDoc, doc: fd } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const snap = await getDoc(fd(db, 'usuarios', uid));
+  if (!snap.exists()) return;
+  const u = snap.data();
+  document.getElementById('mp-uid').value = uid;
+  document.getElementById('mp-nombre').value = u.nombre || '';
+  document.getElementById('mp-area').value = u.area || 'barra';
+  document.getElementById('mp-rol').value = u.rol || 'staff';
+  document.getElementById('mp-activo').value = u.activo !== false ? 'true' : 'false';
+  document.getElementById('modal-personal').style.display = 'flex';
 };
 
 window.cerrarModalPersonal = () => {

@@ -936,6 +936,7 @@ function iniciarAdmin() {
       document.getElementById('sidebar-overlay').classList.remove('visible');
       if (sec === 'horarios') iniciarHorarios();
       if (sec === 'tareas-admin') iniciarTareasAdmin();
+      if (sec === 'finanzas-admin') iniciarFinanzasAdmin();
     });
   });
 
@@ -1142,6 +1143,205 @@ window.borrarRegAdmin = async (uid, idx) => {
   await updateDoc(docRef, { registros: regs });
   mostrarToast('Registro eliminado', '#E24B4A');
   cargarAsistenciasAdmin();
+};
+
+// ===== MÓDULO: FINANZAS ADMIN =====
+let finAdminCardsAbiertos = {};
+let finAdminEditsAbiertos = {};
+
+async function iniciarFinanzasAdmin() {
+  await cargarCobrosAdmin();
+  await cargarDanosAdmin();
+
+  if (usuariosStaff.length === 0) {
+    const { getDocs, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    const snap = await getDocs(collection(db, 'usuarios'));
+    usuariosStaff = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.rol === 'staff');
+  }
+  const sel = document.getElementById('fa-dano-staff');
+  if (sel) {
+    sel.innerHTML = '<option value="">Selecciona...</option>';
+    usuariosStaff.forEach(u => { sel.innerHTML += '<option value="' + u.id + '">' + u.nombre + '</option>'; });
+  }
+}
+
+async function cargarCobrosAdmin() {
+  const { getDocs, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  if (usuariosStaff.length === 0) {
+    const snap = await getDocs(collection(db, 'usuarios'));
+    usuariosStaff = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.rol === 'staff');
+  }
+  const snapFin = await getDocs(collection(db, 'finanzas'));
+  const todos = snapFin.docs.map(d => ({ id: d.id, ...d.data() }));
+  const porPersona = {};
+  usuariosStaff.forEach(u => { porPersona[u.id] = { usuario: u, cobros: [] }; });
+  todos.forEach(f => { if (porPersona[f.uid]) porPersona[f.uid].cobros.push(f); });
+
+  const conPend = Object.values(porPersona).filter(p => p.cobros.some(c => !c.validado));
+  const banner = document.getElementById('fa-banner-pend');
+  if (banner) {
+    if (conPend.length) {
+      banner.innerHTML = '<div style="background:var(--amber-bg);border:0.5px solid #3a2c00;border-radius:10px;padding:10px 12px"><div style="font-size:12px;font-weight:500;color:var(--amber);margin-bottom:4px">⏳ Pendientes de validar (' + conPend.length + ' personas)</div>' +
+        conPend.map(p => '<div style="font-size:11px;color:#7a5020;padding:2px 0">' + p.usuario.nombre + ' · ' + p.cobros.filter(c=>!c.validado).length + ' cobro(s)</div>').join('') + '</div>';
+    } else banner.innerHTML = '';
+  }
+
+  let html = '';
+  Object.values(porPersona).forEach(p => {
+    const total = p.cobros.reduce((a, c) => a + (c.montofinal || 0), 0);
+    const pend = p.cobros.filter(c => !c.validado).reduce((a, c) => a + (c.montofinal || 0), 0);
+    const iniciales = (p.usuario.nombre||'XX').split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+    const isAbierto = finAdminCardsAbiertos[p.usuario.id];
+    html += '<div class="admin-staff-card' + (pend > 0 ? ' tiene-pendiente' : '') + '">';
+    html += '<div class="admin-card-top" onclick="toggleFinCard(\'' + p.usuario.id + '\')">';
+    html += '<div class="avatar av-teal">' + iniciales + '</div>';
+    html += '<div class="admin-card-info"><div class="admin-card-name">' + p.usuario.nombre + '</div><div class="admin-card-sub">' + (p.usuario.area||'—') + ' · ' + p.cobros.length + ' registros</div></div>';
+    html += '<div style="font-size:14px;font-weight:500;color:var(--red)">S/ ' + total.toFixed(2) + '</div></div>';
+    html += '<div class="admin-card-body' + (isAbierto ? ' abierto' : '') + '">';
+
+    const consumos = p.cobros.filter(c => c.tipo === 'consumo');
+    const danos = p.cobros.filter(c => c.tipo !== 'consumo');
+
+    if (consumos.length) {
+      html += '<div class="edit-reg-lbl" style="margin-top:4px">Consumos</div>';
+      consumos.forEach(c => { html += renderCobro Admin(c, p.usuario.id); });
+    }
+    if (danos.length) {
+      html += '<div class="edit-reg-lbl" style="margin-top:4px">Daños y mermas</div>';
+      danos.forEach(c => { html += renderCobroAdmin(c, p.usuario.id); });
+    }
+    if (!p.cobros.length) html += '<div style="font-size:12px;color:var(--text3);text-align:center;padding:8px">Sin cobros</div>';
+
+    const totalFin = p.cobros.reduce((a,c) => a+(c.montofinal||0), 0);
+    if (p.cobros.length) html += '<div class="fin-total-row" style="margin-top:4px"><span>Total a descontar</span><span style="color:var(--red);font-weight:500">S/ ' + totalFin.toFixed(2) + '</span></div>';
+    html += '</div></div>';
+  });
+  const lista = document.getElementById('fa-cobros-lista');
+  if (lista) lista.innerHTML = html;
+}
+
+function renderCobroAdmin(c, uid) {
+  const isEdit = finAdminEditsAbiertos[c.id];
+  const subTxt = c.tipo === 'consumo' ? 'Consumo · ' + (c.descuento||0) + '% desc.' : 'Daño · valorizado por admin';
+  let html = '<div class="cobro-item" style="margin-bottom:6px">';
+  html += '<div class="cobro-top"><div><div class="cobro-desc">' + c.descripcion + '</div><div class="cobro-fecha">' + (c.fecha||'') + '</div></div>';
+  html += '<div style="text-align:right"><div class="cobro-monto">S/ ' + (c.montofinal||0).toFixed(2) + '</div>';
+  if (c.tipo==='consumo'&&c.descuento) html += '<div style="font-size:9px;color:var(--text3)">-' + c.descuento + '% desc.</div>';
+  html += '</div></div>';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between">';
+  html += '<span class="cobro-badge ' + (c.validado?'badge-ok':'badge-pend') + '">' + (c.validado?'Validado':'Pendiente') + '</span>';
+  if (!isEdit) {
+    html += '<div style="display:flex;gap:5px">';
+    html += c.validado ? '<div class="btn-admin-val ya">✓ Validado</div>' : '<div class="btn-admin-val" onclick="validarCobroAdmin(\'' + c.id + '\',\'' + uid + '\')">✓ Validar</div>';
+    html += '<div class="btn-admin-edit" onclick="editarCobroAdmin(\'' + c.id + '\')">Editar</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  if (isEdit) {
+    html += '<div class="edit-reg-box"><div class="edit-reg-lbl">Descripción</div>';
+    html += '<input class="edit-reg-inp" id="fae-desc-' + c.id + '" value="' + (c.descripcion||'') + '">';
+    html += '<div style="display:flex;gap:8px;margin-top:6px"><div style="flex:1"><div class="edit-reg-lbl">Monto (S/)</div>';
+    html += '<input class="edit-reg-inp" id="fae-monto-' + c.id + '" type="number" value="' + (c.monto||0) + '" inputmode="decimal"></div>';
+    if (c.tipo==='consumo') { html += '<div style="flex:1"><div class="edit-reg-lbl">Descuento %</div><input class="edit-reg-inp" id="fae-desc2-' + c.id + '" type="number" value="' + (c.descuento||30) + '" inputmode="numeric"></div>'; }
+    html += '</div><div class="edit-reg-btns" style="margin-top:6px">';
+    html += '<button class="btn-edit-save" onclick="guardarCobroAdmin(\'' + c.id + '\',\'' + (c.tipo||'consumo') + '\')">Guardar</button>';
+    html += '<button class="btn-edit-cancel" onclick="cancelarEditCobro(\'' + c.id + '\')">Cancelar</button></div></div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+window.toggleFinCard = (uid) => { finAdminCardsAbiertos[uid]=!finAdminCardsAbiertos[uid]; cargarCobrosAdmin(); };
+
+window.validarCobroAdmin = async (cid, uid) => {
+  const { doc: fd, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  await updateDoc(fd(db, 'finanzas', cid), { validado: true });
+  mostrarToast('Cobro validado ✓');
+  cargarCobrosAdmin();
+};
+
+window.editarCobroAdmin = (cid) => { finAdminEditsAbiertos[cid]=true; cargarCobrosAdmin(); };
+window.cancelarEditCobro = (cid) => { finAdminEditsAbiertos[cid]=false; cargarCobrosAdmin(); };
+
+window.guardarCobroAdmin = async (cid, tipo) => {
+  const descEl = document.getElementById('fae-desc-' + cid);
+  const montoEl = document.getElementById('fae-monto-' + cid);
+  const desc2El = document.getElementById('fae-desc2-' + cid);
+  if (!descEl||!montoEl) return;
+  const monto = parseFloat(montoEl.value)||0;
+  const descuento = desc2El ? parseInt(desc2El.value)||0 : 0;
+  const montofinal = tipo==='consumo' ? monto*(1-descuento/100) : monto;
+  const { doc: fd, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  await updateDoc(fd(db, 'finanzas', cid), { descripcion: descEl.value.trim(), monto, descuento, montofinal });
+  finAdminEditsAbiertos[cid]=false;
+  mostrarToast('Cobro actualizado ✓');
+  cargarCobrosAdmin();
+};
+
+async function cargarDanosAdmin() {
+  const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const snap = await getDocs(query(collection(db, 'finanzas'), where('tipo','==','daño')));
+  const danos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const lista = document.getElementById('fa-danos-lista');
+  if (!lista) return;
+  if (!danos.length) { lista.innerHTML = '<div style="font-size:12px;color:var(--text3);text-align:center;padding:16px">Sin daños registrados</div>'; return; }
+  lista.innerHTML = danos.map(d => '<div class="cobro-item" style="margin-bottom:6px"><div class="cobro-top"><div><div class="cobro-desc">' + d.descripcion + '</div><div class="cobro-fecha">' + d.nombre + ' · ' + d.fecha + '</div></div><div class="cobro-monto">S/ ' + (d.montofinal||0).toFixed(2) + '</div></div><span class="cobro-badge ' + (d.validado?'badge-ok':'badge-pend') + '">' + (d.validado?'Validado':'Pendiente') + '</span></div>').join('');
+}
+
+window.registrarDanoAdmin = async () => {
+  const desc = document.getElementById('fa-dano-desc').value.trim();
+  const monto = parseFloat(document.getElementById('fa-dano-monto').value)||0;
+  const uid = document.getElementById('fa-dano-staff').value;
+  if (!desc||!monto||!uid) { mostrarToast('Completa todos los campos', '#E24B4A'); return; }
+  const u = usuariosStaff.find(x => x.id===uid);
+  const { addDoc, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  await addDoc(collection(db, 'finanzas'), { uid, nombre: u?u.nombre:'', fecha: getFechaHoy(), tipo:'daño', descripcion: desc, monto, descuento:0, montofinal: monto, validado:false, timestamp: new Date() });
+  document.getElementById('fa-dano-desc').value='';
+  document.getElementById('fa-dano-monto').value='';
+  mostrarToast('Daño registrado ✓');
+  cargarDanosAdmin();
+  cargarCobrosAdmin();
+};
+
+async function cargarResumenAdmin() {
+  const { getDocs, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const snap = await getDocs(collection(db, 'finanzas'));
+  const todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const totalGlobal = todos.reduce((a,f) => a+(f.montofinal||0), 0);
+  const sinValidar = todos.filter(f=>!f.validado).reduce((a,f) => a+(f.montofinal||0), 0);
+  const stats = document.getElementById('fa-stats-globales');
+  if (stats) stats.innerHTML = '<div class="admin-stat-card"><div class="admin-stat-num" style="color:var(--red)">S/ ' + totalGlobal.toFixed(2) + '</div><div class="admin-stat-lbl">Total a descontar</div></div><div class="admin-stat-card"><div class="admin-stat-num" style="color:var(--amber)">S/ ' + sinValidar.toFixed(2) + '</div><div class="admin-stat-lbl">Sin validar</div></div>';
+
+  if (usuariosStaff.length === 0) {
+    const snapU = await getDocs(collection(db, 'usuarios'));
+    usuariosStaff = snapU.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.rol === 'staff');
+  }
+  let html = '';
+  usuariosStaff.forEach(u => {
+    const mis = todos.filter(f => f.uid === u.id);
+    const total = mis.reduce((a,f)=>a+(f.montofinal||0),0);
+    const pend = mis.filter(f=>!f.validado).reduce((a,f)=>a+(f.montofinal||0),0);
+    const consumos = mis.filter(f=>f.tipo==='consumo').reduce((a,f)=>a+(f.montofinal||0),0);
+    const danos = mis.filter(f=>f.tipo!=='consumo').reduce((a,f)=>a+(f.montofinal||0),0);
+    const iniciales = (u.nombre||'XX').split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+    html += '<div class="admin-staff-card"><div class="admin-card-top" style="cursor:default"><div class="avatar av-teal">' + iniciales + '</div>';
+    html += '<div class="admin-card-info"><div class="admin-card-name">' + u.nombre + '</div><div class="admin-card-sub">Consumos: S/ ' + consumos.toFixed(2) + ' · Daños: S/ ' + danos.toFixed(2) + '</div></div>';
+    html += '<div style="font-size:14px;font-weight:500;color:var(--red)">S/ ' + total.toFixed(2) + '</div></div>';
+    if (pend>0) html += '<div style="padding:0 12px 10px;font-size:11px;color:var(--amber)">S/ ' + pend.toFixed(2) + ' pendiente de validar</div>';
+    html += '</div>';
+  });
+  const lista = document.getElementById('fa-resumen-lista');
+  if (lista) lista.innerHTML = html;
+}
+
+window.showTabFinAdmin = (tab) => {
+  ['cobros','dano','resumen'].forEach(t => {
+    document.getElementById('tab-fa-' + t).classList.toggle('activo', t===tab);
+    document.getElementById('panel-fa-' + t).style.display = t===tab ? 'flex' : 'none';
+    document.getElementById('panel-fa-' + t).style.flexDirection = t===tab ? 'column' : '';
+  });
+  if (tab==='resumen') cargarResumenAdmin();
+  if (tab==='dano') cargarDanosAdmin();
 };
 
 // ===== MÓDULO: TAREAS ADMIN =====

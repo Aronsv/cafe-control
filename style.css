@@ -460,7 +460,7 @@ html, body {
 }
  
 /* ===== RESPONSIVE DESKTOP ===== */
-@media (min-width: 768px) {
+@media (min-width: 600px) {
   .pantalla {
     max-width: 480px;
     margin: 0 auto;

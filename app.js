@@ -342,7 +342,8 @@ async function iniciarTareas() {
 
 function getTareasFiltradas() {
   if (catActualTareas === 'todas') return tareasConfig;
-  return tareasConfig.filter(t => t.area === catActualTareas || t.area === 'general');
+  if (catActualTareas === 'general') return tareasConfig.filter(t => t.area === 'general');
+  return tareasConfig.filter(t => t.area === catActualTareas);
 }
 
 function renderTareas() {

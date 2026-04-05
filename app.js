@@ -957,6 +957,7 @@ function iniciarAdmin() {
   });
 
   cargarAsistenciasAdmin();
+  iniciarPersonal();
 }
 
 async function cargarAsistenciasAdmin() {

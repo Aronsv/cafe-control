@@ -156,6 +156,7 @@ function iniciarStaff() {
   iniciarNav();
   iniciarTareas();
   iniciarInsumos();
+  iniciarFinanzas();
   if (unsuscribeAsistencia) unsuscribeAsistencia();
   unsuscribeAsistencia = onSnapshot(
     doc(db, 'asistencias', usuarioActual.uid + '_' + getFechaHoy()),

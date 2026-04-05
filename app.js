@@ -485,8 +485,13 @@ async function iniciarInsumos() {
     });
   });
 
-  document.getElementById('btn-ver-lista').addEventListener('click', () => {
-    actualizarResumen();
+  document.getElementById('btn-toggle-resumen').addEventListener('click', () => {
+    const body = document.getElementById('resumen-whatsapp');
+    const arrow = document.getElementById('resumen-pie-arrow');
+    const visible = body.style.display === 'flex';
+    body.style.display = visible ? 'none' : 'flex';
+    body.style.flexDirection = visible ? '' : 'column';
+    arrow.textContent = visible ? '▼' : '▲';
   });
 
   document.getElementById('btn-copiar-lista').addEventListener('click', () => {
@@ -578,9 +583,11 @@ window.toggleChkIns = (id) => {
 
 function actualizarResumen() {
   const sel = Object.values(insumosSeleccionados).filter(i => i.qty);
-  const box = document.getElementById('resumen-whatsapp');
-  if (!sel.length) { box.style.display = 'none'; return; }
-  box.style.display = 'flex';
+  const contador = document.getElementById('insumos-contador');
+  const label = document.getElementById('resumen-pie-label');
+  if (contador) contador.textContent = sel.length + ' seleccionado' + (sel.length !== 1 ? 's' : '');
+  if (label) label.textContent = 'Lista para WhatsApp (' + sel.length + ' item' + (sel.length !== 1 ? 's' : '') + ')';
+  if (!sel.length) return;
   const catLabels = { cocina: 'Cocina', barra: 'Barra', limpieza: 'Limpieza', cristaleria: 'Cristalería' };
   const byCat = {};
   sel.forEach(i => {

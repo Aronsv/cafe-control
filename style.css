@@ -1120,7 +1120,7 @@ body.tema-claro .clock-big { color: #1a1a1a; }
   gap: 10px;
   overflow-y: auto;
 }
-.admin-sec.activa { display: flex; }
+.admin-sec.activa { display: flex; flex-direction: column; overflow-y: auto; }
 
 .admin-stats {
   display: grid;

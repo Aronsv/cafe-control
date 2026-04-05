@@ -703,3 +703,111 @@ html, body {
     transform: translateX(-50%);
   }
 }
+/* ===== MÓDULO: INSUMOS ===== */
+.btn-ver-lista {
+  background: var(--green-bg);
+  border: 0.5px solid var(--green);
+  color: var(--green-light);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.insumo-grupo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px 4px;
+  cursor: pointer;
+  border-bottom: 0.5px solid var(--border);
+  margin-bottom: 4px;
+}
+.insumo-grupo-nombre {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+.insumo-grupo-arrow { font-size: 10px; color: var(--text3); }
+
+.col-headers-ins {
+  display: grid;
+  grid-template-columns: 1fr 60px 70px 28px;
+  gap: 4px;
+  padding: 2px 4px 4px;
+}
+.col-h-ins { font-size: 9px; color: var(--text3); text-align: center; }
+.col-h-ins:first-child { text-align: left; }
+
+.insumo-row {
+  display: grid;
+  grid-template-columns: 1fr 60px 70px 28px;
+  gap: 4px;
+  align-items: center;
+  border-radius: 7px;
+  padding: 6px 4px;
+  margin-bottom: 3px;
+  border-left: 2px solid transparent;
+}
+.insumo-row.urgente { border-left-color: var(--red); background: #180808; }
+.insumo-row.importante { border-left-color: var(--amber); background: #181208; }
+.insumo-row.normal { background: #181818; }
+.insumo-row.seleccionado { background: #0e1e14; }
+
+.insumo-nombre { font-size: 12px; color: #cccccc; }
+.insumo-min { font-size: 10px; color: var(--text3); text-align: center; }
+.insumo-qty-inp {
+  background: #151515;
+  border: 0.5px solid var(--border2);
+  border-radius: 5px;
+  padding: 4px 4px;
+  font-size: 12px;
+  color: var(--text2);
+  width: 100%;
+  text-align: center;
+  font-family: inherit;
+  outline: none;
+}
+.insumo-qty-inp.tiene-valor {
+  border-color: #1a3a24;
+  color: var(--green-light);
+  background: #0e1e12;
+}
+.insumo-chk {
+  width: 17px; height: 17px;
+  border-radius: 4px;
+  border: 1.5px solid var(--border2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  transition: all .2s;
+}
+.insumo-chk.on { background: var(--green); border-color: var(--green); }
+
+.resumen-whatsapp {
+  margin: 8px 14px;
+  background: #0e1e16;
+  border: 0.5px solid #1a3a24;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.resumen-titulo { font-size: 11px; font-weight: 500; color: var(--green-light); }
+.resumen-cat { font-size: 10px; color: var(--green-light); margin-top: 4px; margin-bottom: 2px; font-weight: 500; }
+.resumen-item { font-size: 12px; color: #cccccc; padding: 1px 0; }
+.btn-copiar-lista {
+  width: 100%; padding: 10px;
+  border-radius: 8px;
+  border: 0.5px solid var(--green);
+  background: var(--green-bg);
+  font-size: 13px; color: var(--green-light);
+  cursor: pointer; font-weight: 500;
+  font-family: inherit;
+}

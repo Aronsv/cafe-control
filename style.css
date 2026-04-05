@@ -815,3 +815,119 @@ html, body {
   cursor: pointer; font-weight: 500;
   font-family: inherit;
 }
+
+/* ===== MÓDULO: FINANZAS ===== */
+.tabs-finanzas {
+  display: flex;
+  border-bottom: 0.5px solid var(--border);
+  flex-shrink: 0;
+}
+.tab-fin {
+  flex: 1;
+  padding: 10px 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+.tab-fin.activo {
+  color: var(--text);
+  border-bottom-color: var(--green-light);
+}
+
+.fin-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: calc(var(--nav-h) + 16px);
+}
+.fin-panel::-webkit-scrollbar { width: 2px; }
+.fin-panel::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 2px; }
+
+.fin-section-lbl {
+  font-size: 11px;
+  color: var(--text2);
+}
+
+.btn-fin-reg {
+  width: 100%; padding: 13px;
+  border-radius: 10px;
+  border: 0.5px solid var(--border2);
+  background: var(--bg2);
+  font-size: 14px; font-weight: 500;
+  color: var(--text); cursor: pointer;
+  font-family: inherit;
+}
+.btn-fin-reg:active { opacity: .8; }
+
+.btn-fin-dano {
+  width: 100%; padding: 13px;
+  border-radius: 10px;
+  border: 0.5px solid #5a1a1a;
+  background: var(--bg2);
+  font-size: 14px; font-weight: 500;
+  color: var(--red); cursor: pointer;
+  font-family: inherit;
+}
+.btn-fin-dano:active { opacity: .8; }
+
+.fin-divider {
+  border: none;
+  border-top: 0.5px solid var(--border);
+  margin: 2px 0;
+}
+
+.cobro-item {
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.cobro-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+.cobro-desc {
+  font-size: 13px;
+  font-weight: 500;
+  color: #cccccc;
+  flex: 1;
+}
+.cobro-fecha { font-size: 10px; color: var(--text3); margin-top: 1px; }
+.cobro-monto {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--red);
+  white-space: nowrap;
+}
+.cobro-sub { font-size: 11px; color: var(--text3); }
+.cobro-badge {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 20px;
+  align-self: flex-start;
+}
+.badge-ok { background: #0f2e1e; color: var(--green-light); border: 0.5px solid var(--green); }
+.badge-pend { background: #2e1e00; color: var(--amber); border: 0.5px solid #BA7517; }
+
+.fin-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: #1a0808;
+  border: 0.5px solid #3a1010;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text2);
+}

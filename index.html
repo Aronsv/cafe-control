@@ -85,20 +85,52 @@
     </nav>
   </div>
 
-  <!-- PANTALLA: STAFF — TAREAS (placeholder) -->
-  <div id="pantalla-tareas" class="pantalla">
-    <div class="placeholder-screen">
-      <div class="placeholder-icon">📋</div>
-      <div class="placeholder-txt">Tareas</div>
-      <div class="placeholder-sub">Próximamente</div>
+<!-- ===== MÓDULO: TAREAS STAFF ===== -->
+<div id="pantalla-tareas" class="pantalla">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="topbar-name" id="tareas-nombre-staff">—</div>
+        <div class="topbar-role" id="tareas-turno-staff">Turno mañana</div>
+      </div>
     </div>
-    <nav class="bottom-nav">
-      <div class="nav-item" data-pantalla="asistencia"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/></svg><span>Asistencia</span></div>
-      <div class="nav-item activo" data-pantalla="tareas"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="2" rx="1" fill="currentColor"/><rect x="3" y="9" width="10" height="2" rx="1" fill="currentColor"/><rect x="3" y="13" width="12" height="2" rx="1" fill="currentColor"/></svg><span>Tareas</span></div>
-      <div class="nav-item" data-pantalla="insumos"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg><span>Insumos</span></div>
-      <div class="nav-item" data-pantalla="finanzas"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 15 Q10 4 16 15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg><span>Finanzas</span></div>
-    </nav>
+    <span class="turno-badge" id="tareas-progreso">0/0</span>
   </div>
+
+  <div id="tareas-alertas"></div>
+
+  <div class="chips-scroll" id="tareas-chips">
+    <div class="chip-area activo" data-cat="todas">Todas</div>
+    <div class="chip-area" data-cat="cocina">Cocina</div>
+    <div class="chip-area" data-cat="barra">Barra</div>
+    <div class="chip-area" data-cat="sala">Sala</div>
+    <div class="chip-area" data-cat="banos">Baños</div>
+    <div class="chip-area" data-cat="general">General</div>
+  </div>
+
+  <div class="prog-bar-wrap">
+    <div class="prog-bar-bg"><div class="prog-bar-fill" id="tareas-prog-fill"></div></div>
+  </div>
+
+  <div class="tareas-scroll" id="tareas-lista"></div>
+
+  <div class="msg-libre-wrap">
+    <div class="msg-libre-header" id="btn-msg-libre">
+      <span>Mensaje para el siguiente turno</span><span id="msg-libre-arrow">▼</span>
+    </div>
+    <div class="msg-libre-body" id="msg-libre-body" style="display:none">
+      <textarea class="obs-textarea" id="msg-libre-input" rows="3" placeholder="Ej: no se lavaron las ollas, dejarlas remojando..."></textarea>
+      <button class="btn-msg-libre-send" id="btn-msg-libre-send">Enviar al siguiente turno y admin</button>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item" data-pantalla="asistencia"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="7" x2="10" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="10" x2="13" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Asistencia</span></div>
+    <div class="nav-item activo" data-pantalla="tareas"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="2" rx="1" fill="currentColor"/><rect x="3" y="9" width="10" height="2" rx="1" fill="currentColor"/><rect x="3" y="13" width="12" height="2" rx="1" fill="currentColor"/></svg><span>Tareas</span></div>
+    <div class="nav-item" data-pantalla="insumos"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg><span>Insumos</span></div>
+    <div class="nav-item" data-pantalla="finanzas"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 15 Q10 4 16 15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><line x1="6.5" y1="11" x2="13.5" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Finanzas</span></div>
+  </nav>
+</div>
 
   <!-- PANTALLA: STAFF — INSUMOS (placeholder) -->
   <div id="pantalla-insumos" class="pantalla">

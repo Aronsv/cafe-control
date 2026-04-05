@@ -621,6 +621,7 @@ async function copiarLista() {
     txt += '\n' + cl + '\n';
     byCat[cl].forEach(line => { txt += line + '\n'; });
   });
+
   const fecha = getFechaHoy();
   const { setDoc, doc: fd } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
   await setDoc(fd(db, 'listas_mercado', usuarioActual.uid + '_' + fecha + '_' + Date.now()), {
@@ -630,10 +631,21 @@ async function copiarLista() {
     timestamp: new Date().toISOString(),
     items: sel
   });
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(txt).then(() => alert('Lista copiada y guardada en el historial.'));
-  } else {
-    alert('Copia esto:\n\n' + txt);
+
+  try {
+    await navigator.clipboard.writeText(txt);
+    mostrarToast('Lista copiada y guardada ✓');
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = txt;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    mostrarToast('Lista copiada y guardada ✓');
   }
 }
 
@@ -651,7 +663,7 @@ async function iniciarFinanzas() {
     if (!desc) return;
     await registrarFinanza('consumo', desc, 0, 30);
     document.getElementById('inp-consumo').value = '';
-    alert('Consumo registrado. El admin lo valuará pronto.');
+    mostrarToast('Consumo registrado ✓');
   });
 
   document.getElementById('btn-reg-dano').addEventListener('click', async () => {
@@ -659,7 +671,7 @@ async function iniciarFinanzas() {
     if (!desc) return;
     await registrarFinanza('daño', desc, 0, 0);
     document.getElementById('inp-dano').value = '';
-    alert('Daño registrado. El admin lo valuará pronto.');
+    mostrarToast('Daño registrado ✓', '#E24B4A');
   });
 }
 
@@ -861,6 +873,21 @@ window.toggleCalFiltro = (estado, el) => {
   }
   renderCalendario();
 };
+
+// ===== TOAST =====
+function mostrarToast(msg, color) {
+  let toast = document.getElementById('toast-global');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast-global';
+    toast.className = 'toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.background = color || '#1D9E75';
+  toast.classList.add('visible');
+  setTimeout(() => toast.classList.remove('visible'), 3000);
+}
 
 // ===== TEMA CLARO/OSCURO =====
 function iniciarTema() {

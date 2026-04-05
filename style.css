@@ -1046,6 +1046,7 @@ body.tema-claro .clock-big { color: #1a1a1a; }
   flex: 1;
   overflow: hidden;
   position: relative;
+  min-height: 0;
 }
 
 .admin-sidebar {
@@ -1110,6 +1111,8 @@ body.tema-claro .clock-big { color: #1a1a1a; }
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  height: 100%;
 }
 
 .admin-sec {

@@ -903,6 +903,225 @@ function iniciarTema() {
   });
 }
 
+// ===== PANEL ADMIN =====
+let adminFechaActual = getFechaHoy();
+let adminCardsAbiertas = {};
+let adminEditsAbiertos = {};
+
+function iniciarAdmin() {
+  mostrarPantalla('admin');
+
+  const nombre = datosUsuario.nombre || 'Admin';
+  const rol = datosUsuario.rol || 'admin';
+  document.getElementById('sidebar-nombre').textContent = nombre;
+  document.getElementById('sidebar-role').textContent = rol;
+  document.getElementById('admin-role-badge').textContent = rol;
+
+  // Menú hamburguesa
+  document.getElementById('btn-menu-admin').addEventListener('click', () => {
+    document.getElementById('sidebar-panel').classList.toggle('abierto');
+    document.getElementById('sidebar-overlay').classList.toggle('visible');
+  });
+  document.getElementById('sidebar-overlay').addEventListener('click', () => {
+    document.getElementById('sidebar-panel').classList.remove('abierto');
+    document.getElementById('sidebar-overlay').classList.remove('visible');
+  });
+
+  // Navegación sidebar
+  document.querySelectorAll('.sidebar-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const sec = item.dataset.adminSec;
+      document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('activo'));
+      item.classList.add('activo');
+      document.querySelectorAll('.admin-sec').forEach(s => s.classList.remove('activa'));
+      document.getElementById('admin-sec-' + sec).classList.add('activa');
+      document.getElementById('admin-titulo-seccion').textContent = item.querySelector('span').textContent;
+      document.getElementById('sidebar-panel').classList.remove('abierto');
+      document.getElementById('sidebar-overlay').classList.remove('visible');
+    });
+  });
+
+  // Navegación de fechas
+  document.getElementById('btn-fecha-prev').addEventListener('click', () => {
+    const d = new Date(adminFechaActual);
+    d.setDate(d.getDate() - 1);
+    adminFechaActual = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    cargarAsistenciasAdmin();
+  });
+  document.getElementById('btn-fecha-next').addEventListener('click', () => {
+    const d = new Date(adminFechaActual);
+    d.setDate(d.getDate() + 1);
+    adminFechaActual = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    cargarAsistenciasAdmin();
+  });
+
+  cargarAsistenciasAdmin();
+}
+
+async function cargarAsistenciasAdmin() {
+  const hoy = getFechaHoy();
+  const esHoy = adminFechaActual === hoy;
+  const d = new Date(adminFechaActual + 'T12:00:00');
+  const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  document.getElementById('admin-fecha-label').textContent = esHoy ? 'Hoy' : dias[d.getDay()] + ' ' + d.getDate() + ' ' + meses[d.getMonth()];
+
+  const { getDocs, collection, query, where, getDoc, doc: fd, updateDoc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+
+  // Cargar todos los usuarios
+  const snapUsers = await getDocs(collection(db, 'usuarios'));
+  const usuarios = snapUsers.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.rol === 'staff');
+
+  // Cargar asistencias de esa fecha
+  const snapAsist = await getDocs(query(collection(db, 'asistencias'), where('fecha', '==', adminFechaActual)));
+  const asistMap = {};
+  snapAsist.docs.forEach(d => { asistMap[d.data().uid] = { id: d.id, ...d.data() }; });
+
+  // Stats
+  let trabajando = 0, tardanza = 0, sinMarcar = 0, enBreak = 0;
+  usuarios.forEach(u => {
+    const a = asistMap[u.id];
+    if (!a || !a.registros || !a.registros.length) { sinMarcar++; return; }
+    const ultimo = a.registros[a.registros.length - 1];
+    if (ultimo.tipo === 'Inicio break') enBreak++;
+    else trabajando++;
+    const ingreso = a.registros.find(r => r.tipo && r.tipo.startsWith('Ingreso'));
+    if (ingreso) {
+      const [h, m] = (ingreso.hora || '00:00').split(':').map(Number);
+      if (h * 60 + m > 8 * 60 + 10) tardanza++;
+    }
+  });
+
+  document.getElementById('admin-stats-hoy').innerHTML =
+    '<div class="admin-stat-card"><div class="admin-stat-num" style="color:var(--green-light)">' + trabajando + '</div><div class="admin-stat-lbl">Trabajando</div></div>' +
+    '<div class="admin-stat-card"><div class="admin-stat-num" style="color:var(--amber)">' + tardanza + '</div><div class="admin-stat-lbl">Tardanza</div></div>' +
+    '<div class="admin-stat-card"><div class="admin-stat-num" style="color:var(--red)">' + sinMarcar + '</div><div class="admin-stat-lbl">Sin marcar</div></div>' +
+    '<div class="admin-stat-card"><div class="admin-stat-num" style="color:var(--purple)">' + enBreak + '</div><div class="admin-stat-lbl">En break</div></div>';
+
+  renderListaAsistencias(usuarios, asistMap);
+}
+
+function renderListaAsistencias(usuarios, asistMap) {
+  const lista = document.getElementById('admin-asist-lista');
+  let html = '';
+
+  usuarios.forEach(u => {
+    const a = asistMap[u.id];
+    const registros = a ? a.registros || [] : [];
+    const tienePend = registros.some(r => !r.validado);
+    const tieneAlerta = !registros.length;
+    const iniciales = (u.nombre || 'XX').split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase();
+    const isAbierto = adminCardsAbiertas[u.id];
+
+    let estadoBadge = '<span style="font-size:10px;padding:3px 8px;border-radius:20px;background:var(--bg3);color:var(--text3)">Sin marcar</span>';
+    if (registros.length) {
+      const ultimo = registros[registros.length-1];
+      if (ultimo.tipo === 'Inicio break') estadoBadge = '<span style="font-size:10px;padding:3px 8px;border-radius:20px;background:var(--purple-bg);color:var(--purple)">En break</span>';
+      else if (ultimo.tipo.startsWith('Salida')) estadoBadge = '<span style="font-size:10px;padding:3px 8px;border-radius:20px;background:var(--green-bg);color:var(--green-light)">Salió</span>';
+      else estadoBadge = '<span style="font-size:10px;padding:3px 8px;border-radius:20px;background:var(--green-bg);color:var(--green-light)">Trabajando</span>';
+    }
+
+    html += '<div class="admin-staff-card' + (tieneAlerta ? ' tiene-alerta' : tienePend ? ' tiene-pendiente' : '') + '">';
+    html += '<div class="admin-card-top" onclick="toggleAdminCard(\'' + u.id + '\')">';
+    html += '<div class="avatar av-teal">' + iniciales + '</div>';
+    html += '<div class="admin-card-info"><div class="admin-card-name">' + u.nombre + '</div><div class="admin-card-sub">' + (u.area || '—') + '</div></div>';
+    html += estadoBadge + '</div>';
+
+    html += '<div class="admin-card-body' + (isAbierto ? ' abierto' : '') + '">';
+    if (tieneAlerta) html += '<div class="alerta-admin">⚠ Sin registros este día</div>';
+    if (!registros.length) {
+      html += '<div style="font-size:12px;color:var(--text3);text-align:center;padding:8px 0">Sin registros</div>';
+    } else {
+      registros.forEach((r, idx) => {
+        const editAbierto = adminEditsAbiertos[u.id + '_' + idx];
+        html += '<div class="reg-admin-bloque">';
+        html += '<div class="reg-admin-top"><div class="reg-admin-tipo">' + r.tipo + (r.validado ? ' <span style="font-size:9px;color:var(--green-light)">✓</span>' : '') + '</div><span class="reg-admin-hora">' + r.hora + '</span></div>';
+        if (r.observacion) html += '<div class="reg-admin-obs">"' + r.observacion + '"</div>';
+        if (!editAbierto) {
+          html += '<div class="reg-admin-actions">';
+          html += r.validado
+            ? '<div class="btn-admin-val ya">✓ Validado</div>'
+            : '<div class="btn-admin-val" onclick="validarRegAdmin(\'' + u.id + '\',' + idx + ')">✓ Validar</div>';
+          html += '<div class="btn-admin-edit" onclick="abrirEditAdmin(\'' + u.id + '\',' + idx + ')">Editar</div>';
+          html += '<div class="btn-admin-del" onclick="borrarRegAdmin(\'' + u.id + '\',' + idx + ')">✕</div>';
+          html += '</div>';
+        } else {
+          html += '<div class="edit-reg-box">';
+          html += '<div class="edit-reg-lbl">Hora</div>';
+          html += '<input class="edit-reg-inp" id="edit-hora-' + u.id + '-' + idx + '" type="time" value="' + r.hora + '">';
+          html += '<div class="edit-reg-lbl" style="margin-top:4px">Observación</div>';
+          html += '<input class="edit-reg-inp" id="edit-obs-' + u.id + '-' + idx + '" type="text" value="' + (r.observacion||'') + '" placeholder="Agregar nota...">';
+          html += '<div class="edit-reg-btns">';
+          html += '<button class="btn-edit-save" onclick="guardarEditAdmin(\'' + u.id + '\',' + idx + ')">Guardar</button>';
+          html += '<button class="btn-edit-cancel" onclick="cancelarEditAdmin(\'' + u.id + '\',' + idx + ')">Cancelar</button>';
+          html += '</div></div>';
+        }
+        html += '</div>';
+      });
+    }
+    html += '</div></div>';
+  });
+
+  lista.innerHTML = html || '<div style="text-align:center;padding:24px;font-size:13px;color:var(--text3)">Sin personal registrado</div>';
+}
+
+window.toggleAdminCard = (uid) => {
+  adminCardsAbiertas[uid] = !adminCardsAbiertas[uid];
+  cargarAsistenciasAdmin();
+};
+
+window.validarRegAdmin = async (uid, idx) => {
+  const { getDoc, doc: fd, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const docRef = fd(db, 'asistencias', uid + '_' + adminFechaActual);
+  const snap = await getDoc(docRef);
+  if (!snap.exists()) return;
+  const regs = snap.data().registros || [];
+  regs[idx].validado = true;
+  await updateDoc(docRef, { registros: regs });
+  mostrarToast('Registro validado ✓');
+  cargarAsistenciasAdmin();
+};
+
+window.abrirEditAdmin = (uid, idx) => {
+  adminEditsAbiertos[uid + '_' + idx] = true;
+  cargarAsistenciasAdmin();
+};
+
+window.cancelarEditAdmin = (uid, idx) => {
+  adminEditsAbiertos[uid + '_' + idx] = false;
+  cargarAsistenciasAdmin();
+};
+
+window.guardarEditAdmin = async (uid, idx) => {
+  const horaEl = document.getElementById('edit-hora-' + uid + '-' + idx);
+  const obsEl = document.getElementById('edit-obs-' + uid + '-' + idx);
+  if (!horaEl) return;
+  const { getDoc, doc: fd, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const docRef = fd(db, 'asistencias', uid + '_' + adminFechaActual);
+  const snap = await getDoc(docRef);
+  if (!snap.exists()) return;
+  const regs = snap.data().registros || [];
+  regs[idx].hora = horaEl.value;
+  regs[idx].observacion = obsEl ? obsEl.value.trim() : regs[idx].observacion;
+  await updateDoc(docRef, { registros: regs });
+  adminEditsAbiertos[uid + '_' + idx] = false;
+  mostrarToast('Registro actualizado ✓');
+  cargarAsistenciasAdmin();
+};
+
+window.borrarRegAdmin = async (uid, idx) => {
+  if (!confirm('¿Borrar este registro?')) return;
+  const { getDoc, doc: fd, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const docRef = fd(db, 'asistencias', uid + '_' + adminFechaActual);
+  const snap = await getDoc(docRef);
+  if (!snap.exists()) return;
+  const regs = snap.data().registros || [];
+  regs.splice(idx, 1);
+  await updateDoc(docRef, { registros: regs });
+  mostrarToast('Registro eliminado', '#E24B4A');
+  cargarAsistenciasAdmin();
+};
+
 // ===== LOGOUT =====
 const btnLogout = document.getElementById('btn-logout');
 if (btnLogout) btnLogout.addEventListener('click', () => signOut(auth));

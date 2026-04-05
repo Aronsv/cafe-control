@@ -937,6 +937,7 @@ function iniciarAdmin() {
       if (sec === 'horarios') iniciarHorarios();
       if (sec === 'tareas-admin') iniciarTareasAdmin();
       if (sec === 'finanzas-admin') iniciarFinanzasAdmin();
+      if (sec === 'insumos-admin') iniciarInsumosAdmin();
     });
   });
 
@@ -1143,6 +1144,139 @@ window.borrarRegAdmin = async (uid, idx) => {
   await updateDoc(docRef, { registros: regs });
   mostrarToast('Registro eliminado', '#E24B4A');
   cargarAsistenciasAdmin();
+};
+
+// ===== MÓDULO: INSUMOS ADMIN =====
+let insAdminEdits = {};
+let insAdminGrupos = {};
+let historialCards = {};
+
+async function iniciarInsumosAdmin() {
+  await cargarListaMaestra();
+}
+
+async function cargarListaMaestra() {
+  const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const snap = await getDocs(query(collection(db, 'insumos'), where('activo','==',true)));
+  const insumos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const prioOrden = { urgente:0, importante:1, normal:2 };
+  const grupos = {};
+  insumos.forEach(i => {
+    const key = (i.categoria||'otro') + '::' + (i.subgrupo||'general');
+    if (!grupos[key]) grupos[key] = { cat: i.categoria, sub: i.subgrupo, items: [] };
+    grupos[key].items.push(i);
+  });
+  Object.values(grupos).forEach(g => { g.items.sort((a,b) => (prioOrden[a.prioridad]||2)-(prioOrden[b.prioridad]||2)); });
+  const catLbl = { cocina:'Cocina', barra:'Barra', limpieza:'Limpieza', cristaleria:'Cristalería' };
+  const prioBorder = { urgente:'var(--red)', importante:'var(--amber)', normal:'transparent' };
+  let html = '';
+  Object.keys(grupos).forEach(key => {
+    const g = grupos[key];
+    const isCol = insAdminGrupos[key];
+    html += '<div style="margin-bottom:4px">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 4px;cursor:pointer;border-bottom:0.5px solid var(--border)" onclick="toggleGrupoAdmin(\'' + key + '\')">';
+    html += '<span style="font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">' + (catLbl[g.cat]||g.cat) + ' · ' + g.sub + '</span>';
+    html += '<span style="font-size:10px;color:var(--text3)">' + (isCol?'▶':'▼') + '</span></div>';
+    if (!isCol) {
+      html += '<div style="display:grid;grid-template-columns:1fr 70px 80px 32px;gap:4px;padding:4px 4px 2px;font-size:9px;color:var(--text3)">';
+      html += '<span>Insumo</span><span style="text-align:center">Mín.</span><span style="text-align:center">Editar mín.</span><span></span></div>';
+      g.items.forEach(i => {
+        const isEdit = insAdminEdits[i.id];
+        html += '<div style="display:grid;grid-template-columns:1fr 70px 80px 32px;gap:4px;align-items:center;padding:6px 4px;border-left:2px solid ' + (prioBorder[i.prioridad]||'transparent') + ';background:var(--bg2);border-radius:6px;margin-bottom:3px">';
+        html += '<div style="font-size:12px;color:var(--text)">' + i.nombre + '</div>';
+        if (!isEdit) {
+          html += '<div style="font-size:11px;color:var(--text3);text-align:center">' + (i.minimo||'—') + '</div>';
+          html += '<input class="edit-reg-inp" style="padding:4px;font-size:11px;text-align:center" value="' + (i.minimo||'') + '" onchange="editarMinimoInsumo(\'' + i.id + '\',this.value)" placeholder="Mín.">';
+          html += '<div style="display:flex;align-items:center;justify-content:center"><div class="btn-admin-del" style="padding:3px 6px;font-size:10px" onclick="eliminarInsumo(\'' + i.id + '\')">✕</div></div>';
+        }
+        html += '</div>';
+      });
+    }
+    html += '</div>';
+  });
+  const lista = document.getElementById('ia-lista-maestra');
+  if (lista) lista.innerHTML = html || '<div style="text-align:center;padding:16px;font-size:13px;color:var(--text3)">Sin insumos</div>';
+}
+
+async function cargarHistorialInsumos() {
+  const { getDocs, collection, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const snap = await getDocs(collection(db, 'listas_mercado'));
+  const listas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  listas.sort((a,b) => b.timestamp > a.timestamp ? 1 : -1);
+  const catLbl = { cocina:'Cocina', barra:'Barra', limpieza:'Limpieza', cristaleria:'Cristalería' };
+  let html = '';
+  if (!listas.length) { html = '<div style="text-align:center;padding:24px;font-size:13px;color:var(--text3)">Sin listas generadas aún</div>'; }
+  listas.forEach(l => {
+    const isAbierto = historialCards[l.id];
+    const items = l.items || [];
+    html += '<div class="admin-staff-card" style="margin-bottom:8px">';
+    html += '<div class="admin-card-top" onclick="toggleHistorialCard(\'' + l.id + '\')">';
+    html += '<div class="admin-card-info"><div class="admin-card-name">' + (l.fecha||'—') + '</div>';
+    html += '<div class="admin-card-sub">' + (l.nombre||'Encargado desconocido') + ' · ' + items.length + ' items</div></div>';
+    html += '<span style="font-size:10px;padding:3px 8px;border-radius:20px;background:var(--green-bg);color:var(--green-light)">' + items.length + ' items</span></div>';
+    html += '<div class="admin-card-body' + (isAbierto?' abierto':'') + '">';
+    const byCat = {};
+    items.forEach(i => { const cl=catLbl[i.cat]||i.cat; if(!byCat[cl])byCat[cl]=[]; byCat[cl].push(i); });
+    Object.keys(byCat).forEach(cl => {
+      html += '<div style="font-size:10px;color:var(--green-light);font-weight:500;margin-top:6px;margin-bottom:3px">' + cl + '</div>';
+      byCat[cl].forEach(i => { html += '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);padding:2px 0">- ' + i.nombre + '<span style="color:var(--green-light)">' + i.qty + '</span></div>'; });
+    });
+    html += '</div></div>';
+  });
+  const lista = document.getElementById('ia-historial-lista');
+  if (lista) lista.innerHTML = html;
+}
+
+window.showTabInsAdmin = (tab) => {
+  document.getElementById('tab-ia-lista').classList.toggle('activo', tab==='lista');
+  document.getElementById('tab-ia-historial').classList.toggle('activo', tab==='historial');
+  document.getElementById('panel-ia-lista').style.display = tab==='lista'?'flex':'none';
+  document.getElementById('panel-ia-lista').style.flexDirection = tab==='lista'?'column':'';
+  document.getElementById('panel-ia-historial').style.display = tab==='historial'?'flex':'none';
+  document.getElementById('panel-ia-historial').style.flexDirection = tab==='historial'?'column':'';
+  if (tab==='historial') cargarHistorialInsumos();
+};
+
+window.toggleFormInsumo = () => {
+  const f = document.getElementById('form-nuevo-insumo');
+  const visible = f.style.display==='flex';
+  f.style.display = visible?'none':'flex';
+  f.style.flexDirection = 'column';
+};
+
+window.toggleGrupoAdmin = (key) => { insAdminGrupos[key]=!insAdminGrupos[key]; cargarListaMaestra(); };
+window.toggleHistorialCard = (id) => { historialCards[id]=!historialCards[id]; cargarHistorialInsumos(); };
+
+window.editarMinimoInsumo = async (id, val) => {
+  if (!val.trim()) return;
+  const { doc: fd, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  await updateDoc(fd(db, 'insumos', id), { minimo: val.trim() });
+  mostrarToast('Mínimo actualizado ✓');
+};
+
+window.eliminarInsumo = async (id) => {
+  if (!confirm('¿Eliminar este insumo de la lista maestra?')) return;
+  const { doc: fd, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  await updateDoc(fd(db, 'insumos', id), { activo: false });
+  mostrarToast('Insumo eliminado', '#E24B4A');
+  cargarListaMaestra();
+};
+
+window.guardarNuevoInsumo = async () => {
+  const nombre = document.getElementById('ni-nombre').value.trim();
+  const cat = document.getElementById('ni-cat').value;
+  const sub = document.getElementById('ni-sub').value.trim()||'general';
+  const min = document.getElementById('ni-min').value.trim();
+  const prio = document.getElementById('ni-prio').value;
+  if (!nombre||!min) { mostrarToast('Completa nombre y mínimo', '#E24B4A'); return; }
+  const { addDoc, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  await addDoc(collection(db, 'insumos'), { nombre, categoria:cat, subgrupo:sub, minimo:min, prioridad:prio, activo:true, creadoEn:new Date().toISOString() });
+  document.getElementById('ni-nombre').value='';
+  document.getElementById('ni-sub').value='';
+  document.getElementById('ni-min').value='';
+  toggleFormInsumo();
+  mostrarToast('Insumo agregado ✓');
+  cargarListaMaestra();
 };
 
 // ===== MÓDULO: FINANZAS ADMIN =====

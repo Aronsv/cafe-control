@@ -1145,6 +1145,7 @@ window.borrarRegAdmin = async (uid, idx) => {
 
 // ===== MÓDULO: HORARIOS ADMIN =====
 let horarioFechaActual = getFechaHoy();
+let semanaOffset = 0;
 let usuariosStaff = [];
 let horariosCache = {};
 
@@ -1164,6 +1165,18 @@ async function iniciarHorarios() {
   sel.addEventListener('change', () => {
     if (sel.value) cargarSemanaPersona(sel.value);
   });
+
+  document.getElementById('btn-semana-prev').addEventListener('click', () => {
+    semanaOffset--;
+    actualizarLabelSemana();
+    if (sel.value) cargarSemanaPersona(sel.value);
+  });
+  document.getElementById('btn-semana-next').addEventListener('click', () => {
+    semanaOffset++;
+    actualizarLabelSemana();
+    if (sel.value) cargarSemanaPersona(sel.value);
+  });
+  actualizarLabelSemana();
 
   document.getElementById('btn-horario-prev').addEventListener('click', () => {
     const d = new Date(horarioFechaActual + 'T12:00:00');
@@ -1186,11 +1199,18 @@ async function iniciarHorarios() {
   cargarHorariosDia();
 }
 
+function actualizarLabelSemana() {
+  if (semanaOffset === 0) { document.getElementById('semana-label').textContent = 'Esta semana'; return; }
+  if (semanaOffset === 1) { document.getElementById('semana-label').textContent = 'Próxima semana'; return; }
+  if (semanaOffset === -1) { document.getElementById('semana-label').textContent = 'Semana pasada'; return; }
+  document.getElementById('semana-label').textContent = semanaOffset > 0 ? '+' + semanaOffset + ' semanas' : semanaOffset + ' semanas';
+}
+
 async function cargarSemanaPersona(uid) {
   const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
   const hoy = new Date(getFechaHoy() + 'T12:00:00');
   const lunes = new Date(hoy);
-  lunes.setDate(hoy.getDate() - (hoy.getDay() === 0 ? 6 : hoy.getDay() - 1));
+  lunes.setDate(hoy.getDate() - (hoy.getDay() === 0 ? 6 : hoy.getDay() - 1) + (semanaOffset * 7));
 
   const fechas = [];
   for (let i = 0; i < 7; i++) {

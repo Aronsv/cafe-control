@@ -268,6 +268,198 @@ $('btn-ver-historial').addEventListener('click', () => {
   $('btn-ver-historial').querySelector('span').textContent = visible ? '▼' : '▲';
 });
 
+// ===== MÓDULO: TAREAS =====
+let tareasConfig = [];
+let tareasDia = {};
+let catActualTareas = 'todas';
+let nopudeAbierto = {};
+let msgLibreAbierto = false;
+let unsuscribeTareas = null;
+
+const TAG_CLASES = {
+  cocina: 'tag-cocina', barra: 'tag-barra', sala: 'tag-sala',
+  banos: 'tag-banos', general: 'tag-general'
+};
+const TAG_LABELS = {
+  cocina: 'cocina', barra: 'barra', sala: 'sala',
+  banos: 'baños', general: 'general'
+};
+
+async function iniciarTareas() {
+  document.getElementById('tareas-nombre-staff').textContent = datosUsuario.nombre || '—';
+
+  const { getDocs, collection, query, where, setDoc, doc: firestoreDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+
+  const snap = await getDocs(query(collection(db, 'tareas_config'), where('activo', '==', true)));
+  tareasConfig = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const fecha = getFechaHoy();
+  if (unsuscribeTareas) unsuscribeTareas();
+  unsuscribeTareas = onSnapshot(
+    firestoreDoc(db, 'tareas_dia', usuarioActual.uid + '_' + fecha),
+    (snap) => {
+      tareasDia = snap.exists() ? snap.data().estados || {} : {};
+      renderTareas();
+    }
+  );
+
+  document.getElementById('btn-msg-libre').addEventListener('click', () => {
+    msgLibreAbierto = !msgLibreAbierto;
+    document.getElementById('msg-libre-body').style.display = msgLibreAbierto ? 'flex' : 'none';
+    document.getElementById('msg-libre-body').style.flexDirection = 'column';
+    document.getElementById('msg-libre-arrow').textContent = msgLibreAbierto ? '▲' : '▼';
+  });
+
+  document.getElementById('btn-msg-libre-send').addEventListener('click', async () => {
+    const msg = document.getElementById('msg-libre-input').value.trim();
+    if (!msg) return;
+    const fecha = getFechaHoy();
+    const { setDoc, doc: fd } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    await setDoc(fd(db, 'mensajes_turno', usuarioActual.uid + '_' + fecha), {
+      uid: usuarioActual.uid,
+      nombre: datosUsuario.nombre,
+      fecha,
+      mensaje: msg,
+      timestamp: new Date().toISOString()
+    });
+    document.getElementById('msg-libre-input').value = '';
+    msgLibreAbierto = false;
+    document.getElementById('msg-libre-body').style.display = 'none';
+    document.getElementById('msg-libre-arrow').textContent = '▼';
+    alert('Mensaje enviado al siguiente turno y al admin.');
+  });
+
+  document.querySelectorAll('.chip-area').forEach(chip => {
+    chip.addEventListener('click', () => {
+      catActualTareas = chip.dataset.cat;
+      document.querySelectorAll('.chip-area').forEach(c => c.classList.remove('activo'));
+      chip.classList.add('activo');
+      renderTareas();
+    });
+  });
+}
+
+function getTareasFiltradas() {
+  if (catActualTareas === 'todas') return tareasConfig;
+  return tareasConfig.filter(t => t.area === catActualTareas || t.area === 'general');
+}
+
+function renderTareas() {
+  const lista = document.getElementById('tareas-lista');
+  const tareas = getTareasFiltradas();
+  const pendientes = tareas.filter(t => {
+    const est = tareasDia[t.id];
+    return !est || est === 'pendiente';
+  });
+  const total = tareas.length;
+  const hechas = total - pendientes.length;
+  const pct = total > 0 ? Math.round((hechas / total) * 100) : 0;
+
+  document.getElementById('tareas-progreso').textContent = hechas + '/' + total;
+  document.getElementById('tareas-prog-fill').style.width = pct + '%';
+
+  if (pendientes.length === 0 && total > 0) {
+    lista.innerHTML = '<div class="todo-listo"><div class="todo-listo-icon">🎉</div><div class="todo-listo-txt">¡Todo listo en este turno!</div><div class="todo-listo-sub">Buen trabajo</div></div>';
+    return;
+  }
+
+  const secciones = [
+    { key: 'urgente', badge: 'URGENTE AHORA', cls: 'sec-urgente' },
+    { key: 'traspaso', badge: 'TURNO ANTERIOR', cls: 'sec-traspaso' },
+    { key: 'recurrente', badge: 'CADA 2-3H', cls: 'sec-recurrente' },
+    { key: 'normal', badge: 'TAREAS DEL TURNO', cls: 'sec-turno' },
+  ];
+
+  let html = '';
+  secciones.forEach(sec => {
+    const items = pendientes.filter(t => {
+      if (sec.key === 'normal') return t.tipo === 'normal' || t.tipo === 'turno';
+      return t.tipo === sec.key;
+    });
+    if (!items.length) return;
+    html += '<div class="sec-badge ' + sec.cls + '">' + sec.badge + '</div>';
+    items.forEach(t => {
+      const isNpOpen = nopudeAbierto[t.id];
+      const tagCls = TAG_CLASES[t.area] || 'tag-general';
+      const tagLbl = TAG_LABELS[t.area] || t.area;
+      html += '<div class="tarea-card" id="tarea-' + t.id + '">';
+      html += '<div class="tarea-top"><div class="tarea-chk" onclick="marcarTarea(\'' + t.id + '\')"></div>';
+      html += '<div class="tarea-body"><div class="tarea-nombre">' + t.nombre + '</div>';
+      html += '<div class="tarea-meta"><span class="tag-area ' + tagCls + '">' + tagLbl + '</span>';
+      if (t.compartida) html += '<span style="font-size:10px;color:var(--purple)">compartida</span>';
+      html += '</div>';
+      if (t.tipo === 'recurrente') html += '<div class="tarea-prox-ok">↻ cada ' + t.repHoras + 'h</div>';
+      html += '</div></div>';
+      html += '<div class="tarea-btns">';
+      html += '<div class="btn-yahay" onclick="marcarYahay(\'' + t.id + '\')">Ya hay / no aplica</div>';
+      html += '<div class="btn-nopude" onclick="toggleNopude(\'' + t.id + '\')">No pude</div>';
+      html += '</div>';
+      if (isNpOpen) {
+        html += '<div class="nopude-box">';
+        html += '<textarea class="nopude-inp" id="np-' + t.id + '" rows="2" placeholder="¿Por qué no pudiste? El admin lo verá..."></textarea>';
+        html += '<button class="btn-nopude-send" onclick="enviarNopude(\'' + t.id + '\')">Enviar y dejar pendiente</button>';
+        html += '</div>';
+      }
+      html += '</div>';
+    });
+  });
+
+  lista.innerHTML = html;
+}
+
+window.marcarTarea = async (id) => {
+  const el = document.getElementById('tarea-' + id);
+  if (el) el.classList.add('desapareciendo');
+  setTimeout(async () => {
+    const t = tareasConfig.find(x => x.id === id);
+    if (!t) return;
+    const { setDoc, doc: fd } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    const fecha = getFechaHoy();
+    const docRef = fd(db, 'tareas_dia', usuarioActual.uid + '_' + fecha);
+    const nuevos = Object.assign({}, tareasDia);
+    nuevos[id] = 'hecho';
+    await setDoc(docRef, { uid: usuarioActual.uid, fecha, estados: nuevos }, { merge: true });
+    if (t.tipo === 'recurrente' && t.repHoras > 0) {
+      setTimeout(async () => {
+        const { setDoc: sd, doc: fd2 } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        const n2 = Object.assign({}, tareasDia);
+        delete n2[id];
+        await sd(fd2(db, 'tareas_dia', usuarioActual.uid + '_' + getFechaHoy()), { uid: usuarioActual.uid, fecha: getFechaHoy(), estados: n2 }, { merge: true });
+      }, t.repHoras * 3600000);
+    }
+  }, 280);
+};
+
+window.marcarYahay = async (id) => {
+  const el = document.getElementById('tarea-' + id);
+  if (el) el.classList.add('desapareciendo');
+  setTimeout(async () => {
+    const { setDoc, doc: fd } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    const fecha = getFechaHoy();
+    const nuevos = Object.assign({}, tareasDia);
+    nuevos[id] = 'yahay';
+    await setDoc(fd(db, 'tareas_dia', usuarioActual.uid + '_' + fecha), { uid: usuarioActual.uid, fecha, estados: nuevos }, { merge: true });
+  }, 280);
+};
+
+window.toggleNopude = (id) => {
+  nopudeAbierto[id] = !nopudeAbierto[id];
+  renderTareas();
+};
+
+window.enviarNopude = async (id) => {
+  const el = document.getElementById('np-' + id);
+  if (!el || !el.value.trim()) return;
+  const motivo = el.value.trim();
+  const { setDoc, doc: fd } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const fecha = getFechaHoy();
+  const nuevos = Object.assign({}, tareasDia);
+  nuevos[id] = 'nopudo';
+  await setDoc(fd(db, 'tareas_dia', usuarioActual.uid + '_' + fecha), { uid: usuarioActual.uid, fecha, estados: nuevos, ['motivo_' + id]: motivo }, { merge: true });
+  nopudeAbierto[id] = false;
+  alert('Motivo enviado al admin. La tarea quedará pendiente para el siguiente turno.');
+};
+
 // ===== LOGOUT =====
 const btnLogout = document.getElementById('btn-logout');
 if (btnLogout) btnLogout.addEventListener('click', () => signOut(auth));

@@ -634,6 +634,103 @@ async function copiarLista() {
   }
 }
 
+// ===== MÓDULO: FINANZAS =====
+async function iniciarFinanzas() {
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const ahora = new Date();
+  const elMes = document.getElementById('finanzas-mes');
+  if (elMes) elMes.textContent = meses[ahora.getMonth()] + ' ' + ahora.getFullYear();
+
+  await cargarFinanzas();
+
+  document.getElementById('btn-reg-consumo').addEventListener('click', async () => {
+    const desc = document.getElementById('inp-consumo').value.trim();
+    if (!desc) return;
+    await registrarFinanza('consumo', desc, 0, 30);
+    document.getElementById('inp-consumo').value = '';
+    alert('Consumo registrado. El admin lo valuará pronto.');
+  });
+
+  document.getElementById('btn-reg-dano').addEventListener('click', async () => {
+    const desc = document.getElementById('inp-dano').value.trim();
+    if (!desc) return;
+    await registrarFinanza('daño', desc, 0, 0);
+    document.getElementById('inp-dano').value = '';
+    alert('Daño registrado. El admin lo valuará pronto.');
+  });
+}
+
+async function registrarFinanza(tipo, descripcion, monto, descuento) {
+  const { addDoc, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  await addDoc(collection(db, 'finanzas'), {
+    uid: usuarioActual.uid,
+    nombre: datosUsuario.nombre,
+    fecha: getFechaHoy(),
+    tipo,
+    descripcion,
+    monto,
+    descuento,
+    montofinal: monto * (1 - descuento / 100),
+    validado: false,
+    timestamp: new Date()
+  });
+  await cargarFinanzas();
+}
+
+async function cargarFinanzas() {
+  const { getDocs, collection, query, where, orderBy } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const snap = await getDocs(query(
+    collection(db, 'finanzas'),
+    where('uid', '==', usuarioActual.uid)
+  ));
+  const todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const hoy = getFechaHoy();
+  const deHoy = todos.filter(f => f.fecha === hoy);
+  const delMes = todos;
+
+  renderFinanzasHoy(deHoy);
+  renderFinanzasMes(delMes);
+
+  const totalMes = delMes.reduce((a, f) => a + (f.montofinal || 0), 0);
+  const totalEl = document.getElementById('finanzas-total');
+  if (totalEl) totalEl.textContent = 'S/ ' + totalMes.toFixed(2);
+}
+
+function renderFinanzasHoy(lista) {
+  const el = document.getElementById('finanzas-lista-hoy');
+  const totalEl = document.getElementById('fin-total-hoy');
+  const montoEl = document.getElementById('fin-total-hoy-monto');
+  if (!lista.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3);text-align:center;padding:8px 0">Sin registros hoy</div>'; totalEl.style.display='none'; return; }
+  const total = lista.reduce((a, f) => a + (f.montofinal || 0), 0);
+  el.innerHTML = lista.map(f => renderCobroItem(f)).join('');
+  totalEl.style.display = 'flex';
+  montoEl.textContent = 'S/ ' + total.toFixed(2);
+}
+
+function renderFinanzasMes(lista) {
+  const el = document.getElementById('finanzas-lista-mes');
+  const totalEl = document.getElementById('fin-total-mes');
+  const montoEl = document.getElementById('fin-total-mes-monto');
+  if (!lista.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3);text-align:center;padding:8px 0">Sin cobros este mes</div>'; totalEl.style.display='none'; return; }
+  const total = lista.reduce((a, f) => a + (f.montofinal || 0), 0);
+  el.innerHTML = lista.map(f => renderCobroItem(f)).join('');
+  totalEl.style.display = 'flex';
+  montoEl.textContent = 'S/ ' + total.toFixed(2);
+}
+
+function renderCobroItem(f) {
+  const esBadge = f.validado ? '<span class="cobro-badge badge-ok">Descontado</span>' : '<span class="cobro-badge badge-pend">Pendiente</span>';
+  const subTxt = f.tipo === 'consumo' ? 'Consumo · ' + f.descuento + '% desc. aplicado' : 'Daño · valorizado por admin';
+  return '<div class="cobro-item"><div class="cobro-top"><div><div class="cobro-desc">' + f.descripcion + '</div><div class="cobro-fecha">' + f.fecha + '</div></div><div class="cobro-monto">S/ ' + (f.montofinal || 0).toFixed(2) + '</div></div><div class="cobro-sub">' + subTxt + '</div>' + esBadge + '</div>';
+}
+
+window.showTabFin = (tab) => {
+  document.getElementById('tab-registros').classList.toggle('activo', tab === 'registros');
+  document.getElementById('tab-cobros').classList.toggle('activo', tab === 'cobros');
+  document.getElementById('panel-registros').style.display = tab === 'registros' ? 'flex' : 'none';
+  document.getElementById('panel-cobros').style.display = tab === 'cobros' ? 'flex' : 'none';
+};
+
 // ===== LOGOUT =====
 const btnLogout = document.getElementById('btn-logout');
 if (btnLogout) btnLogout.addEventListener('click', () => signOut(auth));

@@ -1205,8 +1205,6 @@ window.cargarPersonal = async function() {
   if (lista) lista.innerHTML = html || '<div style="text-align:center;padding:24px;font-size:13px;color:var(--text3)">Sin personal registrado</div>';
 };
 window.cargarPersonal = cargarPersonal;
-}
-
 
 window.abrirModalPersonal = async (uid) => {
   const { getDoc, doc: fd } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');

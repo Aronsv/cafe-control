@@ -596,7 +596,7 @@ function actualizarResumen() {
   document.getElementById('resumen-items').innerHTML = html;
 }
 
-function copiarLista() {
+async function copiarLista() {
   const sel = Object.values(insumosSeleccionados).filter(i => i.qty);
   if (!sel.length) return;
   const catLabels = { cocina: 'Cocina', barra: 'Barra', limpieza: 'Limpieza', cristaleria: 'Cristalería' };
@@ -611,8 +611,17 @@ function copiarLista() {
     txt += '\n' + cl + '\n';
     byCat[cl].forEach(line => { txt += line + '\n'; });
   });
+  const fecha = getFechaHoy();
+  const { setDoc, doc: fd } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  await setDoc(fd(db, 'listas_mercado', usuarioActual.uid + '_' + fecha + '_' + Date.now()), {
+    uid: usuarioActual.uid,
+    nombre: datosUsuario.nombre,
+    fecha,
+    timestamp: new Date().toISOString(),
+    items: sel
+  });
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(txt).then(() => alert('Lista copiada. Pégala en WhatsApp.'));
+    navigator.clipboard.writeText(txt).then(() => alert('Lista copiada y guardada en el historial.'));
   } else {
     alert('Copia esto:\n\n' + txt);
   }

@@ -166,10 +166,6 @@ function iniciarStaff() {
   );
 }
  
-function iniciarAdmin() {
-  mostrarPantalla('admin');
-}
- 
 function iniciarNav() {
   document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
     item.addEventListener('click', () => {

@@ -550,10 +550,60 @@
 
       <!-- ===== SECCIÓN: INSUMOS ADMIN ===== -->
       <div id="admin-sec-insumos-admin" class="admin-sec">
-        <div class="placeholder-screen" style="padding-bottom:0">
-          <div class="placeholder-icon">🛒</div>
-          <div class="placeholder-txt">Insumos</div>
-          <div class="placeholder-sub">Próximamente</div>
+        <div class="tabs-finanzas">
+          <div class="tab-fin activo" id="tab-ia-lista" onclick="showTabInsAdmin('lista')">Lista maestra</div>
+          <div class="tab-fin" id="tab-ia-historial" onclick="showTabInsAdmin('historial')">Historial</div>
+        </div>
+
+        <!-- LISTA MAESTRA -->
+        <div id="panel-ia-lista" style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn-admin-val" style="width:100%" onclick="toggleFormInsumo()">+ Nuevo insumo</button>
+
+          <!-- Formulario nuevo insumo -->
+          <div id="form-nuevo-insumo" style="display:none;background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:12px;flex-direction:column;gap:8px">
+            <div class="edit-reg-lbl">Nombre del insumo</div>
+            <input class="edit-reg-inp" id="ni-nombre" placeholder="Ej: pollo deshilachado">
+            <div style="display:flex;gap:8px">
+              <div style="flex:1">
+                <div class="edit-reg-lbl">Categoría</div>
+                <select class="edit-reg-inp" id="ni-cat">
+                  <option value="cocina">Cocina</option>
+                  <option value="barra">Barra</option>
+                  <option value="limpieza">Limpieza</option>
+                  <option value="cristaleria">Cristalería</option>
+                </select>
+              </div>
+              <div style="flex:1">
+                <div class="edit-reg-lbl">Subgrupo</div>
+                <input class="edit-reg-inp" id="ni-sub" placeholder="Ej: carnes">
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <div style="flex:1">
+                <div class="edit-reg-lbl">Cantidad mínima</div>
+                <input class="edit-reg-inp" id="ni-min" placeholder="Ej: 10 bolsas">
+              </div>
+              <div style="flex:1">
+                <div class="edit-reg-lbl">Prioridad</div>
+                <select class="edit-reg-inp" id="ni-prio">
+                  <option value="urgente">Urgente</option>
+                  <option value="importante">Importante</option>
+                  <option value="normal">Normal</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn-edit-save" onclick="guardarNuevoInsumo()">Guardar insumo</button>
+              <button class="btn-edit-cancel" onclick="toggleFormInsumo()">Cancelar</button>
+            </div>
+          </div>
+
+          <div id="ia-lista-maestra"></div>
+        </div>
+
+        <!-- HISTORIAL -->
+        <div id="panel-ia-historial" style="display:none;flex-direction:column;gap:8px">
+          <div id="ia-historial-lista"></div>
         </div>
       </div>
 

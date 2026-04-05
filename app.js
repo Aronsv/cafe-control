@@ -935,6 +935,7 @@ function iniciarAdmin() {
       document.getElementById('sidebar-panel').classList.remove('abierto');
       document.getElementById('sidebar-overlay').classList.remove('visible');
       if (sec === 'horarios') iniciarHorarios();
+      if (sec === 'tareas-admin') iniciarTareasAdmin();
     });
   });
 
@@ -1141,6 +1142,160 @@ window.borrarRegAdmin = async (uid, idx) => {
   await updateDoc(docRef, { registros: regs });
   mostrarToast('Registro eliminado', '#E24B4A');
   cargarAsistenciasAdmin();
+};
+
+// ===== MÓDULO: TAREAS ADMIN =====
+let tipoTareaActual = 'normal';
+let tareasAdminCards = {};
+let seguimientoCards = {};
+
+async function iniciarTareasAdmin() {
+  await cargarTareasConfig();
+  await cargarSeguimiento();
+
+  // Llenar select de urgente
+  const sel = document.getElementById('sel-urgente-staff');
+  if (sel && usuariosStaff.length === 0) {
+    const { getDocs, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    const snap = await getDocs(collection(db, 'usuarios'));
+    usuariosStaff = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.rol === 'staff');
+  }
+  const sel2 = document.getElementById('sel-urgente-staff');
+  if (sel2) {
+    sel2.innerHTML = '<option value="">Selecciona persona...</option>';
+    usuariosStaff.forEach(u => {
+      sel2.innerHTML += '<option value="' + u.id + '">' + u.nombre + '</option>';
+    });
+  }
+}
+
+async function cargarTareasConfig() {
+  const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const snap = await getDocs(query(collection(db, 'tareas_config'), where('activo', '==', true)));
+  const tareas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const tagCls = { cocina:'tag-cocina', barra:'tag-barra', sala:'tag-sala', banos:'tag-banos', general:'tag-general' };
+  const tagLbl = { cocina:'cocina', barra:'barra', sala:'sala', banos:'baños', general:'general' };
+  let html = '';
+  tareas.forEach(t => {
+    const tipoBadge = t.tipo === 'recurrente' ? '<span style="font-size:9px;padding:2px 6px;border-radius:20px;background:#2a1a00;color:var(--amber);border:0.5px solid #3a2400">↻ cada ' + (t.repHoras||2) + 'h</span>' :
+      t.tipo === 'turno' ? '<span style="font-size:9px;padding:2px 6px;border-radius:20px;background:var(--purple-bg);color:var(--purple)">por turno</span>' : '';
+    const compBadge = t.compartida ? '<span style="font-size:9px;padding:2px 6px;border-radius:20px;background:#001828;color:#5DAAE8">compartida</span>' : '';
+    html += '<div class="tarea-config-card">';
+    html += '<div class="tarea-config-top"><div class="tarea-config-nombre">' + t.nombre + '</div></div>';
+    html += '<div class="tarea-config-meta"><span class="tag-area ' + (tagCls[t.area]||'tag-general') + '">' + (tagLbl[t.area]||t.area) + '</span>' + tipoBadge + compBadge + '</div>';
+    html += '<div style="font-size:10px;color:var(--text3)">Turno: ' + (t.turno||'ambos') + '</div>';
+    html += '<div class="tarea-config-btns">';
+    html += '<button class="btn-admin-del" onclick="desactivarTarea(\'' + t.id + '\')">Eliminar</button>';
+    html += '</div></div>';
+  });
+  document.getElementById('lista-tareas-config').innerHTML = html || '<div style="font-size:12px;color:var(--text3);text-align:center;padding:16px">Sin tareas configuradas</div>';
+}
+
+async function cargarSeguimiento() {
+  const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  if (usuariosStaff.length === 0) {
+    const snap = await getDocs(collection(db, 'usuarios'));
+    usuariosStaff = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.rol === 'staff');
+  }
+  const snapConfig = await getDocs(query(collection(db, 'tareas_config'), where('activo', '==', true)));
+  const config = snapConfig.docs.map(d => ({ id: d.id, ...d.data() }));
+  const fecha = getFechaHoy();
+  const snapDia = await getDocs(query(collection(db, 'tareas_dia'), where('fecha', '==', fecha)));
+  const diaMap = {};
+  snapDia.docs.forEach(d => { diaMap[d.data().uid] = d.data(); });
+
+  let html = '';
+  usuariosStaff.forEach(u => {
+    const dia = diaMap[u.id] || {};
+    const estados = dia.estados || {};
+    const total = config.length;
+    const hechas = config.filter(t => estados[t.id] === 'hecho' || estados[t.id] === 'yahay').length;
+    const pct = total > 0 ? Math.round(hechas / total * 100) : 0;
+    const color = pct >= 80 ? 'var(--green-light)' : pct >= 40 ? 'var(--amber)' : 'var(--red)';
+    const iniciales = (u.nombre||'XX').split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+    const isAbierto = seguimientoCards[u.id];
+
+    html += '<div class="seguimiento-card">';
+    html += '<div class="seguimiento-top" onclick="toggleSeguimiento(\'' + u.id + '\')">';
+    html += '<div class="avatar av-teal">' + iniciales + '</div>';
+    html += '<div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">' + u.nombre + '</div>';
+    html += '<div style="font-size:11px;color:var(--text3)">' + (u.area||'—') + '</div>';
+    html += '<div class="seg-prog"><div class="seg-prog-bar"><div class="seg-prog-fill" style="width:' + pct + '%;background:' + color + '"></div></div>';
+    html += '<span style="font-size:10px;color:var(--text3)">' + hechas + '/' + total + '</span></div></div></div>';
+
+    html += '<div class="seguimiento-body' + (isAbierto ? ' abierto' : '') + '">';
+    config.forEach(t => {
+      const est = estados[t.id] || 'pend';
+      const estLbl = { hecho:'Hecho', yahay:'Ya había', nopudo:'No pudo', pend:'Pendiente' }[est] || 'Pendiente';
+      const estCls = { hecho:'seg-ok', yahay:'seg-yh', nopudo:'seg-np', pend:'seg-pend' }[est] || 'seg-pend';
+      html += '<div class="seg-tarea-row"><span class="seg-tarea-nombre">' + t.nombre + '</span><span class="seg-estado ' + estCls + '">' + estLbl + '</span></div>';
+      if (est === 'nopudo' && dia['motivo_' + t.id]) {
+        html += '<div style="font-size:10px;color:var(--red);font-style:italic;padding:2px 6px;background:var(--red-bg);border-radius:5px">"' + dia['motivo_' + t.id] + '"</div>';
+      }
+    });
+    html += '</div></div>';
+  });
+  document.getElementById('seguimiento-lista').innerHTML = html || '<div style="text-align:center;padding:16px;font-size:13px;color:var(--text3)">Sin personal</div>';
+}
+
+window.showTabTareasAdmin = (tab) => {
+  document.getElementById('tab-ta-gestion').classList.toggle('activo', tab === 'gestion');
+  document.getElementById('tab-ta-seguimiento').classList.toggle('activo', tab === 'seguimiento');
+  document.getElementById('panel-ta-gestion').style.display = tab === 'gestion' ? 'flex' : 'none';
+  document.getElementById('panel-ta-seguimiento').style.display = tab === 'seguimiento' ? 'flex' : 'none';
+  if (tab === 'seguimiento') cargarSeguimiento();
+};
+
+window.toggleFormTarea = () => {
+  const f = document.getElementById('form-nueva-tarea');
+  const visible = f.style.display === 'flex';
+  f.style.display = visible ? 'none' : 'flex';
+  f.style.flexDirection = 'column';
+};
+
+window.setTipoTarea = (tipo) => {
+  tipoTareaActual = tipo;
+  document.querySelectorAll('.tipo-tarea-btn').forEach(b => b.classList.toggle('activo', b.dataset.tipo === tipo));
+  document.getElementById('nt-rep-wrap').style.display = tipo === 'recurrente' ? 'flex' : 'none';
+  document.getElementById('nt-rep-wrap').style.flexDirection = 'column';
+};
+
+window.guardarNuevaTarea = async () => {
+  const nombre = document.getElementById('nt-nombre').value.trim();
+  if (!nombre) { mostrarToast('Escribe el nombre de la tarea', '#E24B4A'); return; }
+  const area = document.getElementById('nt-area').value;
+  const turno = document.getElementById('nt-turno').value;
+  const compartida = document.getElementById('nt-compartida').checked;
+  const repHoras = tipoTareaActual === 'recurrente' ? parseInt(document.getElementById('nt-rep-horas').value) || 2 : 0;
+  const { addDoc, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  await addDoc(collection(db, 'tareas_config'), { nombre, area, turno, tipo: tipoTareaActual, repHoras, compartida, activo: true, creadoEn: new Date().toISOString() });
+  mostrarToast('Tarea guardada ✓');
+  toggleFormTarea();
+  document.getElementById('nt-nombre').value = '';
+  cargarTareasConfig();
+};
+
+window.desactivarTarea = async (id) => {
+  if (!confirm('¿Eliminar esta tarea? Ya no aparecerá para el personal.')) return;
+  const { doc: fd, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  await updateDoc(fd(db, 'tareas_config', id), { activo: false });
+  mostrarToast('Tarea eliminada', '#E24B4A');
+  cargarTareasConfig();
+};
+
+window.toggleSeguimiento = (uid) => {
+  seguimientoCards[uid] = !seguimientoCards[uid];
+  cargarSeguimiento();
+};
+
+window.asignarUrgente = async () => {
+  const uid = document.getElementById('sel-urgente-staff').value;
+  const tarea = document.getElementById('inp-urgente-tarea').value.trim();
+  if (!uid || !tarea) { mostrarToast('Selecciona persona y escribe la tarea', '#E24B4A'); return; }
+  const { addDoc, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  await addDoc(collection(db, 'tareas_urgentes'), { uid, tarea, fecha: getFechaHoy(), timestamp: new Date().toISOString(), completada: false });
+  document.getElementById('inp-urgente-tarea').value = '';
+  mostrarToast('Tarea urgente asignada ✓');
 };
 
 // ===== MÓDULO: HORARIOS ADMIN =====

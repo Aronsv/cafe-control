@@ -1171,7 +1171,7 @@ async function iniciarPersonal() {
   await cargarPersonal();
 }
 
-async function cargarPersonal() {
+window.cargarPersonal = async function() {
   const { getDocs, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
   const snap = await getDocs(collection(db, 'usuarios'));
   const usuarios = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -1203,7 +1203,10 @@ async function cargarPersonal() {
 
   const lista = document.getElementById('personal-lista');
   if (lista) lista.innerHTML = html || '<div style="text-align:center;padding:24px;font-size:13px;color:var(--text3)">Sin personal registrado</div>';
+};
+window.cargarPersonal = cargarPersonal;
 }
+
 
 window.abrirModalPersonal = async (uid) => {
   const { getDoc, doc: fd } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');

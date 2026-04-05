@@ -751,25 +751,67 @@ async function cargarCalendario() {
 
   const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
   const mesStr = calYear + '-' + String(calMonth+1).padStart(2,'0');
-  const snap = await getDocs(query(collection(db, 'asistencias'), where('uid','==',usuarioActual.uid)));
-  calDatos = {};
-  snap.docs.forEach(d => {
+  const snapHorarios = await getDocs(query(collection(db, 'horarios'), where('uid','==',usuarioActual.uid)));
+    calDatos = {};
+    snapHorarios.docs.forEach(d => {
+      const h = d.data();
+      if (h.fecha && h.fecha.startsWith(mesStr)) {
+        if (h.tipo_dia === 'libre') calDatos[h.fecha] = 'libre';
+        if (h.tipo_dia === 'permiso') calDatos[h.fecha] = 'permiso';
+      }
+    });
+    const snap = await getDocs(query(collection(db, 'asistencias'), where('uid','==',usuarioActual.uid)));
+  const promesas = snap.docs.map(async d => {
     const data = d.data();
     if (data.fecha && data.fecha.startsWith(mesStr)) {
-      calDatos[data.fecha] = data.estado || calcularEstado(data.registros || []);
+      const estado = data.estado || await calcularEstadoConHorario(usuarioActual.uid, data.fecha, data.registros || []);
+      calDatos[data.fecha] = estado;
     }
   });
+  await Promise.all(promesas);
   renderCalendario();
+}
+
+async function calcularEstadoConHorario(uid, fecha, registros) {
+  const { getDoc, doc: fd } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const { getDocs, collection, query, where } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+
+  const snap = await getDocs(query(
+    collection(db, 'horarios'),
+    where('uid', '==', uid),
+    where('fecha', '==', fecha)
+  ));
+
+  if (!snap.empty) {
+    const horario = snap.docs[0].data();
+    if (horario.tipo_dia === 'libre') return 'libre';
+    if (horario.tipo_dia === 'permiso') return 'permiso';
+    if (horario.tipo_dia === 'trabajo') {
+      const ingreso = registros.find(r => r.tipo && r.tipo.startsWith('Ingreso'));
+      if (!ingreso) return 'falta';
+      const horaEntrada = horario.hora_entrada || '08:00';
+      const [he, me] = horaEntrada.split(':').map(Number);
+      const limiteMin = he * 60 + me + 10;
+      const [hi, mi] = (ingreso.hora || '00:00').split(':').map(Number);
+      const ingresoMin = hi * 60 + mi;
+      return ingresoMin > limiteMin ? 'tardanza' : 'atiempo';
+    }
+  }
+
+  if (!registros.length) return null;
+  const ingreso = registros.find(r => r.tipo && r.tipo.startsWith('Ingreso'));
+  if (!ingreso) return null;
+  const [hi, mi] = (ingreso.hora || '00:00').split(':').map(Number);
+  const ingresoMin = hi * 60 + mi;
+  return ingresoMin > 8 * 60 + 10 ? 'tardanza' : 'atiempo';
 }
 
 function calcularEstado(registros) {
   if (!registros.length) return null;
   const ingreso = registros.find(r => r.tipo && r.tipo.startsWith('Ingreso'));
   if (!ingreso) return null;
-  const hora = ingreso.hora || '00:00';
-  const [h, m] = hora.split(':').map(Number);
-  const minutos = h * 60 + m;
-  return minutos > 8 * 60 + 10 ? 'tardanza' : 'atiempo';
+  const [hi, mi] = (ingreso.hora || '00:00').split(':').map(Number);
+  return (hi * 60 + mi) > 8 * 60 + 10 ? 'tardanza' : 'atiempo';
 }
 
 function renderCalendario() {

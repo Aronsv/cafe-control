@@ -268,6 +268,9 @@ $('btn-ver-historial').addEventListener('click', () => {
   $('btn-ver-historial').querySelector('span').textContent = visible ? '▼' : '▲';
 });
 
-// LOGOUT
+// ===== LOGOUT =====
 const btnLogout = document.getElementById('btn-logout');
 if (btnLogout) btnLogout.addEventListener('click', () => signOut(auth));
+
+const btnLogoutStaff = document.getElementById('btn-logout-staff');
+if (btnLogoutStaff) btnLogoutStaff.addEventListener('click', () => signOut(auth));

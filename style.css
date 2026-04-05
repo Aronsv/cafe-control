@@ -1010,3 +1010,22 @@ body.tema-claro .btn-salida { background: #E24B4A; color: #fff; }
 body.tema-claro .bottom-nav { background: #f5f5f0; }
 body.tema-claro .clock-big { color: #1a1a1a; }
 
+/* ===== TOAST ===== */
+.toast {
+  position: fixed;
+  bottom: calc(var(--nav-h) + 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1D9E75;
+  color: #E1F5EE;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity .3s;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.toast.visible { opacity: 1; }

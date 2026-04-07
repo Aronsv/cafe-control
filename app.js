@@ -975,6 +975,20 @@ function iniciarAdmin() {
 
   adminFechaActual = getFechaHoy();
   cargarAsistenciasAdmin();
+
+  // Tema admin
+  const btnTemaAdmin = document.getElementById('btn-tema-admin');
+  if (btnTemaAdmin) {
+    const temaGuardado = localStorage.getItem('tema') || 'oscuro';
+    btnTemaAdmin.textContent = temaGuardado === 'claro' ? '🌙' : '☀️';
+    if (temaGuardado === 'claro') document.body.classList.add('tema-claro');
+    btnTemaAdmin.addEventListener('click', () => {
+      const esClaro = document.body.classList.toggle('tema-claro');
+      localStorage.setItem('tema', esClaro ? 'claro' : 'oscuro');
+      btnTemaAdmin.textContent = esClaro ? '🌙' : '☀️';
+    });
+  }
+}
 }
 
 async function cargarAsistenciasAdmin() {

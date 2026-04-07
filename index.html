@@ -145,6 +145,17 @@
 
   <div class="tareas-scroll" id="insumos-lista"></div>
 
+  <div class="msg-libre-wrap" id="alerta-insumo-wrap" style="bottom:calc(var(--nav-h) + 48px)">
+    <div class="msg-libre-header" id="btn-toggle-alerta-ins">
+      <span>⚠ Reportar insumo agotado</span><span id="alerta-ins-arrow">▼</span>
+    </div>
+    <div class="msg-libre-body" id="alerta-ins-body" style="display:none">
+      <input class="obs-textarea" id="alerta-ins-nombre" placeholder="¿Qué insumo se agotó? Ej: café en grano...">
+      <textarea class="obs-textarea" id="alerta-ins-msg" rows="2" placeholder="Detalle opcional..."></textarea>
+      <button class="btn-msg-libre-send" style="background:#2a0018;border-color:#4a0028;color:#E060A0" id="btn-enviar-alerta-ins">Avisar a todos ahora</button>
+    </div>
+  </div>
+  
   <div class="msg-libre-wrap" id="resumen-pie">
     <div class="msg-libre-header" id="btn-toggle-resumen">
       <span id="resumen-pie-label">Lista para WhatsApp (0 items)</span>

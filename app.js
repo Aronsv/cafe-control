@@ -294,6 +294,42 @@ async function iniciarTareas() {
   const snap = await getDocs(query(collection(db, 'tareas_config'), where('activo', '==', true)));
   tareasConfig = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
+  // Cargar urgentes asignadas a este usuario hoy
+  const snapUrg = await getDocs(query(collection(db, 'tareas_urgentes'),
+    where('uid', '==', usuarioActual.uid),
+    where('fecha', '==', getFechaHoy()),
+    where('completada', '==', false)
+  ));
+  const urgentesAsignadas = snapUrg.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  // Cargar mensajes del turno anterior de hoy
+  const snapMsg = await getDocs(query(collection(db, 'mensajes_turno'),
+    where('fecha', '==', getFechaHoy())
+  ));
+  const mensajesTurno = snapMsg.docs.map(d => ({ id: d.id, ...d.data() }))
+    .filter(m => m.uid !== usuarioActual.uid);
+
+  // Cargar alertas de insumos agotados
+  const snapAlertas = await getDocs(query(collection(db, 'alertas_insumos'),
+    where('fecha', '==', getFechaHoy()),
+    where('activa', '==', true)
+  ));
+  const alertasInsumos = snapAlertas.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  // Mostrar alertas arriba de tareas
+  const divAlertas = document.getElementById('tareas-alertas');
+  let htmlAlertas = '';
+  urgentesAsignadas.forEach(u => {
+    htmlAlertas += '<div class="alerta-urgente" style="margin:0 14px 6px"><div class="alerta-urgente-titulo">⚡ Tarea urgente del admin</div><div class="alerta-urgente-sub">' + u.tarea + '</div></div>';
+  });
+  mensajesTurno.forEach(m => {
+    htmlAlertas += '<div class="alerta-traspaso" style="margin:0 14px 6px"><div class="alerta-traspaso-titulo">💬 Mensaje del turno anterior · ' + (m.nombre||'') + '</div><div class="alerta-traspaso-sub">' + m.mensaje + '</div></div>';
+  });
+  alertasInsumos.forEach(a => {
+    htmlAlertas += '<div style="margin:0 14px 6px;background:#1a0010;border:0.5px solid #4a0030;border-radius:10px;padding:10px 12px"><div style="font-size:12px;font-weight:500;color:#E060A0;margin-bottom:2px">⚠ Insumo agotado · ' + (a.nombre||'') + '</div><div style="font-size:11px;color:#804060;font-style:italic">' + (a.mensaje||'') + '</div></div>';
+  });
+  divAlertas.innerHTML = htmlAlertas;
+
   const fecha = getFechaHoy();
   if (unsuscribeTareas) unsuscribeTareas();
   unsuscribeTareas = onSnapshot(
@@ -304,6 +340,35 @@ async function iniciarTareas() {
     }
   );
 
+  document.getElementById('btn-toggle-alerta-ins').addEventListener('click', () => {
+    const body = document.getElementById('alerta-ins-body');
+    const arrow = document.getElementById('alerta-ins-arrow');
+    const visible = body.style.display === 'flex';
+    body.style.display = visible ? 'none' : 'flex';
+    body.style.flexDirection = 'column';
+    arrow.textContent = visible ? '▼' : '▲';
+  });
+
+  document.getElementById('btn-enviar-alerta-ins').addEventListener('click', async () => {
+    const nombre = document.getElementById('alerta-ins-nombre').value.trim();
+    const msg = document.getElementById('alerta-ins-msg').value.trim();
+    if (!nombre) { mostrarToast('Escribe qué insumo se agotó', '#E24B4A'); return; }
+    const { addDoc, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    await addDoc(collection(db, 'alertas_insumos'), {
+      uid: usuarioActual.uid,
+      nombre: datosUsuario.nombre,
+      insumo: nombre,
+      mensaje: msg || 'Se agotó el insumo',
+      fecha: getFechaHoy(),
+      timestamp: new Date().toISOString(),
+      activa: true
+    });
+    document.getElementById('alerta-ins-nombre').value = '';
+    document.getElementById('alerta-ins-msg').value = '';
+    document.getElementById('alerta-ins-body').style.display = 'none';
+    document.getElementById('alerta-ins-arrow').textContent = '▼';
+    mostrarToast('Alerta enviada a todos ✓', '#E060A0');
+  }); 
   document.getElementById('btn-msg-libre').addEventListener('click', () => {
     msgLibreAbierto = !msgLibreAbierto;
     document.getElementById('msg-libre-body').style.display = msgLibreAbierto ? 'flex' : 'none';
@@ -1634,7 +1699,16 @@ async function cargarSeguimiento() {
     });
     html += '</div></div>';
   });
-  document.getElementById('seguimiento-lista').innerHTML = html || '<div style="text-align:center;padding:16px;font-size:13px;color:var(--text3)">Sin personal</div>';
+  // Cargar mensajes del turno
+  const snapMsg = await getDocs(query(collection(db, 'mensajes_turno'), where('fecha', '==', fecha)));
+  const mensajes = snapMsg.docs.map(d => ({ id: d.id, ...d.data() }));
+  let htmlMsg = '';
+  if (mensajes.length) {
+    htmlMsg = '<div style="background:#1a1400;border:0.5px solid #3a2c00;border-radius:10px;padding:10px 12px;margin-bottom:8px"><div style="font-size:11px;font-weight:500;color:var(--amber);margin-bottom:6px">💬 Mensajes del turno de hoy</div>';
+    mensajes.forEach(m => { htmlMsg += '<div style="font-size:12px;color:#c09040;padding:3px 0"><b>' + (m.nombre||'—') + ':</b> ' + m.mensaje + '</div>'; });
+    htmlMsg += '</div>';
+  }
+  document.getElementById('seguimiento-lista').innerHTML = htmlMsg + (html || '<div style="text-align:center;padding:16px;font-size:13px;color:var(--text3)">Sin personal</div>');
 }
 
 window.showTabTareasAdmin = (tab) => {

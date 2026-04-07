@@ -294,41 +294,51 @@ async function iniciarTareas() {
   const snap = await getDocs(query(collection(db, 'tareas_config'), where('activo', '==', true)));
   tareasConfig = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-  // Cargar urgentes asignadas a este usuario hoy
-  const snapUrg = await getDocs(query(collection(db, 'tareas_urgentes'),
-    where('uid', '==', usuarioActual.uid),
-    where('fecha', '==', getFechaHoy()),
-    where('completada', '==', false)
-  ));
-  const urgentesAsignadas = snapUrg.docs.map(d => ({ id: d.id, ...d.data() }));
+  // ===== TIEMPO REAL: urgentes + mensajes + alertas insumos =====
+  const renderAlertas = (urgentes, mensajes, alertas) => {
+    const divAlertas = document.getElementById('tareas-alertas');
+    let html = '';
+    urgentes.forEach(u => {
+      html += '<div class="alerta-urgente" style="margin:0 14px 6px">' +
+        '<div class="alerta-urgente-titulo">⚡ Tarea urgente del admin</div>' +
+        '<div class="alerta-urgente-sub">' + u.tarea + '</div>' +
+        '<button onclick="completarUrgente(\'' + u.id + '\')" style="margin-top:6px;width:100%;padding:6px;border-radius:7px;border:0.5px solid #1a3a24;background:#0e1e12;font-size:11px;color:var(--green-light);cursor:pointer">✓ Completada</button>' +
+        '</div>';
+    });
+    mensajes.forEach(m => {
+      html += '<div class="alerta-traspaso" style="margin:0 14px 6px">' +
+        '<div class="alerta-traspaso-titulo">💬 Mensaje de ' + (m.nombre||'turno anterior') + '</div>' +
+        '<div class="alerta-traspaso-sub">' + m.mensaje + '</div>' +
+        '</div>';
+    });
+    const vistasLocal = JSON.parse(localStorage.getItem('alertas_vistas') || '{}');
+    alertas.filter(a => !vistasLocal[a.id]).forEach(a => {
+      html += '<div style="margin:0 14px 6px;background:#1a0010;border:0.5px solid #4a0030;border-radius:10px;padding:10px 12px">' +
+        '<div style="font-size:12px;font-weight:500;color:#E060A0;margin-bottom:2px">⚠ Insumo agotado · ' + (a.insumo||a.nombre||'') + '</div>' +
+        '<div style="font-size:11px;color:#804060;font-style:italic;margin-bottom:6px">' + (a.mensaje||'') + ' — avisado por ' + (a.nombre||'') + '</div>' +
+        '<button onclick="verAlerta(\'' + a.id + '\')" style="width:100%;padding:6px;border-radius:7px;border:0.5px solid #4a0030;background:#2a0018;font-size:11px;color:#E060A0;cursor:pointer">✓ Entendido, ya sé</button>' +
+        '</div>';
+    });
+    divAlertas.innerHTML = html;
+  };
 
-  // Cargar mensajes del turno anterior de hoy
-  const snapMsg = await getDocs(query(collection(db, 'mensajes_turno'),
-    where('fecha', '==', getFechaHoy())
-  ));
-  const mensajesTurno = snapMsg.docs.map(d => ({ id: d.id, ...d.data() }))
-    .filter(m => m.uid !== usuarioActual.uid);
+  let urgentesRT = [], mensajesRT = [], alertasRT = [];
 
-  // Cargar alertas de insumos agotados
-  const snapAlertas = await getDocs(query(collection(db, 'alertas_insumos'),
-    where('fecha', '==', getFechaHoy()),
-    where('activa', '==', true)
-  ));
-  const alertasInsumos = snapAlertas.docs.map(d => ({ id: d.id, ...d.data() }));
+  // Urgentes en tiempo real
+  const { onSnapshot: onSnap2, collection: col2, query: q2, where: w2 } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  onSnap2(q2(col2(db, 'tareas_urgentes'), w2('uid','==',usuarioActual.uid), w2('fecha','==',getFechaHoy()), w2('completada','==',false)),
+    snap => { urgentesRT = snap.docs.map(d=>({id:d.id,...d.data()})); renderAlertas(urgentesRT, mensajesRT, alertasRT); }
+  );
 
-  // Mostrar alertas arriba de tareas
-  const divAlertas = document.getElementById('tareas-alertas');
-  let htmlAlertas = '';
-  urgentesAsignadas.forEach(u => {
-    htmlAlertas += '<div class="alerta-urgente" style="margin:0 14px 6px"><div class="alerta-urgente-titulo">⚡ Tarea urgente del admin</div><div class="alerta-urgente-sub">' + u.tarea + '</div></div>';
-  });
-  mensajesTurno.forEach(m => {
-    htmlAlertas += '<div class="alerta-traspaso" style="margin:0 14px 6px"><div class="alerta-traspaso-titulo">💬 Mensaje del turno anterior · ' + (m.nombre||'') + '</div><div class="alerta-traspaso-sub">' + m.mensaje + '</div></div>';
-  });
-  alertasInsumos.forEach(a => {
-    htmlAlertas += '<div style="margin:0 14px 6px;background:#1a0010;border:0.5px solid #4a0030;border-radius:10px;padding:10px 12px"><div style="font-size:12px;font-weight:500;color:#E060A0;margin-bottom:2px">⚠ Insumo agotado · ' + (a.nombre||'') + '</div><div style="font-size:11px;color:#804060;font-style:italic">' + (a.mensaje||'') + '</div></div>';
-  });
-  divAlertas.innerHTML = htmlAlertas;
+  // Mensajes turno en tiempo real
+  onSnap2(q2(col2(db, 'mensajes_turno'), w2('fecha','==',getFechaHoy())),
+    snap => { mensajesRT = snap.docs.map(d=>({id:d.id,...d.data()})).filter(m=>m.uid!==usuarioActual.uid); renderAlertas(urgentesRT, mensajesRT, alertasRT); }
+  );
+
+  // Alertas insumos en tiempo real
+  onSnap2(q2(col2(db, 'alertas_insumos'), w2('fecha','==',getFechaHoy()), w2('activa','==',true)),
+    snap => { alertasRT = snap.docs.map(d=>({id:d.id,...d.data()})); renderAlertas(urgentesRT, mensajesRT, alertasRT); }
+  );
 
   const fecha = getFechaHoy();
   if (unsuscribeTareas) unsuscribeTareas();
@@ -473,6 +483,19 @@ function renderTareas() {
 
   lista.innerHTML = html;
 }
+
+window.completarUrgente = async (id) => {
+  const { doc: fd, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  await updateDoc(fd(db, 'tareas_urgentes', id), { completada: true });
+  mostrarToast('Tarea urgente completada ✓');
+};
+
+window.verAlerta = (id) => {
+  const vistas = JSON.parse(localStorage.getItem('alertas_vistas') || '{}');
+  vistas[id] = true;
+  localStorage.setItem('alertas_vistas', JSON.stringify(vistas));
+  mostrarToast('Alerta marcada como vista ✓', '#E060A0');
+};
 
 window.marcarTarea = async (id) => {
   const el = document.getElementById('tarea-' + id);
@@ -1616,6 +1639,7 @@ let seguimientoCards = {};
 async function iniciarTareasAdmin() {
   await cargarTareasConfig();
   await cargarSeguimiento();
+  iniciarSeguimientoRT();
 
   // Llenar select de urgente
   const sel = document.getElementById('sel-urgente-staff');
@@ -1755,6 +1779,18 @@ window.desactivarTarea = async (id) => {
   mostrarToast('Tarea eliminada', '#E24B4A');
   cargarTareasConfig();
 };
+
+// Listener tiempo real para seguimiento
+let unsuscribeSeguimiento = null;
+function iniciarSeguimientoRT() {
+  if (unsuscribeSeguimiento) unsuscribeSeguimiento();
+  import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(({ onSnapshot, collection, query, where }) => {
+    unsuscribeSeguimiento = onSnapshot(
+      query(collection(db, 'mensajes_turno'), where('fecha','==',getFechaHoy())),
+      () => cargarSeguimiento()
+    );
+  });
+}
 
 window.toggleSeguimiento = (uid) => {
   seguimientoCards[uid] = !seguimientoCards[uid];

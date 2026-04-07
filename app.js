@@ -1045,8 +1045,8 @@ function renderListaAsistencias(usuarios, asistMap) {
       else estadoBadge = '<span style="font-size:10px;padding:3px 8px;border-radius:20px;background:var(--green-bg);color:var(--green-light)">Trabajando</span>';
     }
 
-    html += '<div class="admin-staff-card"' + (!activo?' style="opacity:.5"':'') + '>';
-    html += '<div class="admin-card-top" style="cursor:default">';
+    html += '<div class="admin-staff-card' + (tieneAlerta ? ' tiene-alerta' : tienePend ? ' tiene-pendiente' : '') + '">';
+    html += '<div class="admin-card-top" onclick="toggleAdminCard(\'' + u.id + '\')">';
     html += '<div class="avatar av-teal">' + iniciales + '</div>';
     html += '<div class="admin-card-info"><div class="admin-card-name">' + u.nombre + '</div><div class="admin-card-sub">' + (u.area || '—') + '</div></div>';
     html += estadoBadge + '</div>';

@@ -1193,7 +1193,7 @@ window.cargarPersonal = async function() {
     const iniciales = (u.nombre||'XX').split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
     const activo = u.activo !== false;
     const rolCls = rolColores[u.rol] || rolColores.staff;
-    html += '<div class="admin-staff-card" style="' + (!activo?'opacity:.5':'') + '">';
+    html += '<div class="admin-staff-card"' + (!activo?' style="opacity:.5"':'') + '>';
     html += '<div class="admin-card-top" style="cursor:default">';
     html += '<div class="avatar av-teal" style="' + (!activo?'filter:grayscale(1)':'') + '">' + iniciales + '</div>';
     html += '<div class="admin-card-info">';

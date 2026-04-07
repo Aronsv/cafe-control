@@ -1,6 +1,6 @@
 {
   "name": "Café Control",
-  "short_name": "CaféCtrl",
+  "short_name": "6:30",
   "description": "Sistema de gestión para el local",
   "start_url": "/",
   "display": "standalone",

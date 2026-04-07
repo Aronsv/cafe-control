@@ -987,28 +987,53 @@ html, body {
 body.tema-claro {
   --bg: #f5f5f0;
   --bg2: #ffffff;
-  --bg3: #e8e8e4;
-  --border: #ddddd8;
+  --bg3: #ebebeb;
+  --border: #d8d8d8;
   --border2: #cccccc;
   --text: #1a1a1a;
-  --text2: #555555;
-  --text3: #999999;
-  --green-bg: #e1f5ee;
-  --green-light: #0f6e56;
-  --red-bg: #fcebeb;
+  --text2: #444444;
+  --text3: #888888;
+  --green-bg: #d4f0e4;
+  --green-light: #0a6e4f;
+  --red: #cc2222;
+  --red-bg: #fdeaea;
+  --purple: #5048c8;
   --purple-bg: #eeedfe;
-  --amber-bg: #faeeda;
+  --amber: #b07000;
+  --amber-bg: #fdf0d0;
 }
-body.tema-claro .hist-item { background: #ffffff; }
-body.tema-claro .tarea-card { background: #ffffff; }
-body.tema-claro .cobro-item { background: #ffffff; }
-body.tema-claro .msgbox { background: #ffffff; }
-body.tema-claro .obs-textarea { background: #ffffff; color: #333; }
-body.tema-claro .btn-ingreso { background: #1D9E75; color: #fff; }
-body.tema-claro .btn-break { background: #BA7517; color: #fff; }
-body.tema-claro .btn-salida { background: #E24B4A; color: #fff; }
-body.tema-claro .bottom-nav { background: #f5f5f0; }
-body.tema-claro .clock-big { color: #1a1a1a; }
+body.tema-claro .hist-item { background: #ffffff; border-color: #ddd; }
+body.tema-claro .tarea-card { background: #ffffff; border-color: #ddd; }
+body.tema-claro .cobro-item { background: #ffffff; border-color: #ddd; }
+body.tema-claro .obs-textarea { background: #ffffff; color: #333; border-color: #ccc; }
+body.tema-claro .btn-ingreso { background: #1D9E75; color: #fff; border: none; }
+body.tema-claro .btn-break { background: #c07800; color: #fff; border: none; }
+body.tema-claro .btn-salida { background: #cc2222; color: #fff; border: none; }
+body.tema-claro .btn-vuelta { background: #1D9E75; color: #fff; border: none; }
+body.tema-claro .bottom-nav { background: #f0f0eb; border-top-color: #ddd; }
+body.tema-claro .nav-item { color: #888; }
+body.tema-claro .nav-item.activo { color: #0a6e4f; }
+body.tema-claro .chips-scroll { background: #f5f5f0; }
+body.tema-claro .topbar { background: #f5f5f0; border-bottom-color: #ddd; }
+body.tema-claro .msgbox-wrap { background: #f5f5f0; border-color: #ddd; }
+body.tema-claro .insumo-row { background: #f9f9f9; }
+body.tema-claro .insumo-qty-inp { background: #fff; border-color: #ccc; color: #333; }
+body.tema-claro .fin-panel { background: #f5f5f0; }
+body.tema-claro .btn-fin-reg { background: #fff; border-color: #ccc; color: #333; }
+body.tema-claro .btn-fin-dano { background: #fff; border-color: #ffaaaa; color: #cc2222; }
+body.tema-claro .resumen-cal { background: #fff; border-color: #ddd; }
+body.tema-claro .cal-dia { color: #aaa; }
+body.tema-claro .admin-staff-card { background: #fff; border-color: #ddd; }
+body.tema-claro .sidebar-panel { background: #f0f0eb; border-color: #ddd; }
+body.tema-claro .sidebar-item { color: #555; }
+body.tema-claro .admin-stat-card { background: #fff; border-color: #ddd; }
+body.tema-claro .admin-fecha-nav { background: #fff; border-color: #ddd; }
+body.tema-claro .reg-admin-bloque { background: #f0f0eb; }
+body.tema-claro .edit-reg-inp { background: #fff; border-color: #ccc; color: #333; }
+body.tema-claro .cobro-item { background: #fff; border-color: #ddd; }
+body.tema-claro .fin-total-row { background: #fdeaea; border-color: #ffaaaa; }
+body.tema-claro .tarea-config-card { background: #fff; border-color: #ddd; }
+body.tema-claro .seguimiento-card { background: #fff; border-color: #ddd; }
 
 /* ===== TOAST ===== */
 .toast {

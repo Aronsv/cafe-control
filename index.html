@@ -319,10 +319,6 @@
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
             <span>Insumos</span>
           </div>
-          <div class="sidebar-item" data-admin-sec="personal">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M4 17c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            <span>Personal</span>
-          </div>
         </nav>
       </div>
     </div>
@@ -614,54 +610,6 @@
       <!-- ===== SECCIÓN: PERSONAL ===== -->
       <div id="admin-sec-personal" class="admin-sec" style="display:none;flex-direction:column;gap:8px;padding:14px;overflow-y:auto">
         <div id="personal-lista" style="display:flex;flex-direction:column;gap:8px"></div>
-
-        <!-- Modal editar personal -->
-        <div id="modal-personal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:center;justify-content:center">
-          <div style="background:var(--bg2);border-radius:16px;padding:20px;width:90%;max-width:340px;display:flex;flex-direction:column;gap:12px">
-            <div style="font-size:15px;font-weight:500;color:var(--text)">Editar personal</div>
-            <input type="hidden" id="mp-uid">
-            <div>
-              <div class="edit-reg-lbl">Nombre completo</div>
-              <input class="edit-reg-inp" id="mp-nombre" placeholder="Nombre completo">
-            </div>
-            <div style="display:flex;gap:8px">
-              <div style="flex:1">
-                <div class="edit-reg-lbl">Área</div>
-                <select class="edit-reg-inp" id="mp-area">
-                  <option value="cocina">Cocina</option>
-                  <option value="barra">Barra</option>
-                  <option value="sala">Sala</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              <div style="flex:1">
-                <div class="edit-reg-lbl">Rol</div>
-                <select class="edit-reg-inp" id="mp-rol">
-                  <option value="staff">Staff</option>
-                  <option value="admin">Admin</option>
-                  <option value="superadmin">Superadmin</option>
-                  <option value="dueno">Dueño</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <div class="edit-reg-lbl">Estado</div>
-              <select class="edit-reg-inp" id="mp-activo">
-                <option value="true">Activo</option>
-                <option value="false">Inactivo</option>
-              </select>
-            </div>
-            <div style="display:flex;gap:8px">
-              <button class="btn-edit-save" onclick="guardarPersonal()">Guardar</button>
-              <button class="btn-edit-cancel" onclick="cerrarModalPersonal()">Cancelar</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
 
   <!-- Firebase SDK -->
   <script type="module" src="app.js"></script>

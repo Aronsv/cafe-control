@@ -1173,6 +1173,8 @@ body.tema-claro .clock-big { color: #1a1a1a; }
   background: var(--bg2);
   border: 0.5px solid var(--border);
   border-radius: 10px;
+  display: block;
+  width: 100%;
 }
 .admin-staff-card.tiene-pendiente { border-color: #3a2a00; }
 .admin-staff-card.tiene-alerta { border-color: #3a1400; }

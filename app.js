@@ -989,7 +989,6 @@ function iniciarAdmin() {
     });
   }
 }
-}
 
 async function cargarAsistenciasAdmin() {
   const hoy = getFechaHoy();

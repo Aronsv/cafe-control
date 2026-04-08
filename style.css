@@ -1463,3 +1463,18 @@ body.tema-claro .seguimiento-card { background: #fff; border-color: #ddd; }
 .seg-np { background: var(--red-bg); color: var(--red); }
 .seg-yh { background: var(--bg3); color: var(--text3); }
 .seg-pend { background: var(--bg3); color: var(--text3); border: 0.5px solid var(--border2); }
+
+/* ===== NOTIFICACIÓN BADGE ===== */
+.nav-item { position: relative; }
+.nav-badge {
+  position: absolute;
+  top: 4px;
+  right: calc(50% - 18px);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  border: 1.5px solid var(--bg);
+  display: none;
+}
+.nav-badge.visible { display: block; }

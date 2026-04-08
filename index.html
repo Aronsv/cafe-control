@@ -41,583 +41,521 @@
       <button id="btn-tema" style="background:none;border:0.5px solid #3a3a3a;color:#666;padding:3px 8px;border-radius:20px;font-size:13px;cursor:pointer">☀️</button>
       <button id="btn-logout-staff" style="background:none;border:0.5px solid #3a3a3a;color:#666;padding:3px 10px;border-radius:20px;font-size:11px;cursor:pointer">Salir</button>
     </div>
-
     <div class="asistencia-main">
       <div class="clock-big" id="reloj">00:00</div>
       <div class="clock-date" id="fecha-hoy">—</div>
-
       <div class="msgbox">
         <div class="msg-txt" id="msg-estado">Aún no ingresas a turno</div>
         <div class="msg-sub" id="msg-sub">Cuando llegues, registra tu ingreso</div>
       </div>
-
       <div id="area-botones"></div>
-
       <textarea id="obs-input" class="obs-textarea" placeholder="Observación (opcional): ej. llegué tarde por lluvia..."></textarea>
-
       <div class="break-info">
         <span class="break-num" id="break-num">0</span> break tomado hoy
       </div>
-
       <div class="hist-btn" id="btn-ver-historial">
         Ver mi historial de hoy <span>▼</span>
       </div>
-
       <div id="historial-hoy" class="historial-lista"></div>
     </div>
-
     <nav class="bottom-nav">
-      <div class="nav-item" data-pantalla="asistencia"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L3 8v10h5v-5h4v5h5V8z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg><span>Inicio</span></div>
+      <div class="nav-item activo" data-pantalla="asistencia"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L3 8v10h5v-5h4v5h5V8z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg><span>Inicio</span></div>
       <div class="nav-item" data-pantalla="historial"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><line x1="7" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="11" x2="11" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Asistencia</span></div>
-      <div class="nav-item activo" data-pantalla="tareas"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="2" rx="1" fill="currentColor"/><rect x="3" y="9" width="10" height="2" rx="1" fill="currentColor"/><rect x="3" y="13" width="12" height="2" rx="1" fill="currentColor"/></svg><span>Tareas</span></div>
+      <div class="nav-item" data-pantalla="tareas"><div class="nav-badge badge-tareas"></div><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="2" rx="1" fill="currentColor"/><rect x="3" y="9" width="10" height="2" rx="1" fill="currentColor"/><rect x="3" y="13" width="12" height="2" rx="1" fill="currentColor"/></svg><span>Tareas</span></div>
       <div class="nav-item" data-pantalla="insumos"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg><span>Insumos</span></div>
       <div class="nav-item" data-pantalla="finanzas"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 15 Q10 4 16 15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><line x1="6.5" y1="11" x2="13.5" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Finanzas</span></div>
     </nav>
   </div>
 
-<!-- ===== MÓDULO: TAREAS STAFF ===== -->
-<div id="pantalla-tareas" class="pantalla">
-  <div class="topbar">
-    <div class="topbar-left">
-      <div>
-        <div class="topbar-name" id="tareas-nombre-staff">—</div>
-        <div class="topbar-role" id="tareas-turno-staff">Turno mañana</div>
+  <!-- ===== MÓDULO: TAREAS STAFF ===== -->
+  <div id="pantalla-tareas" class="pantalla">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div>
+          <div class="topbar-name" id="tareas-nombre-staff">—</div>
+          <div class="topbar-role" id="tareas-turno-staff">Turno mañana</div>
+        </div>
+      </div>
+      <span class="turno-badge" id="tareas-progreso">0/0</span>
+    </div>
+    <div id="tareas-alertas"></div>
+    <div class="chips-scroll" id="tareas-chips">
+      <div class="chip-area activo" data-cat="todas">Todas</div>
+      <div class="chip-area" data-cat="cocina">Cocina</div>
+      <div class="chip-area" data-cat="barra">Barra</div>
+      <div class="chip-area" data-cat="sala">Sala</div>
+      <div class="chip-area" data-cat="banos">Baños</div>
+      <div class="chip-area" data-cat="general">General</div>
+    </div>
+    <div class="prog-bar-wrap">
+      <div class="prog-bar-bg"><div class="prog-bar-fill" id="tareas-prog-fill"></div></div>
+    </div>
+    <div class="tareas-scroll" id="tareas-lista"></div>
+    <div class="msg-libre-wrap">
+      <div class="msg-libre-header" id="btn-msg-libre">
+        <span>Mensaje para el siguiente turno</span><span id="msg-libre-arrow">▼</span>
+      </div>
+      <div class="msg-libre-body" id="msg-libre-body" style="display:none">
+        <textarea class="obs-textarea" id="msg-libre-input" rows="3" placeholder="Ej: no se lavaron las ollas, dejarlas remojando..."></textarea>
+        <button class="btn-msg-libre-send" id="btn-msg-libre-send">Enviar al siguiente turno y admin</button>
       </div>
     </div>
-    <span class="turno-badge" id="tareas-progreso">0/0</span>
+    <nav class="bottom-nav">
+      <div class="nav-item" data-pantalla="asistencia"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L3 8v10h5v-5h4v5h5V8z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg><span>Inicio</span></div>
+      <div class="nav-item" data-pantalla="historial"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><line x1="7" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="11" x2="11" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Asistencia</span></div>
+      <div class="nav-item activo" data-pantalla="tareas"><div class="nav-badge badge-tareas"></div><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="2" rx="1" fill="currentColor"/><rect x="3" y="9" width="10" height="2" rx="1" fill="currentColor"/><rect x="3" y="13" width="12" height="2" rx="1" fill="currentColor"/></svg><span>Tareas</span></div>
+      <div class="nav-item" data-pantalla="insumos"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg><span>Insumos</span></div>
+      <div class="nav-item" data-pantalla="finanzas"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 15 Q10 4 16 15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><line x1="6.5" y1="11" x2="13.5" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Finanzas</span></div>
+    </nav>
   </div>
-
-  <div id="tareas-alertas"></div>
-
-  <div class="chips-scroll" id="tareas-chips">
-    <div class="chip-area activo" data-cat="todas">Todas</div>
-    <div class="chip-area" data-cat="cocina">Cocina</div>
-    <div class="chip-area" data-cat="barra">Barra</div>
-    <div class="chip-area" data-cat="sala">Sala</div>
-    <div class="chip-area" data-cat="banos">Baños</div>
-    <div class="chip-area" data-cat="general">General</div>
-  </div>
-
-  <div class="prog-bar-wrap">
-    <div class="prog-bar-bg"><div class="prog-bar-fill" id="tareas-prog-fill"></div></div>
-  </div>
-
-  <div class="tareas-scroll" id="tareas-lista"></div>
-
-  <div class="msg-libre-wrap">
-    <div class="msg-libre-header" id="btn-msg-libre">
-      <span>Mensaje para el siguiente turno</span><span id="msg-libre-arrow">▼</span>
-    </div>
-    <div class="msg-libre-body" id="msg-libre-body" style="display:none">
-      <textarea class="obs-textarea" id="msg-libre-input" rows="3" placeholder="Ej: no se lavaron las ollas, dejarlas remojando..."></textarea>
-      <button class="btn-msg-libre-send" id="btn-msg-libre-send">Enviar al siguiente turno y admin</button>
-    </div>
-  </div>
-
-  <nav class="bottom-nav">
-    <div class="nav-item" data-pantalla="asistencia"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L3 8v10h5v-5h4v5h5V8z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg><span>Inicio</span></div>
-    <div class="nav-item" data-pantalla="historial"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><line x1="7" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="11" x2="11" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Asistencia</span></div>
-    <div class="nav-item activo" data-pantalla="tareas"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="2" rx="1" fill="currentColor"/><rect x="3" y="9" width="10" height="2" rx="1" fill="currentColor"/><rect x="3" y="13" width="12" height="2" rx="1" fill="currentColor"/></svg><span>Tareas</span></div>
-    <div class="nav-item" data-pantalla="insumos"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg><span>Insumos</span></div>
-    <div class="nav-item" data-pantalla="finanzas"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 15 Q10 4 16 15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><line x1="6.5" y1="11" x2="13.5" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Finanzas</span></div>
-  </nav>
-</div>
 
   <!-- ===== MÓDULO: INSUMOS STAFF ===== -->
-<div id="pantalla-insumos" class="pantalla">
-  <div class="topbar">
-    <div class="topbar-left">
-      <div>
-        <div class="topbar-name">Lista de mercado</div>
-        <div class="topbar-role">Marca lo que hay que pedir</div>
+  <div id="pantalla-insumos" class="pantalla">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div>
+          <div class="topbar-name">Lista de mercado</div>
+          <div class="topbar-role">Marca lo que hay que pedir</div>
+        </div>
+      </div>
+      <span style="font-size:11px;color:var(--text3)" id="insumos-contador">0 seleccionados</span>
+    </div>
+    <div class="chips-scroll" id="insumos-chips">
+      <div class="chip-area activo" data-cat-ins="todos">Todos</div>
+      <div class="chip-area" data-cat-ins="cocina">Cocina</div>
+      <div class="chip-area" data-cat-ins="barra">Barra</div>
+      <div class="chip-area" data-cat-ins="limpieza">Limpieza</div>
+      <div class="chip-area" data-cat-ins="cristaleria">Cristalería</div>
+    </div>
+    <div class="tareas-scroll" id="insumos-lista"></div>
+    <div class="msg-libre-wrap" id="alerta-insumo-wrap" style="bottom:calc(var(--nav-h) + 48px)">
+      <div class="msg-libre-header" id="btn-toggle-alerta-ins">
+        <span>⚠ Reportar insumo agotado</span><span id="alerta-ins-arrow">▼</span>
+      </div>
+      <div class="msg-libre-body" id="alerta-ins-body" style="display:none">
+        <input class="obs-textarea" id="alerta-ins-nombre" placeholder="¿Qué insumo se agotó? Ej: café en grano...">
+        <textarea class="obs-textarea" id="alerta-ins-msg" rows="2" placeholder="Detalle opcional..."></textarea>
+        <button class="btn-msg-libre-send" style="background:#2a0018;border-color:#4a0028;color:#E060A0" id="btn-enviar-alerta-ins">Avisar a todos ahora</button>
       </div>
     </div>
-    <span style="font-size:11px;color:var(--text3)" id="insumos-contador">0 seleccionados</span>
-  </div>
-
-  <div class="chips-scroll" id="insumos-chips">
-    <div class="chip-area activo" data-cat-ins="todos">Todos</div>
-    <div class="chip-area" data-cat-ins="cocina">Cocina</div>
-    <div class="chip-area" data-cat-ins="barra">Barra</div>
-    <div class="chip-area" data-cat-ins="limpieza">Limpieza</div>
-    <div class="chip-area" data-cat-ins="cristaleria">Cristalería</div>
-  </div>
-
-  <div class="tareas-scroll" id="insumos-lista"></div>
-
-  <div class="msg-libre-wrap" id="alerta-insumo-wrap" style="bottom:calc(var(--nav-h) + 48px)">
-    <div class="msg-libre-header" id="btn-toggle-alerta-ins">
-      <span>⚠ Reportar insumo agotado</span><span id="alerta-ins-arrow">▼</span>
-    </div>
-    <div class="msg-libre-body" id="alerta-ins-body" style="display:none">
-      <input class="obs-textarea" id="alerta-ins-nombre" placeholder="¿Qué insumo se agotó? Ej: café en grano...">
-      <textarea class="obs-textarea" id="alerta-ins-msg" rows="2" placeholder="Detalle opcional..."></textarea>
-      <button class="btn-msg-libre-send" style="background:#2a0018;border-color:#4a0028;color:#E060A0" id="btn-enviar-alerta-ins">Avisar a todos ahora</button>
-    </div>
-  </div>
-  
-  <div class="msg-libre-wrap" id="resumen-pie">
-    <div class="msg-libre-header" id="btn-toggle-resumen">
-      <span id="resumen-pie-label">Lista para WhatsApp (0 items)</span>
-      <span id="resumen-pie-arrow">▼</span>
-    </div>
-    <div class="msg-libre-body" id="resumen-whatsapp" style="display:none">
-      <div class="resumen-whatsapp-inner">
-        <div id="resumen-items"></div>
+    <div class="msg-libre-wrap" id="resumen-pie">
+      <div class="msg-libre-header" id="btn-toggle-resumen">
+        <span id="resumen-pie-label">Lista para WhatsApp (0 items)</span>
+        <span id="resumen-pie-arrow">▼</span>
       </div>
-      <button id="btn-copiar-lista" class="btn-copiar-lista">Copiar y pegar en WhatsApp</button>
+      <div class="msg-libre-body" id="resumen-whatsapp" style="display:none">
+        <div class="resumen-whatsapp-inner">
+          <div id="resumen-items"></div>
+        </div>
+        <button id="btn-copiar-lista" class="btn-copiar-lista">Copiar y pegar en WhatsApp</button>
+      </div>
     </div>
+    <nav class="bottom-nav">
+      <div class="nav-item" data-pantalla="asistencia"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L3 8v10h5v-5h4v5h5V8z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg><span>Inicio</span></div>
+      <div class="nav-item" data-pantalla="historial"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><line x1="7" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="11" x2="11" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Asistencia</span></div>
+      <div class="nav-item" data-pantalla="tareas"><div class="nav-badge badge-tareas"></div><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="2" rx="1" fill="currentColor"/><rect x="3" y="9" width="10" height="2" rx="1" fill="currentColor"/><rect x="3" y="13" width="12" height="2" rx="1" fill="currentColor"/></svg><span>Tareas</span></div>
+      <div class="nav-item activo" data-pantalla="insumos"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg><span>Insumos</span></div>
+      <div class="nav-item" data-pantalla="finanzas"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 15 Q10 4 16 15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><line x1="6.5" y1="11" x2="13.5" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Finanzas</span></div>
+    </nav>
   </div>
-
-  <nav class="bottom-nav">
-    <div class="nav-item" data-pantalla="asistencia"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L3 8v10h5v-5h4v5h5V8z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg><span>Inicio</span></div>
-    <div class="nav-item" data-pantalla="historial"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><line x1="7" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="11" x2="11" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Asistencia</span></div>
-    <div class="nav-item activo" data-pantalla="tareas"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="2" rx="1" fill="currentColor"/><rect x="3" y="9" width="10" height="2" rx="1" fill="currentColor"/><rect x="3" y="13" width="12" height="2" rx="1" fill="currentColor"/></svg><span>Tareas</span></div>
-    <div class="nav-item" data-pantalla="insumos"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg><span>Insumos</span></div>
-    <div class="nav-item" data-pantalla="finanzas"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 15 Q10 4 16 15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><line x1="6.5" y1="11" x2="13.5" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Finanzas</span></div>
-  </nav>
-</div>
 
   <!-- ===== MÓDULO: FINANZAS STAFF ===== -->
-<div id="pantalla-finanzas" class="pantalla">
-  <div class="topbar">
-    <div class="topbar-left">
-      <div>
-        <div class="topbar-name">Mis finanzas</div>
-        <div class="topbar-role" id="finanzas-mes">Abril 2026</div>
-      </div>
-    </div>
-    <span class="turno-badge" id="finanzas-total" style="color:var(--red)">S/ 0.00</span>
-  </div>
-
-  <div class="tabs-finanzas">
-    <div class="tab-fin activo" id="tab-registros" onclick="showTabFin('registros')">Mis registros</div>
-    <div class="tab-fin" id="tab-cobros" onclick="showTabFin('cobros')">Mis cobros</div>
-  </div>
-
-  <div id="panel-registros" class="fin-panel">
-    <div class="fin-section-lbl">¿Qué consumiste hoy?</div>
-    <textarea class="obs-textarea" id="inp-consumo" placeholder="Ej: un café y una porción de torta..."></textarea>
-    <button class="btn-fin-reg" id="btn-reg-consumo">Registrar consumo</button>
-
-    <div class="fin-divider"></div>
-
-    <div class="fin-section-lbl">¿Rompiste o dañaste algo?</div>
-    <textarea class="obs-textarea" id="inp-dano" placeholder="Ej: se me cayó un vaso de vidrio..."></textarea>
-    <button class="btn-fin-dano" id="btn-reg-dano">Registrar daño</button>
-
-    <div class="fin-divider"></div>
-
-    <div class="fin-section-lbl">Lo que el admin ya valuó</div>
-    <div id="finanzas-lista-hoy"></div>
-    <div class="fin-total-row" id="fin-total-hoy" style="display:none">
-      <span>Total a descontar</span>
-      <span id="fin-total-hoy-monto" style="color:var(--red);font-weight:500">S/ 0.00</span>
-    </div>
-  </div>
-
-  <div id="panel-cobros" class="fin-panel" style="display:none">
-    <div class="fin-section-lbl">Historial del mes</div>
-    <div id="finanzas-lista-mes"></div>
-    <div class="fin-total-row" id="fin-total-mes" style="display:none">
-      <span>Total del mes</span>
-      <span id="fin-total-mes-monto" style="color:var(--red);font-weight:500">S/ 0.00</span>
-    </div>
-  </div>
-
-  <nav class="bottom-nav">
-    <div class="nav-item" data-pantalla="asistencia"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L3 8v10h5v-5h4v5h5V8z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg><span>Inicio</span></div>
-    <div class="nav-item" data-pantalla="historial"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><line x1="7" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="11" x2="11" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Asistencia</span></div>
-    <div class="nav-item activo" data-pantalla="tareas"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="2" rx="1" fill="currentColor"/><rect x="3" y="9" width="10" height="2" rx="1" fill="currentColor"/><rect x="3" y="13" width="12" height="2" rx="1" fill="currentColor"/></svg><span>Tareas</span></div>
-    <div class="nav-item" data-pantalla="insumos"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg><span>Insumos</span></div>
-    <div class="nav-item" data-pantalla="finanzas"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 15 Q10 4 16 15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><line x1="6.5" y1="11" x2="13.5" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Finanzas</span></div>
-  </nav>
-</div>
-
-<!-- ===== MÓDULO: HISTORIAL ASISTENCIA STAFF ===== -->
-<div id="pantalla-historial" class="pantalla">
-  <div class="topbar">
-    <div class="topbar-left">
-      <div>
-        <div class="topbar-name">Mis asistencias</div>
-        <div class="topbar-role" id="cal-mes-label">Abril 2026</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <span style="font-size:18px;cursor:pointer;color:var(--text2)" id="cal-prev">‹</span>
-      <span style="font-size:18px;cursor:pointer;color:var(--text2)" id="cal-next">›</span>
-    </div>
-  </div>
-
-  <div style="padding:8px 14px 4px;flex-shrink:0">
-    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">
-      <div style="font-size:10px;color:var(--text3);text-align:center;font-weight:500">L</div>
-      <div style="font-size:10px;color:var(--text3);text-align:center;font-weight:500">M</div>
-      <div style="font-size:10px;color:var(--text3);text-align:center;font-weight:500">M</div>
-      <div style="font-size:10px;color:var(--text3);text-align:center;font-weight:500">J</div>
-      <div style="font-size:10px;color:var(--text3);text-align:center;font-weight:500">V</div>
-      <div style="font-size:10px;color:var(--text3);text-align:center;font-weight:500">S</div>
-      <div style="font-size:10px;color:var(--text3);text-align:center;font-weight:500">D</div>
-    </div>
-    <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px"></div>
-  </div>
-
-  <div style="padding:8px 14px;flex-shrink:0;display:flex;flex-wrap:wrap;gap:6px" id="cal-filtros">
-    <div class="cal-chip on" data-estado="atiempo" onclick="toggleCalFiltro('atiempo',this)"><div style="width:7px;height:7px;border-radius:50%;background:#5DCAA5"></div>A tiempo</div>
-    <div class="cal-chip" data-estado="tardanza" onclick="toggleCalFiltro('tardanza',this)"><div style="width:7px;height:7px;border-radius:50%;background:#EF9F27"></div>Tardanza</div>
-    <div class="cal-chip" data-estado="falta" onclick="toggleCalFiltro('falta',this)"><div style="width:7px;height:7px;border-radius:50%;background:#E24B4A"></div>Falta</div>
-    <div class="cal-chip" data-estado="permiso" onclick="toggleCalFiltro('permiso',this)"><div style="width:7px;height:7px;border-radius:50%;background:#7F77DD"></div>Permiso</div>
-    <div class="cal-chip" data-estado="libre" onclick="toggleCalFiltro('libre',this)"><div style="width:7px;height:7px;border-radius:50%;background:#555"></div>Libre</div>
-  </div>
-
-  <div style="padding:0 14px;flex:1;overflow-y:auto;padding-bottom:calc(var(--nav-h) + 16px)">
-    <div class="resumen-cal" id="resumen-cal"></div>
-  </div>
-
-  <nav class="bottom-nav">
-    <div class="nav-item" data-pantalla="asistencia"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L3 8v10h5v-5h4v5h5V8z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg><span>Inicio</span></div>
-    <div class="nav-item activo" data-pantalla="historial">
-    <div class="nav-item" data-pantalla="tareas"><div class="nav-badge" class="nav-badge badge-tareas"></div><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="2" rx="1" fill="currentColor"/><rect x="3" y="9" width="10" height="2" rx="1" fill="currentColor"/><rect x="3" y="13" width="12" height="2" rx="1" fill="currentColor"/></svg><span>Tareas</span></div>
-    <div class="nav-item" data-pantalla="insumos"><div class="nav-badge"></div><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg><span>Insumos</span></div>
-    <div class="nav-item" data-pantalla="finanzas"><div class="nav-badge"></div><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 15 Q10 4 16 15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><line x1="6.5" y1="11" x2="13.5" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Finanzas</span></div>
-  </nav>
-</div>  
-
-<!-- ===== PANEL ADMIN ===== -->
-<div id="pantalla-admin" class="pantalla">
-
-  <!-- Topbar admin -->
-  <div class="admin-topbar">
-    <div style="display:flex;align-items:center;gap:10px">
-      <button id="btn-menu-admin" class="btn-hamburguesa">≡</button>
-      <span class="admin-titulo" id="admin-titulo-seccion">Asistencias</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-      <span class="role-badge" id="admin-role-badge">Admin</span>
-      <button id="btn-tema-admin" style="background:none;border:0.5px solid #3a3a3a;color:#666;padding:3px 8px;border-radius:20px;font-size:13px;cursor:pointer;flex-shrink:0">☀️</button>
-      <button id="btn-logout" style="background:none;border:0.5px solid #3a3a3a;color:#666;padding:3px 10px;border-radius:20px;font-size:11px;cursor:pointer;flex-shrink:0">Salir</button>
-    </div>
-  </div>
-
-  <!-- Layout: sidebar + contenido -->
-  <div class="admin-layout">
-
-    <!-- Sidebar -->
-    <div class="admin-sidebar" id="admin-sidebar">
-      <div class="sidebar-overlay" id="sidebar-overlay"></div>
-      <div class="sidebar-panel" id="sidebar-panel">
-        <div class="sidebar-header">
-          <div style="font-size:14px;font-weight:500;color:var(--text)" id="sidebar-nombre">Admin</div>
-          <div style="font-size:11px;color:var(--text3)" id="sidebar-role">—</div>
+  <div id="pantalla-finanzas" class="pantalla">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div>
+          <div class="topbar-name">Mis finanzas</div>
+          <div class="topbar-role" id="finanzas-mes">Abril 2026</div>
         </div>
-        <nav class="sidebar-nav">
-          <div class="sidebar-item activo" data-admin-sec="asistencias">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="7" x2="10" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="10" x2="13" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            <span>Asistencias</span>
-          </div>
-          <div class="sidebar-item" data-admin-sec="horarios">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            <span>Horarios</span>
-          </div>
-          <div class="sidebar-item" data-admin-sec="tareas-admin">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="2" rx="1" fill="currentColor"/><rect x="3" y="9" width="10" height="2" rx="1" fill="currentColor"/><rect x="3" y="13" width="12" height="2" rx="1" fill="currentColor"/></svg>
-            <span>Tareas</span>
-          </div>
-          <div class="sidebar-item" data-admin-sec="finanzas-admin">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 15 Q10 4 16 15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><line x1="6.5" y1="11" x2="13.5" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            <span>Finanzas</span>
-          </div>
-          <div class="sidebar-item" data-admin-sec="insumos-admin">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
-            <span>Insumos</span>
-          </div>
-        </nav>
+      </div>
+      <span class="turno-badge" id="finanzas-total" style="color:var(--red)">S/ 0.00</span>
+    </div>
+    <div class="tabs-finanzas">
+      <div class="tab-fin activo" id="tab-registros" onclick="showTabFin('registros')">Mis registros</div>
+      <div class="tab-fin" id="tab-cobros" onclick="showTabFin('cobros')">Mis cobros</div>
+    </div>
+    <div id="panel-registros" class="fin-panel">
+      <div class="fin-section-lbl">¿Qué consumiste hoy?</div>
+      <textarea class="obs-textarea" id="inp-consumo" placeholder="Ej: un café y una porción de torta..."></textarea>
+      <button class="btn-fin-reg" id="btn-reg-consumo">Registrar consumo</button>
+      <div class="fin-divider"></div>
+      <div class="fin-section-lbl">¿Rompiste o dañaste algo?</div>
+      <textarea class="obs-textarea" id="inp-dano" placeholder="Ej: se me cayó un vaso de vidrio..."></textarea>
+      <button class="btn-fin-dano" id="btn-reg-dano">Registrar daño</button>
+      <div class="fin-divider"></div>
+      <div class="fin-section-lbl">Lo que el admin ya valuó</div>
+      <div id="finanzas-lista-hoy"></div>
+      <div class="fin-total-row" id="fin-total-hoy" style="display:none">
+        <span>Total a descontar</span>
+        <span id="fin-total-hoy-monto" style="color:var(--red);font-weight:500">S/ 0.00</span>
       </div>
     </div>
-
-    <!-- Contenido principal -->
-    <div class="admin-contenido">
-
-      <!-- ===== SECCIÓN: ASISTENCIAS ADMIN ===== -->
-      <div id="admin-sec-asistencias" class="admin-sec activa">
-        <div class="admin-stats" id="admin-stats-hoy"></div>
-        <div class="admin-fecha-nav">
-          <button class="btn-fecha-nav" id="btn-fecha-prev">‹</button>
-          <span id="admin-fecha-label">Hoy</span>
-          <button class="btn-fecha-nav" id="btn-fecha-next">›</button>
-        </div>
-        <div id="admin-asist-lista" class="admin-lista"></div>
+    <div id="panel-cobros" class="fin-panel" style="display:none">
+      <div class="fin-section-lbl">Historial del mes</div>
+      <div id="finanzas-lista-mes"></div>
+      <div class="fin-total-row" id="fin-total-mes" style="display:none">
+        <span>Total del mes</span>
+        <span id="fin-total-mes-monto" style="color:var(--red);font-weight:500">S/ 0.00</span>
       </div>
+    </div>
+    <nav class="bottom-nav">
+      <div class="nav-item" data-pantalla="asistencia"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L3 8v10h5v-5h4v5h5V8z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg><span>Inicio</span></div>
+      <div class="nav-item" data-pantalla="historial"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><line x1="7" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="11" x2="11" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Asistencia</span></div>
+      <div class="nav-item" data-pantalla="tareas"><div class="nav-badge badge-tareas"></div><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="2" rx="1" fill="currentColor"/><rect x="3" y="9" width="10" height="2" rx="1" fill="currentColor"/><rect x="3" y="13" width="12" height="2" rx="1" fill="currentColor"/></svg><span>Tareas</span></div>
+      <div class="nav-item" data-pantalla="insumos"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg><span>Insumos</span></div>
+      <div class="nav-item activo" data-pantalla="finanzas"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 15 Q10 4 16 15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><line x1="6.5" y1="11" x2="13.5" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Finanzas</span></div>
+    </nav>
+  </div>
 
-<!-- ===== SECCIÓN: HORARIOS ADMIN ===== -->
-      <div id="admin-sec-horarios" class="admin-sec">
-        <div class="tabs-finanzas">
-          <div class="tab-fin activo" id="tab-horarios-persona" onclick="showTabHorarios('persona')">Por persona</div>
-          <div class="tab-fin" id="tab-horarios-dia" onclick="showTabHorarios('dia')">Por día</div>
+  <!-- ===== MÓDULO: HISTORIAL ASISTENCIA STAFF ===== -->
+  <div id="pantalla-historial" class="pantalla">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div>
+          <div class="topbar-name">Mis asistencias</div>
+          <div class="topbar-role" id="cal-mes-label">Abril 2026</div>
         </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:18px;cursor:pointer;color:var(--text2)" id="cal-prev">‹</span>
+        <span style="font-size:18px;cursor:pointer;color:var(--text2)" id="cal-next">›</span>
+      </div>
+    </div>
+    <div style="padding:8px 14px 4px;flex-shrink:0">
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">
+        <div style="font-size:10px;color:var(--text3);text-align:center;font-weight:500">L</div>
+        <div style="font-size:10px;color:var(--text3);text-align:center;font-weight:500">M</div>
+        <div style="font-size:10px;color:var(--text3);text-align:center;font-weight:500">M</div>
+        <div style="font-size:10px;color:var(--text3);text-align:center;font-weight:500">J</div>
+        <div style="font-size:10px;color:var(--text3);text-align:center;font-weight:500">V</div>
+        <div style="font-size:10px;color:var(--text3);text-align:center;font-weight:500">S</div>
+        <div style="font-size:10px;color:var(--text3);text-align:center;font-weight:500">D</div>
+      </div>
+      <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px"></div>
+    </div>
+    <div style="padding:8px 14px;flex-shrink:0;display:flex;flex-wrap:wrap;gap:6px" id="cal-filtros">
+      <div class="cal-chip on" data-estado="atiempo" onclick="toggleCalFiltro('atiempo',this)"><div style="width:7px;height:7px;border-radius:50%;background:#5DCAA5"></div>A tiempo</div>
+      <div class="cal-chip" data-estado="tardanza" onclick="toggleCalFiltro('tardanza',this)"><div style="width:7px;height:7px;border-radius:50%;background:#EF9F27"></div>Tardanza</div>
+      <div class="cal-chip" data-estado="falta" onclick="toggleCalFiltro('falta',this)"><div style="width:7px;height:7px;border-radius:50%;background:#E24B4A"></div>Falta</div>
+      <div class="cal-chip" data-estado="permiso" onclick="toggleCalFiltro('permiso',this)"><div style="width:7px;height:7px;border-radius:50%;background:#7F77DD"></div>Permiso</div>
+      <div class="cal-chip" data-estado="libre" onclick="toggleCalFiltro('libre',this)"><div style="width:7px;height:7px;border-radius:50%;background:#555"></div>Libre</div>
+    </div>
+    <div style="padding:0 14px;flex:1;overflow-y:auto;padding-bottom:calc(var(--nav-h) + 16px)">
+      <div class="resumen-cal" id="resumen-cal"></div>
+    </div>
+    <nav class="bottom-nav">
+      <div class="nav-item" data-pantalla="asistencia"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L3 8v10h5v-5h4v5h5V8z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg><span>Inicio</span></div>
+      <div class="nav-item activo" data-pantalla="historial"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><line x1="7" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="11" x2="11" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Asistencia</span></div>
+      <div class="nav-item" data-pantalla="tareas"><div class="nav-badge badge-tareas"></div><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="2" rx="1" fill="currentColor"/><rect x="3" y="9" width="10" height="2" rx="1" fill="currentColor"/><rect x="3" y="13" width="12" height="2" rx="1" fill="currentColor"/></svg><span>Tareas</span></div>
+      <div class="nav-item" data-pantalla="insumos"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg><span>Insumos</span></div>
+      <div class="nav-item" data-pantalla="finanzas"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 15 Q10 4 16 15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><line x1="6.5" y1="11" x2="13.5" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Finanzas</span></div>
+    </nav>
+  </div>
 
-        <!-- Por persona -->
-        <div id="panel-horarios-persona">
-          <div style="display:flex;gap:8px;align-items:center">
-            <select id="sel-persona-horario" class="edit-reg-inp" style="flex:1">
-              <option value="">Selecciona persona...</option>
-            </select>
+  <!-- ===== PANEL ADMIN ===== -->
+  <div id="pantalla-admin" class="pantalla">
+    <div class="admin-topbar">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button id="btn-menu-admin" class="btn-hamburguesa">≡</button>
+        <span class="admin-titulo" id="admin-titulo-seccion">Asistencias</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <span class="role-badge" id="admin-role-badge">Admin</span>
+        <button id="btn-tema-admin" style="background:none;border:0.5px solid #3a3a3a;color:#666;padding:3px 8px;border-radius:20px;font-size:13px;cursor:pointer;flex-shrink:0">☀️</button>
+        <button id="btn-logout" style="background:none;border:0.5px solid #3a3a3a;color:#666;padding:3px 10px;border-radius:20px;font-size:11px;cursor:pointer;flex-shrink:0">Salir</button>
+      </div>
+    </div>
+    <div class="admin-layout">
+      <div class="admin-sidebar" id="admin-sidebar">
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+        <div class="sidebar-panel" id="sidebar-panel">
+          <div class="sidebar-header">
+            <div style="font-size:14px;font-weight:500;color:var(--text)" id="sidebar-nombre">Admin</div>
+            <div style="font-size:11px;color:var(--text3)" id="sidebar-role">—</div>
           </div>
+          <nav class="sidebar-nav">
+            <div class="sidebar-item activo" data-admin-sec="asistencias">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="7" x2="10" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="10" x2="13" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              <span>Asistencias</span>
+            </div>
+            <div class="sidebar-item" data-admin-sec="horarios">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              <span>Horarios</span>
+            </div>
+            <div class="sidebar-item" data-admin-sec="tareas-admin">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="2" rx="1" fill="currentColor"/><rect x="3" y="9" width="10" height="2" rx="1" fill="currentColor"/><rect x="3" y="13" width="12" height="2" rx="1" fill="currentColor"/></svg>
+              <span>Tareas</span>
+            </div>
+            <div class="sidebar-item" data-admin-sec="finanzas-admin">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 15 Q10 4 16 15" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><line x1="6.5" y1="11" x2="13.5" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              <span>Finanzas</span>
+            </div>
+            <div class="sidebar-item" data-admin-sec="insumos-admin">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
+              <span>Insumos</span>
+            </div>
+          </nav>
+        </div>
+      </div>
+      <div class="admin-contenido">
+
+        <!-- ===== SECCIÓN: ASISTENCIAS ADMIN ===== -->
+        <div id="admin-sec-asistencias" class="admin-sec activa">
+          <div class="admin-stats" id="admin-stats-hoy"></div>
           <div class="admin-fecha-nav">
-            <button class="btn-fecha-nav" id="btn-semana-prev">‹</button>
-            <span id="semana-label">Esta semana</span>
-            <button class="btn-fecha-nav" id="btn-semana-next">›</button>
+            <button class="btn-fecha-nav" id="btn-fecha-prev">‹</button>
+            <span id="admin-fecha-label">Hoy</span>
+            <button class="btn-fecha-nav" id="btn-fecha-next">›</button>
           </div>
-          <div id="horarios-semana-wrap"></div>
+          <div id="admin-asist-lista" class="admin-lista"></div>
         </div>
 
-        <!-- Por día -->
-        <div id="panel-horarios-dia" style="display:none">
-          <div class="admin-fecha-nav" style="margin-bottom:8px">
-            <button class="btn-fecha-nav" id="btn-horario-prev">‹</button>
-            <span id="horario-dia-label">Hoy</span>
-            <button class="btn-fecha-nav" id="btn-horario-next">›</button>
+        <!-- ===== SECCIÓN: HORARIOS ADMIN ===== -->
+        <div id="admin-sec-horarios" class="admin-sec">
+          <div class="tabs-finanzas">
+            <div class="tab-fin activo" id="tab-horarios-persona" onclick="showTabHorarios('persona')">Por persona</div>
+            <div class="tab-fin" id="tab-horarios-dia" onclick="showTabHorarios('dia')">Por día</div>
           </div>
-          <div id="horarios-dia-lista"></div>
-        </div>
-
-        <!-- Modal agregar/editar horario -->
-        <div id="modal-horario" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:center;justify-content:center">
-          <div style="background:var(--bg2);border-radius:16px;padding:20px;width:90%;max-width:340px;display:flex;flex-direction:column;gap:12px">
-            <div style="font-size:15px;font-weight:500;color:var(--text)" id="modal-horario-titulo">Asignar horario</div>
-            <input type="hidden" id="modal-uid">
-            <input type="hidden" id="modal-fecha">
-            <div>
-              <div class="edit-reg-lbl">Tipo de día</div>
-              <select class="edit-reg-inp" id="modal-tipo-dia">
-                <option value="trabajo">Trabajo</option>
-                <option value="libre">Libre</option>
-                <option value="permiso">Permiso</option>
+          <div id="panel-horarios-persona">
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="sel-persona-horario" class="edit-reg-inp" style="flex:1">
+                <option value="">Selecciona persona...</option>
               </select>
             </div>
-            <div id="modal-horas-wrap">
+            <div class="admin-fecha-nav">
+              <button class="btn-fecha-nav" id="btn-semana-prev">‹</button>
+              <span id="semana-label">Esta semana</span>
+              <button class="btn-fecha-nav" id="btn-semana-next">›</button>
+            </div>
+            <div id="horarios-semana-wrap"></div>
+          </div>
+          <div id="panel-horarios-dia" style="display:none">
+            <div class="admin-fecha-nav" style="margin-bottom:8px">
+              <button class="btn-fecha-nav" id="btn-horario-prev">‹</button>
+              <span id="horario-dia-label">Hoy</span>
+              <button class="btn-fecha-nav" id="btn-horario-next">›</button>
+            </div>
+            <div id="horarios-dia-lista"></div>
+          </div>
+          <div id="modal-horario" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:center;justify-content:center">
+            <div style="background:var(--bg2);border-radius:16px;padding:20px;width:90%;max-width:340px;display:flex;flex-direction:column;gap:12px">
+              <div style="font-size:15px;font-weight:500;color:var(--text)" id="modal-horario-titulo">Asignar horario</div>
+              <input type="hidden" id="modal-uid">
+              <input type="hidden" id="modal-fecha">
+              <div>
+                <div class="edit-reg-lbl">Tipo de día</div>
+                <select class="edit-reg-inp" id="modal-tipo-dia">
+                  <option value="trabajo">Trabajo</option>
+                  <option value="libre">Libre</option>
+                  <option value="permiso">Permiso</option>
+                </select>
+              </div>
+              <div id="modal-horas-wrap">
+                <div style="display:flex;gap:8px">
+                  <div style="flex:1">
+                    <div class="edit-reg-lbl">Entrada</div>
+                    <input class="edit-reg-inp" type="time" id="modal-hora-entrada" value="08:00">
+                  </div>
+                  <div style="flex:1">
+                    <div class="edit-reg-lbl">Salida</div>
+                    <input class="edit-reg-inp" type="time" id="modal-hora-salida" value="13:00">
+                  </div>
+                </div>
+                <div style="margin-top:8px">
+                  <div class="edit-reg-lbl">Turno</div>
+                  <select class="edit-reg-inp" id="modal-turno">
+                    <option value="mañana">Mañana</option>
+                    <option value="tarde">Tarde</option>
+                    <option value="completo">Completo</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn-edit-save" onclick="guardarHorario()">Guardar</button>
+                <button class="btn-edit-cancel" onclick="cerrarModalHorario()">Cancelar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== SECCIÓN: TAREAS ADMIN ===== -->
+        <div id="admin-sec-tareas-admin" class="admin-sec">
+          <div class="tabs-finanzas">
+            <div class="tab-fin activo" id="tab-ta-gestion" onclick="showTabTareasAdmin('gestion')">Gestión</div>
+            <div class="tab-fin" id="tab-ta-seguimiento" onclick="showTabTareasAdmin('seguimiento')">Seguimiento hoy</div>
+          </div>
+          <div id="panel-ta-gestion" style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn-admin-val" style="width:100%" onclick="toggleFormTarea()">+ Nueva tarea</button>
+            <div id="form-nueva-tarea" style="display:none;background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:12px;flex-direction:column;gap:8px">
+              <div class="edit-reg-lbl">Nombre de la tarea</div>
+              <input class="edit-reg-inp" id="nt-nombre" placeholder="Ej: limpiar mampara de entrada">
               <div style="display:flex;gap:8px">
                 <div style="flex:1">
-                  <div class="edit-reg-lbl">Entrada</div>
-                  <input class="edit-reg-inp" type="time" id="modal-hora-entrada" value="08:00">
+                  <div class="edit-reg-lbl">Área</div>
+                  <select class="edit-reg-inp" id="nt-area">
+                    <option value="cocina">Cocina</option>
+                    <option value="barra">Barra</option>
+                    <option value="sala">Sala</option>
+                    <option value="banos">Baños</option>
+                    <option value="general">General</option>
+                  </select>
                 </div>
                 <div style="flex:1">
-                  <div class="edit-reg-lbl">Salida</div>
-                  <input class="edit-reg-inp" type="time" id="modal-hora-salida" value="13:00">
+                  <div class="edit-reg-lbl">Turno</div>
+                  <select class="edit-reg-inp" id="nt-turno">
+                    <option value="ambos">Ambos</option>
+                    <option value="manana">Mañana</option>
+                    <option value="tarde">Tarde</option>
+                  </select>
                 </div>
               </div>
-              <div style="margin-top:8px">
-                <div class="edit-reg-lbl">Turno</div>
-                <select class="edit-reg-inp" id="modal-turno">
-                  <option value="mañana">Mañana</option>
-                  <option value="tarde">Tarde</option>
-                  <option value="completo">Completo</option>
-                </select>
+              <div>
+                <div class="edit-reg-lbl">Tipo</div>
+                <div style="display:flex;gap:6px">
+                  <div class="tipo-tarea-btn activo" data-tipo="normal" onclick="setTipoTarea('normal')">Normal</div>
+                  <div class="tipo-tarea-btn" data-tipo="recurrente" onclick="setTipoTarea('recurrente')">Recurrente</div>
+                  <div class="tipo-tarea-btn" data-tipo="turno" onclick="setTipoTarea('turno')">Por turno</div>
+                </div>
               </div>
-            </div>
-            <div style="display:flex;gap:8px">
-              <button class="btn-edit-save" onclick="guardarHorario()">Guardar</button>
-              <button class="btn-edit-cancel" onclick="cerrarModalHorario()">Cancelar</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ===== SECCIÓN: TAREAS ADMIN ===== -->
-      <div id="admin-sec-tareas-admin" class="admin-sec">
-        <div class="tabs-finanzas">
-          <div class="tab-fin activo" id="tab-ta-gestion" onclick="showTabTareasAdmin('gestion')">Gestión</div>
-          <div class="tab-fin" id="tab-ta-seguimiento" onclick="showTabTareasAdmin('seguimiento')">Seguimiento hoy</div>
-        </div>
-
-        <!-- GESTIÓN -->
-        <div id="panel-ta-gestion" style="display:flex;flex-direction:column;gap:10px">
-          <button class="btn-admin-val" style="width:100%" onclick="toggleFormTarea()">+ Nueva tarea</button>
-
-          <!-- Formulario nueva tarea -->
-          <div id="form-nueva-tarea" style="display:none;background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:12px;flex-direction:column;gap:8px">
-            <div class="edit-reg-lbl">Nombre de la tarea</div>
-            <input class="edit-reg-inp" id="nt-nombre" placeholder="Ej: limpiar mampara de entrada">
-            <div style="display:flex;gap:8px">
-              <div style="flex:1">
-                <div class="edit-reg-lbl">Área</div>
-                <select class="edit-reg-inp" id="nt-area">
-                  <option value="cocina">Cocina</option>
-                  <option value="barra">Barra</option>
-                  <option value="sala">Sala</option>
-                  <option value="banos">Baños</option>
-                  <option value="general">General</option>
-                </select>
+              <div id="nt-rep-wrap" style="display:none;background:var(--bg3);border-radius:8px;padding:8px">
+                <div class="edit-reg-lbl">Repetir cada</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+                  <input class="edit-reg-inp" id="nt-rep-horas" type="number" value="2" min="1" max="12" style="width:60px;text-align:center">
+                  <span style="font-size:12px;color:var(--text3)">horas — reaparece al marcar</span>
+                </div>
               </div>
-              <div style="flex:1">
-                <div class="edit-reg-lbl">Turno</div>
-                <select class="edit-reg-inp" id="nt-turno">
-                  <option value="ambos">Ambos</option>
-                  <option value="manana">Mañana</option>
-                  <option value="tarde">Tarde</option>
-                </select>
+              <div>
+                <div class="edit-reg-lbl">¿Compartida?</div>
+                <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer">
+                  <input type="checkbox" id="nt-compartida"> El primero que la marque la completa para todos
+                </label>
               </div>
-            </div>
-            <div>
-              <div class="edit-reg-lbl">Tipo</div>
               <div style="display:flex;gap:6px">
-                <div class="tipo-tarea-btn activo" data-tipo="normal" onclick="setTipoTarea('normal')">Normal</div>
-                <div class="tipo-tarea-btn" data-tipo="recurrente" onclick="setTipoTarea('recurrente')">Recurrente</div>
-                <div class="tipo-tarea-btn" data-tipo="turno" onclick="setTipoTarea('turno')">Por turno</div>
-              </div>
-            </div>
-            <div id="nt-rep-wrap" style="display:none;background:var(--bg3);border-radius:8px;padding:8px">
-              <div class="edit-reg-lbl">Repetir cada</div>
-              <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
-                <input class="edit-reg-inp" id="nt-rep-horas" type="number" value="2" min="1" max="12" style="width:60px;text-align:center">
-                <span style="font-size:12px;color:var(--text3)">horas — reaparece al marcar</span>
+                <button class="btn-edit-save" onclick="guardarNuevaTarea()">Guardar tarea</button>
+                <button class="btn-edit-cancel" onclick="toggleFormTarea()">Cancelar</button>
               </div>
             </div>
             <div>
-              <div class="edit-reg-lbl">¿Compartida?</div>
-              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer">
-                <input type="checkbox" id="nt-compartida"> El primero que la marque la completa para todos
-              </label>
-            </div>
-            <div style="display:flex;gap:6px">
-              <button class="btn-edit-save" onclick="guardarNuevaTarea()">Guardar tarea</button>
-              <button class="btn-edit-cancel" onclick="toggleFormTarea()">Cancelar</button>
+              <div class="edit-reg-lbl" style="margin-bottom:6px">Tareas configuradas</div>
+              <div id="lista-tareas-config"></div>
             </div>
           </div>
-
-          <!-- Lista de tareas configuradas -->
-          <div>
-            <div class="edit-reg-lbl" style="margin-bottom:6px">Tareas configuradas</div>
-            <div id="lista-tareas-config"></div>
+          <div id="panel-ta-seguimiento" style="display:none;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--green-light);animation:pulse 2s infinite"></div>
+              <span style="font-size:12px;color:var(--text2)">En vivo</span>
+            </div>
+            <div style="background:var(--red-bg);border:0.5px solid #4a1800;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:12px;font-weight:500;color:var(--red)">⚡ Asignar tarea urgente ahora</div>
+              <select class="edit-reg-inp" id="sel-urgente-staff">
+                <option value="">Selecciona persona...</option>
+              </select>
+              <input class="edit-reg-inp" id="inp-urgente-tarea" placeholder="Describe la tarea urgente...">
+              <button class="btn-admin-del" style="width:100%" onclick="asignarUrgente()">Asignar ahora</button>
+            </div>
+            <div id="seguimiento-lista"></div>
           </div>
         </div>
 
-        <!-- SEGUIMIENTO -->
-        <div id="panel-ta-seguimiento" style="display:none;flex-direction:column;gap:10px">
-          <div style="display:flex;align-items:center;gap:6px">
-            <div style="width:8px;height:8px;border-radius:50%;background:var(--green-light);animation:pulse 2s infinite"></div>
-            <span style="font-size:12px;color:var(--text2)">En vivo</span>
+        <!-- ===== SECCIÓN: FINANZAS ADMIN ===== -->
+        <div id="admin-sec-finanzas-admin" class="admin-sec">
+          <div class="tabs-finanzas">
+            <div class="tab-fin activo" id="tab-fa-cobros" onclick="showTabFinAdmin('cobros')">Cobros</div>
+            <div class="tab-fin" id="tab-fa-dano" onclick="showTabFinAdmin('dano')">Registrar daño</div>
+            <div class="tab-fin" id="tab-fa-resumen" onclick="showTabFinAdmin('resumen')">Resumen</div>
           </div>
-          <!-- Asignar urgente -->
-          <div style="background:var(--red-bg);border:0.5px solid #4a1800;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px">
-            <div style="font-size:12px;font-weight:500;color:var(--red)">⚡ Asignar tarea urgente ahora</div>
-            <select class="edit-reg-inp" id="sel-urgente-staff">
-              <option value="">Selecciona persona...</option>
-            </select>
-            <input class="edit-reg-inp" id="inp-urgente-tarea" placeholder="Describe la tarea urgente...">
-            <button class="btn-admin-del" style="width:100%" onclick="asignarUrgente()">Asignar ahora</button>
+          <div id="panel-fa-cobros" style="display:flex;flex-direction:column;gap:8px">
+            <div id="fa-banner-pend"></div>
+            <div id="fa-cobros-lista"></div>
           </div>
-          <div id="seguimiento-lista"></div>
+          <div id="panel-fa-dano" style="display:none;flex-direction:column;gap:10px">
+            <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:12px;font-weight:500;color:var(--red)">Registrar daño o merma</div>
+              <div class="edit-reg-lbl">¿Qué se rompió o dañó?</div>
+              <input class="edit-reg-inp" id="fa-dano-desc" placeholder="Ej: infusionera rota, alicates malogrados...">
+              <div style="display:flex;gap:8px">
+                <div style="flex:1">
+                  <div class="edit-reg-lbl">Monto (S/)</div>
+                  <input class="edit-reg-inp" id="fa-dano-monto" type="number" placeholder="0.00" inputmode="decimal">
+                </div>
+                <div style="flex:1">
+                  <div class="edit-reg-lbl">Asignar a</div>
+                  <select class="edit-reg-inp" id="fa-dano-staff">
+                    <option value="">Selecciona...</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn-admin-del" style="width:100%" onclick="registrarDanoAdmin()">Registrar daño</button>
+            </div>
+            <div class="edit-reg-lbl">Daños del mes</div>
+            <div id="fa-danos-lista"></div>
+          </div>
+          <div id="panel-fa-resumen" style="display:none;flex-direction:column;gap:8px">
+            <div class="admin-stats" id="fa-stats-globales"></div>
+            <div id="fa-resumen-lista"></div>
+          </div>
         </div>
+
+        <!-- ===== SECCIÓN: INSUMOS ADMIN ===== -->
+        <div id="admin-sec-insumos-admin" class="admin-sec">
+          <div class="tabs-finanzas">
+            <div class="tab-fin activo" id="tab-ia-lista" onclick="showTabInsAdmin('lista')">Lista maestra</div>
+            <div class="tab-fin" id="tab-ia-historial" onclick="showTabInsAdmin('historial')">Historial</div>
+          </div>
+          <div id="panel-ia-lista" style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn-admin-val" style="width:100%" onclick="toggleFormInsumo()">+ Nuevo insumo</button>
+            <div id="form-nuevo-insumo" style="display:none;background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:12px;flex-direction:column;gap:8px">
+              <div class="edit-reg-lbl">Nombre del insumo</div>
+              <input class="edit-reg-inp" id="ni-nombre" placeholder="Ej: pollo deshilachado">
+              <div style="display:flex;gap:8px">
+                <div style="flex:1">
+                  <div class="edit-reg-lbl">Categoría</div>
+                  <select class="edit-reg-inp" id="ni-cat">
+                    <option value="cocina">Cocina</option>
+                    <option value="barra">Barra</option>
+                    <option value="limpieza">Limpieza</option>
+                    <option value="cristaleria">Cristalería</option>
+                  </select>
+                </div>
+                <div style="flex:1">
+                  <div class="edit-reg-lbl">Subgrupo</div>
+                  <input class="edit-reg-inp" id="ni-sub" placeholder="Ej: carnes">
+                </div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <div style="flex:1">
+                  <div class="edit-reg-lbl">Cantidad mínima</div>
+                  <input class="edit-reg-inp" id="ni-min" placeholder="Ej: 10 bolsas">
+                </div>
+                <div style="flex:1">
+                  <div class="edit-reg-lbl">Prioridad</div>
+                  <select class="edit-reg-inp" id="ni-prio">
+                    <option value="urgente">Urgente</option>
+                    <option value="importante">Importante</option>
+                    <option value="normal">Normal</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px">
+                <button class="btn-edit-save" onclick="guardarNuevoInsumo()">Guardar insumo</button>
+                <button class="btn-edit-cancel" onclick="toggleFormInsumo()">Cancelar</button>
+              </div>
+            </div>
+            <div id="ia-lista-maestra"></div>
+          </div>
+          <div id="panel-ia-historial" style="display:none;flex-direction:column;gap:8px">
+            <div class="admin-fecha-nav">
+              <button class="btn-fecha-nav" id="btn-hist-ins-prev">‹</button>
+              <span id="hist-ins-fecha-label">Hoy</span>
+              <button class="btn-fecha-nav" id="btn-hist-ins-next">›</button>
+            </div>
+            <div id="ia-historial-lista"></div>
+          </div>
+        </div>
+
       </div>
-
-      <!-- ===== SECCIÓN: FINANZAS ADMIN ===== -->
-      <div id="admin-sec-finanzas-admin" class="admin-sec">
-        <div class="tabs-finanzas">
-          <div class="tab-fin activo" id="tab-fa-cobros" onclick="showTabFinAdmin('cobros')">Cobros</div>
-          <div class="tab-fin" id="tab-fa-dano" onclick="showTabFinAdmin('dano')">Registrar daño</div>
-          <div class="tab-fin" id="tab-fa-resumen" onclick="showTabFinAdmin('resumen')">Resumen</div>
-        </div>
-
-        <!-- COBROS -->
-        <div id="panel-fa-cobros" style="display:flex;flex-direction:column;gap:8px">
-          <div id="fa-banner-pend"></div>
-          <div id="fa-cobros-lista"></div>
-        </div>
-
-        <!-- REGISTRAR DAÑO -->
-        <div id="panel-fa-dano" style="display:none;flex-direction:column;gap:10px">
-          <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px">
-            <div style="font-size:12px;font-weight:500;color:var(--red)">Registrar daño o merma</div>
-            <div class="edit-reg-lbl">¿Qué se rompió o dañó?</div>
-            <input class="edit-reg-inp" id="fa-dano-desc" placeholder="Ej: infusionera rota, alicates malogrados...">
-            <div style="display:flex;gap:8px">
-              <div style="flex:1">
-                <div class="edit-reg-lbl">Monto (S/)</div>
-                <input class="edit-reg-inp" id="fa-dano-monto" type="number" placeholder="0.00" inputmode="decimal">
-              </div>
-              <div style="flex:1">
-                <div class="edit-reg-lbl">Asignar a</div>
-                <select class="edit-reg-inp" id="fa-dano-staff">
-                  <option value="">Selecciona...</option>
-                </select>
-              </div>
-            </div>
-            <button class="btn-admin-del" style="width:100%" onclick="registrarDanoAdmin()">Registrar daño</button>
-          </div>
-          <div class="edit-reg-lbl">Daños del mes</div>
-          <div id="fa-danos-lista"></div>
-        </div>
-
-        <!-- RESUMEN -->
-        <div id="panel-fa-resumen" style="display:none;flex-direction:column;gap:8px">
-          <div class="admin-stats" id="fa-stats-globales"></div>
-          <div id="fa-resumen-lista"></div>
-        </div>
-      </div>
-
-      <!-- ===== SECCIÓN: INSUMOS ADMIN ===== -->
-      <div id="admin-sec-insumos-admin" class="admin-sec">
-        <div class="tabs-finanzas">
-          <div class="tab-fin activo" id="tab-ia-lista" onclick="showTabInsAdmin('lista')">Lista maestra</div>
-          <div class="tab-fin" id="tab-ia-historial" onclick="showTabInsAdmin('historial')">Historial</div>
-        </div>
-
-        <!-- LISTA MAESTRA -->
-        <div id="panel-ia-lista" style="display:flex;flex-direction:column;gap:8px">
-          <button class="btn-admin-val" style="width:100%" onclick="toggleFormInsumo()">+ Nuevo insumo</button>
-
-          <!-- Formulario nuevo insumo -->
-          <div id="form-nuevo-insumo" style="display:none;background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:12px;flex-direction:column;gap:8px">
-            <div class="edit-reg-lbl">Nombre del insumo</div>
-            <input class="edit-reg-inp" id="ni-nombre" placeholder="Ej: pollo deshilachado">
-            <div style="display:flex;gap:8px">
-              <div style="flex:1">
-                <div class="edit-reg-lbl">Categoría</div>
-                <select class="edit-reg-inp" id="ni-cat">
-                  <option value="cocina">Cocina</option>
-                  <option value="barra">Barra</option>
-                  <option value="limpieza">Limpieza</option>
-                  <option value="cristaleria">Cristalería</option>
-                </select>
-              </div>
-              <div style="flex:1">
-                <div class="edit-reg-lbl">Subgrupo</div>
-                <input class="edit-reg-inp" id="ni-sub" placeholder="Ej: carnes">
-              </div>
-            </div>
-            <div style="display:flex;gap:8px">
-              <div style="flex:1">
-                <div class="edit-reg-lbl">Cantidad mínima</div>
-                <input class="edit-reg-inp" id="ni-min" placeholder="Ej: 10 bolsas">
-              </div>
-              <div style="flex:1">
-                <div class="edit-reg-lbl">Prioridad</div>
-                <select class="edit-reg-inp" id="ni-prio">
-                  <option value="urgente">Urgente</option>
-                  <option value="importante">Importante</option>
-                  <option value="normal">Normal</option>
-                </select>
-              </div>
-            </div>
-            <div style="display:flex;gap:6px">
-              <button class="btn-edit-save" onclick="guardarNuevoInsumo()">Guardar insumo</button>
-              <button class="btn-edit-cancel" onclick="toggleFormInsumo()">Cancelar</button>
-            </div>
-          </div>
-
-          <div id="ia-lista-maestra"></div>
-        </div>
-
-        <!-- HISTORIAL -->
-        <div id="panel-ia-historial" style="display:none;flex-direction:column;gap:8px">
-          <div class="admin-fecha-nav">
-            <button class="btn-fecha-nav" id="btn-hist-ins-prev">‹</button>
-            <span id="hist-ins-fecha-label">Hoy</span>
-            <button class="btn-fecha-nav" id="btn-hist-ins-next">›</button>
-          </div>
-          <div id="ia-historial-lista"></div>
-        </div>
+    </div>
+  </div>
 
   <!-- Firebase SDK -->
   <script type="module" src="app.js"></script>

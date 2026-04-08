@@ -676,6 +676,13 @@ html, body {
   left: 0; right: 0;
   background: var(--bg);
   z-index: 50;
+  max-width: 600px;
+}
+@media (min-width: 600px) {
+  .msg-libre-wrap {
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }
 .msg-libre-header {
   display: flex;

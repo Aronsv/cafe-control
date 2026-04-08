@@ -306,7 +306,7 @@ async function iniciarTareas() {
         '</div>';
     });
     const msgVistosLocal = JSON.parse(localStorage.getItem('mensajes_vistos') || '{}');
-    mensajesTurno.filter(m => !msgVistosLocal[m.id]).forEach(m => {
+    mensajes.filter(m => !msgVistosLocal[m.id]).forEach(m => {
       html += '<div class="alerta-traspaso" style="margin:0 14px 6px">' +
         '<div class="alerta-traspaso-titulo">💬 Mensaje de ' + (m.nombre||'turno anterior') + '</div>' +
         '<div class="alerta-traspaso-sub">' + m.mensaje + '</div>' +

@@ -453,6 +453,12 @@
               <input class="edit-reg-inp" id="inp-urgente-tarea" placeholder="Describe la tarea urgente...">
               <button class="btn-admin-del" style="width:100%" onclick="asignarUrgente()">Asignar ahora</button>
             </div>
+            <!-- Alerta insumos admin -->
+            <div style="background:#1a0010;border:0.5px solid #4a0030;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:12px;font-weight:500;color:#E060A0">⚠ Reportar insumo agotado</div>
+              <input class="edit-reg-inp" id="admin-alerta-ins-nombre" placeholder="¿Qué insumo se agotó?">
+              <button onclick="enviarAlertaInsAdmin()" style="width:100%;padding:8px;border-radius:8px;border:0.5px solid #4a0030;background:#2a0018;font-size:12px;color:#E060A0;cursor:pointer">Avisar a todo el staff</button>
+            </div>
             <div id="seguimiento-lista"></div>
           </div>
         </div>

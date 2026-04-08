@@ -320,6 +320,8 @@ async function iniciarTareas() {
         '</div>';
     });
     divAlertas.innerHTML = html;
+    const badge = document.getElementById('badge-tareas');
+    if (badge) badge.classList.toggle('visible', urgentes.length > 0 || mensajes.length > 0);
   };
 
   let urgentesRT = [], mensajesRT = [], alertasRT = [];

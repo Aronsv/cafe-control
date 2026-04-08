@@ -355,8 +355,11 @@ async function iniciarTareas() {
     const body = document.getElementById('alerta-ins-body');
     const arrow = document.getElementById('alerta-ins-arrow');
     const visible = body.style.display === 'flex';
+    // Cerrar resumen si está abierto
+    document.getElementById('resumen-whatsapp').style.display = 'none';
+    document.getElementById('resumen-pie-arrow').textContent = '▼';
     body.style.display = visible ? 'none' : 'flex';
-    body.style.flexDirection = 'column';
+    body.style.flexDirection = visible ? '' : 'column';
     arrow.textContent = visible ? '▼' : '▲';
   });
 
@@ -577,6 +580,9 @@ async function iniciarInsumos() {
     const body = document.getElementById('resumen-whatsapp');
     const arrow = document.getElementById('resumen-pie-arrow');
     const visible = body.style.display === 'flex';
+    // Cerrar alerta si está abierta
+    document.getElementById('alerta-ins-body').style.display = 'none';
+    document.getElementById('alerta-ins-arrow').textContent = '▼';
     body.style.display = visible ? 'none' : 'flex';
     body.style.flexDirection = visible ? '' : 'column';
     arrow.textContent = visible ? '▼' : '▲';

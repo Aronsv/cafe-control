@@ -1665,8 +1665,17 @@ async function cargarTareasConfig() {
   const tareas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   const tagCls = { cocina:'tag-cocina', barra:'tag-barra', sala:'tag-sala', banos:'tag-banos', general:'tag-general' };
   const tagLbl = { cocina:'cocina', barra:'barra', sala:'sala', banos:'baños', general:'general' };
+  const areas = ['cocina','barra','sala','banos','general'];
+  const areaLbl = { cocina:'Cocina', barra:'Barra', sala:'Sala', banos:'Baños', general:'General' };
+  const porArea = {};
+  areas.forEach(a => porArea[a] = []);
+  tareas.forEach(t => { const a = t.area||'general'; if(!porArea[a]) porArea[a]=[]; porArea[a].push(t); });
+
   let html = '';
-  tareas.forEach(t => {
+  areas.forEach(area => {
+    if (!porArea[area] || !porArea[area].length) return;
+    html += '<div style="font-size:10px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:8px 0 4px;border-bottom:0.5px solid var(--border);margin-bottom:6px">' + (areaLbl[area]||area) + ' (' + porArea[area].length + ')</div>';
+    porArea[area].forEach(t => {
     const tipoBadge = t.tipo === 'recurrente' ? '<span style="font-size:9px;padding:2px 6px;border-radius:20px;background:#2a1a00;color:var(--amber);border:0.5px solid #3a2400">↻ cada ' + (t.repHoras||2) + 'h</span>' :
       t.tipo === 'turno' ? '<span style="font-size:9px;padding:2px 6px;border-radius:20px;background:var(--purple-bg);color:var(--purple)">por turno</span>' : '';
     const compBadge = t.compartida ? '<span style="font-size:9px;padding:2px 6px;border-radius:20px;background:#001828;color:#5DAAE8">compartida</span>' : '';
@@ -1675,8 +1684,10 @@ async function cargarTareasConfig() {
     html += '<div class="tarea-config-meta"><span class="tag-area ' + (tagCls[t.area]||'tag-general') + '">' + (tagLbl[t.area]||t.area) + '</span>' + tipoBadge + compBadge + '</div>';
     html += '<div style="font-size:10px;color:var(--text3)">Turno: ' + (t.turno||'ambos') + '</div>';
     html += '<div class="tarea-config-btns">';
+    html += '<button class="btn-admin-edit" onclick="editarTareaAdmin(\'' + t.id + '\')">Editar</button>';
     html += '<button class="btn-admin-del" onclick="desactivarTarea(\'' + t.id + '\')">Eliminar</button>';
     html += '</div></div>';
+    });
   });
   document.getElementById('lista-tareas-config').innerHTML = html || '<div style="font-size:12px;color:var(--text3);text-align:center;padding:16px">Sin tareas configuradas</div>';
 }
@@ -1732,7 +1743,7 @@ async function cargarSeguimiento() {
   if (mensajes.length) {
     htmlMsg = '<div style="background:#1a1400;border:0.5px solid #3a2c00;border-radius:10px;padding:10px 12px;margin-bottom:8px"><div style="font-size:11px;font-weight:500;color:var(--amber);margin-bottom:6px">💬 Mensajes del turno de hoy</div>';
     mensajes.forEach(m => { htmlMsg += '<div style="font-size:12px;color:#c09040;padding:3px 0"><b>' + (m.nombre||'—') + ':</b> ' + m.mensaje + '</div>'; });
-    htmlMsg += '</div>';
+    htmlMsg += '<button onclick="cerrarMensajesAdmin(this)" style="margin-top:6px;width:100%;padding:6px;border-radius:7px;border:0.5px solid #3a2c00;background:#2a1a00;font-size:11px;color:var(--amber);cursor:pointer">✓ Entendido</button></div>';
   }
   document.getElementById('seguimiento-lista').innerHTML = htmlMsg + (html || '<div style="text-align:center;padding:16px;font-size:13px;color:var(--text3)">Sin personal</div>');
 }
@@ -1774,6 +1785,21 @@ window.guardarNuevaTarea = async () => {
   cargarTareasConfig();
 };
 
+window.editarTareaAdmin = async (id) => {
+  const { getDoc, doc: fd, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const snap = await getDoc(fd(db, 'tareas_config', id));
+  if (!snap.exists()) return;
+  const t = snap.data();
+  const nuevoNombre = prompt('Nombre de la tarea:', t.nombre || '');
+  if (!nuevoNombre) return;
+  const areaOpts = 'cocina, barra, sala, banos, general';
+  const nuevaArea = prompt('Área (' + areaOpts + '):', t.area || 'general');
+  if (!nuevaArea) return;
+  await updateDoc(fd(db, 'tareas_config', id), { nombre: nuevoNombre, area: nuevaArea });
+  mostrarToast('Tarea actualizada ✓');
+  cargarTareasConfig();
+};
+
 window.desactivarTarea = async (id) => {
   if (!confirm('¿Eliminar esta tarea? Ya no aparecerá para el personal.')) return;
   const { doc: fd, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
@@ -1793,6 +1819,10 @@ function iniciarSeguimientoRT() {
     );
   });
 }
+
+window.cerrarMensajesAdmin = (btn) => {
+  btn.closest('div[style*="1a1400"]').style.display = 'none';
+};
 
 window.toggleSeguimiento = (uid) => {
   seguimientoCards[uid] = !seguimientoCards[uid];

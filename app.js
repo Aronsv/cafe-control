@@ -305,10 +305,12 @@ async function iniciarTareas() {
         '<button onclick="completarUrgente(\'' + u.id + '\')" style="margin-top:6px;width:100%;padding:6px;border-radius:7px;border:0.5px solid #1a3a24;background:#0e1e12;font-size:11px;color:var(--green-light);cursor:pointer">✓ Completada</button>' +
         '</div>';
     });
-    mensajes.forEach(m => {
+    const msgVistosLocal = JSON.parse(localStorage.getItem('mensajes_vistos') || '{}');
+    mensajesTurno.filter(m => !msgVistosLocal[m.id]).forEach(m => {
       html += '<div class="alerta-traspaso" style="margin:0 14px 6px">' +
         '<div class="alerta-traspaso-titulo">💬 Mensaje de ' + (m.nombre||'turno anterior') + '</div>' +
         '<div class="alerta-traspaso-sub">' + m.mensaje + '</div>' +
+        '<button onclick="cerrarMensajeStaff(\'' + m.id + '\')" style="margin-top:6px;width:100%;padding:6px;border-radius:7px;border:0.5px solid #3a2c00;background:#2a1a00;font-size:11px;color:var(--amber);cursor:pointer">✓ Entendido</button>' +
         '</div>';
     });
     const vistasLocal = JSON.parse(localStorage.getItem('alertas_vistas') || '{}');
@@ -487,6 +489,13 @@ function renderTareas() {
 
   lista.innerHTML = html;
 }
+
+window.cerrarMensajeStaff = (id) => {
+  const vistos = JSON.parse(localStorage.getItem('mensajes_vistos') || '{}');
+  vistos[id] = true;
+  localStorage.setItem('mensajes_vistos', JSON.stringify(vistos));
+  mostrarToast('Mensaje marcado como leído ✓', '#BA7517');
+};
 
 window.completarUrgente = async (id) => {
   const { doc: fd, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
@@ -1370,14 +1379,20 @@ window.showTabInsAdmin = (tab) => {
   document.getElementById('panel-ia-historial').style.flexDirection = tab==='historial'?'column':'';
   if (tab==='historial') {
     cargarHistorialInsumos();
-    document.getElementById('btn-hist-ins-prev').addEventListener('click', () => {
+    const btnP = document.getElementById('btn-hist-ins-prev');
+    const btnN = document.getElementById('btn-hist-ins-next');
+    const btnPNuevo = btnP.cloneNode(true);
+    const btnNNuevo = btnN.cloneNode(true);
+    btnP.parentNode.replaceChild(btnPNuevo, btnP);
+    btnN.parentNode.replaceChild(btnNNuevo, btnN);
+    btnPNuevo.addEventListener('click', () => {
       const d = new Date(historialFecha + 'T12:00:00');
       d.setDate(d.getDate()-1);
       historialFecha = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
       actualizarLabelHistIns();
       cargarHistorialInsumos();
     });
-    document.getElementById('btn-hist-ins-next').addEventListener('click', () => {
+    btnNNuevo.addEventListener('click', () => {
       const d = new Date(historialFecha + 'T12:00:00');
       d.setDate(d.getDate()+1);
       historialFecha = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -1848,12 +1863,30 @@ window.cerrarAlertaAdmin = async (id, btn) => {
 };
 
 window.cerrarMensajesAdmin = (btn) => {
-  btn.closest('div[style*="1a1400"]').style.display = 'none';
+  const wrap = btn.parentElement;
+  if (wrap) wrap.style.display = 'none';
 };
 
 window.toggleSeguimiento = (uid) => {
   seguimientoCards[uid] = !seguimientoCards[uid];
   cargarSeguimiento();
+};
+
+window.enviarAlertaInsAdmin = async () => {
+  const nombre = document.getElementById('admin-alerta-ins-nombre').value.trim();
+  if (!nombre) { mostrarToast('Escribe qué insumo se agotó', '#E060A0'); return; }
+  const { addDoc, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  await addDoc(collection(db, 'alertas_insumos'), {
+    uid: usuarioActual.uid,
+    nombre: datosUsuario.nombre,
+    insumo: nombre,
+    mensaje: 'Reportado por admin',
+    fecha: getFechaHoy(),
+    timestamp: new Date().toISOString(),
+    activa: true
+  });
+  document.getElementById('admin-alerta-ins-nombre').value = '';
+  mostrarToast('Alerta enviada a todo el staff ✓', '#E060A0');
 };
 
 window.asignarUrgente = async () => {

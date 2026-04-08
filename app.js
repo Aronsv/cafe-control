@@ -320,8 +320,7 @@ async function iniciarTareas() {
         '</div>';
     });
     divAlertas.innerHTML = html;
-    const badge = document.getElementById('badge-tareas');
-    if (badge) badge.classList.toggle('visible', urgentes.length > 0 || mensajes.length > 0);
+    document.querySelectorAll('.badge-tareas').forEach(b => b.classList.toggle('visible', urgentes.length > 0 || mensajes.length > 0));
   };
 
   let urgentesRT = [], mensajesRT = [], alertasRT = [];
@@ -1739,13 +1738,28 @@ async function cargarSeguimiento() {
   // Cargar mensajes del turno
   const snapMsg = await getDocs(query(collection(db, 'mensajes_turno'), where('fecha', '==', fecha)));
   const mensajes = snapMsg.docs.map(d => ({ id: d.id, ...d.data() }));
+ // Cargar alertas insumos
+  const snapAlertas = await getDocs(query(collection(db, 'alertas_insumos'), where('fecha','==',fecha), where('activa','==',true)));
+  const alertas = snapAlertas.docs.map(d => ({id:d.id,...d.data()}));
+
   let htmlMsg = '';
+  if (alertas.length) {
+    htmlMsg += '<div style="background:#1a0010;border:0.5px solid #4a0030;border-radius:10px;padding:10px 12px;margin-bottom:8px">';
+    htmlMsg += '<div style="font-size:11px;font-weight:500;color:#E060A0;margin-bottom:6px">⚠ Insumos agotados reportados hoy</div>';
+    alertas.forEach(a => {
+      htmlMsg += '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:0.5px solid #3a0020">';
+      htmlMsg += '<div><div style="font-size:12px;color:#E060A0">' + (a.insumo||a.nombre||'—') + '</div><div style="font-size:10px;color:#804060">' + (a.nombre||'') + ' · ' + (a.mensaje||'') + '</div></div>';
+      htmlMsg += '<button onclick="cerrarAlertaAdmin(\'' + a.id + '\',this)" style="padding:3px 8px;border-radius:6px;border:0.5px solid #4a0030;background:#2a0018;font-size:10px;color:#E060A0;cursor:pointer">Cerrar</button>';
+      htmlMsg += '</div>';
+    });
+    htmlMsg += '</div>';
+  }
   if (mensajes.length) {
-    htmlMsg = '<div style="background:#1a1400;border:0.5px solid #3a2c00;border-radius:10px;padding:10px 12px;margin-bottom:8px"><div style="font-size:11px;font-weight:500;color:var(--amber);margin-bottom:6px">💬 Mensajes del turno de hoy</div>';
+    htmlMsg += '<div style="background:#1a1400;border:0.5px solid #3a2c00;border-radius:10px;padding:10px 12px;margin-bottom:8px"><div style="font-size:11px;font-weight:500;color:var(--amber);margin-bottom:6px">💬 Mensajes del turno de hoy</div>';
     mensajes.forEach(m => { htmlMsg += '<div style="font-size:12px;color:#c09040;padding:3px 0"><b>' + (m.nombre||'—') + ':</b> ' + m.mensaje + '</div>'; });
     htmlMsg += '<button onclick="cerrarMensajesAdmin(this)" style="margin-top:6px;width:100%;padding:6px;border-radius:7px;border:0.5px solid #3a2c00;background:#2a1a00;font-size:11px;color:var(--amber);cursor:pointer">✓ Entendido</button></div>';
   }
-  document.getElementById('seguimiento-lista').innerHTML = htmlMsg + (html || '<div style="text-align:center;padding:16px;font-size:13px;color:var(--text3)">Sin personal</div>');
+  document.getElementById('seguimiento-lista').innerHTML = htmlMsg + (html || '<div style="text-align:center;padding:16px;font-size:13px;color:var(--text3)">Sin personal</div>'); 
 }
 
 window.showTabTareasAdmin = (tab) => {
@@ -1819,6 +1833,13 @@ function iniciarSeguimientoRT() {
     );
   });
 }
+
+window.cerrarAlertaAdmin = async (id, btn) => {
+  const { doc: fd, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  await updateDoc(fd(db, 'alertas_insumos', id), { activa: false });
+  mostrarToast('Alerta cerrada ✓', '#E060A0');
+  cargarSeguimiento();
+};
 
 window.cerrarMensajesAdmin = (btn) => {
   btn.closest('div[style*="1a1400"]').style.display = 'none';

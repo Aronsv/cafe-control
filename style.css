@@ -1485,3 +1485,15 @@ body.tema-claro .seguimiento-card { background: #fff; border-color: #ddd; }
   display: none;
 }
 .nav-badge.visible { display: block; }
+
+/* ===== TAREA COMPACTA ===== */
+.tarea-compacta {
+  padding: 8px 12px;
+}
+.tarea-compacta .tarea-top {
+  min-height: 36px;
+}
+.tarea-compacta .tarea-nombre {
+  font-size: 13px;
+  line-height: 1.3;
+}

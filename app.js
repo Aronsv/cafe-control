@@ -274,6 +274,7 @@ let tareasConfig = [];
 let tareasDia = {};
 let catActualTareas = 'todas';
 let nopudeAbierto = {};
+let tareasExpandidas = {};
 let msgLibreAbierto = false;
 let unsuscribeTareas = null;
 
@@ -463,25 +464,30 @@ function renderTareas() {
     html += '<div class="sec-badge ' + sec.cls + '">' + sec.badge + '</div>';
     items.forEach(t => {
       const isNpOpen = nopudeAbierto[t.id];
+      const isExpanded = tareasExpandidas[t.id];
       const tagCls = TAG_CLASES[t.area] || 'tag-general';
       const tagLbl = TAG_LABELS[t.area] || t.area;
-      html += '<div class="tarea-card" id="tarea-' + t.id + '">';
-      html += '<div class="tarea-top"><div class="tarea-chk" onclick="marcarTarea(\'' + t.id + '\')"></div>';
+      html += '<div class="tarea-card tarea-compacta" id="tarea-' + t.id + '">';
+      html += '<div class="tarea-top" onclick="expandirTarea(\'' + t.id + '\')" style="cursor:pointer">';
+      html += '<div class="tarea-chk" onclick="event.stopPropagation();marcarTarea(\'' + t.id + '\')"></div>';
       html += '<div class="tarea-body"><div class="tarea-nombre">' + t.nombre + '</div>';
       html += '<div class="tarea-meta"><span class="tag-area ' + tagCls + '">' + tagLbl + '</span>';
       if (t.compartida) html += '<span style="font-size:10px;color:var(--purple)">compartida</span>';
-      html += '</div>';
-      if (t.tipo === 'recurrente') html += '<div class="tarea-prox-ok">↻ cada ' + t.repHoras + 'h</div>';
+      if (t.tipo === 'recurrente') html += '<span style="font-size:10px;color:var(--amber)">↻ ' + t.repHoras + 'h</span>';
       html += '</div></div>';
-      html += '<div class="tarea-btns">';
-      html += '<div class="btn-yahay" onclick="marcarYahay(\'' + t.id + '\')">Ya hay / no aplica</div>';
-      html += '<div class="btn-nopude" onclick="toggleNopude(\'' + t.id + '\')">No pude</div>';
+      html += '<span style="font-size:12px;color:var(--text3);padding:0 4px">' + (isExpanded ? '▲' : '▼') + '</span>';
       html += '</div>';
-      if (isNpOpen) {
-        html += '<div class="nopude-box">';
-        html += '<textarea class="nopude-inp" id="np-' + t.id + '" rows="2" placeholder="¿Por qué no pudiste? El admin lo verá..."></textarea>';
-        html += '<button class="btn-nopude-send" onclick="enviarNopude(\'' + t.id + '\')">Enviar y dejar pendiente</button>';
+      if (isExpanded) {
+        html += '<div class="tarea-btns">';
+        html += '<div class="btn-yahay" onclick="marcarYahay(\'' + t.id + '\')">Ya hay / no aplica</div>';
+        html += '<div class="btn-nopude" onclick="toggleNopude(\'' + t.id + '\')">No pude</div>';
         html += '</div>';
+        if (isNpOpen) {
+          html += '<div class="nopude-box">';
+          html += '<textarea class="nopude-inp" id="np-' + t.id + '" rows="2" placeholder="¿Por qué no pudiste? El admin lo verá..."></textarea>';
+          html += '<button class="btn-nopude-send" onclick="enviarNopude(\'' + t.id + '\')">Enviar y dejar pendiente</button>';
+          html += '</div>';
+        }
       }
       html += '</div>';
     });
@@ -508,6 +514,11 @@ window.verAlerta = (id) => {
   vistas[id] = true;
   localStorage.setItem('alertas_vistas', JSON.stringify(vistas));
   mostrarToast('Alerta marcada como vista ✓', '#E060A0');
+};
+
+window.expandirTarea = (id) => {
+  tareasExpandidas[id] = !tareasExpandidas[id];
+  renderTareas();
 };
 
 window.marcarTarea = async (id) => {

@@ -269,123 +269,77 @@ $('btn-ver-historial').addEventListener('click', () => {
   $('btn-ver-historial').querySelector('span').textContent = visible ? '▼' : '▲';
 });
 
-// ===== MÓDULO: TAREAS =====
+// ===== MÓDULO: TAREAS (REFACTORIZADO) =====
 let tareasConfig = [];
 let tareasDia = {};
-let catActualTareas = 'todas';
-let nopudeAbierto = {};
-let tareasExpandidas = {};
+let nopudoAbierto = null;
 let msgLibreAbierto = false;
 let unsuscribeTareas = null;
 
-const TAG_CLASES = {
-  cocina: 'tag-cocina', barra: 'tag-barra', sala: 'tag-sala',
-  banos: 'tag-banos', general: 'tag-general'
+// Estado de alertas en tiempo real
+let urgentesRT = [];
+let mensajesRT = [];
+let alertasRT = [];
+let estadosModal = {};
+
+// Estado vista por área
+let areaActual = null;
+let filtroTexto = '';
+let ordenActual = 'tipo';
+
+const AREA_CONFIG = {
+  cocina:  { nom: 'Cocina',  cls: 'area-card-cocina'  },
+  barra:   { nom: 'Barra',   cls: 'area-card-barra'   },
+  sala:    { nom: 'Sala',    cls: 'area-card-sala'     },
+  banos:   { nom: 'Baños',   cls: 'area-card-banos'   },
+  general: { nom: 'General', cls: 'area-card-general'  },
 };
-const TAG_LABELS = {
-  cocina: 'cocina', barra: 'barra', sala: 'sala',
-  banos: 'baños', general: 'general'
-};
+const AREAS_ORDEN = ['cocina', 'barra', 'sala', 'banos', 'general'];
+
+function svCheck(color) {
+  return '<svg width="11" height="11" viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+}
+function svX(color) {
+  return '<svg width="11" height="11" viewBox="0 0 10 10" fill="none"><line x1="2" y1="2" x2="8" y2="8" stroke="' + color + '" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="2" x2="2" y2="8" stroke="' + color + '" stroke-width="2" stroke-linecap="round"/></svg>';
+}
 
 async function iniciarTareas() {
   document.getElementById('tareas-nombre-staff').textContent = datosUsuario.nombre || '—';
 
-  const { getDocs, collection, query, where, setDoc, doc: firestoreDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const { getDocs, collection, query, where, onSnapshot: onSnap, doc: firestoreDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
 
+  // Cargar config de tareas
   const snap = await getDocs(query(collection(db, 'tareas_config'), where('activo', '==', true)));
   tareasConfig = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-  // ===== TIEMPO REAL: urgentes + mensajes + alertas insumos =====
-  const renderAlertas = (urgentes, mensajes, alertas) => {
-    const divAlertas = document.getElementById('tareas-alertas');
-    let html = '';
-    urgentes.forEach(u => {
-      html += '<div class="alerta-urgente" style="margin:0 14px 6px">' +
-        '<div class="alerta-urgente-titulo">⚡ Tarea urgente del admin</div>' +
-        '<div class="alerta-urgente-sub">' + u.tarea + '</div>' +
-        '<button onclick="completarUrgente(\'' + u.id + '\')" style="margin-top:6px;width:100%;padding:6px;border-radius:7px;border:0.5px solid #1a3a24;background:#0e1e12;font-size:11px;color:var(--green-light);cursor:pointer">✓ Completada</button>' +
-        '</div>';
-    });
-    const msgVistosLocal = JSON.parse(localStorage.getItem('mensajes_vistos') || '{}');
-    mensajes.filter(m => !msgVistosLocal[m.id]).forEach(m => {
-      html += '<div class="alerta-traspaso" style="margin:0 14px 6px">' +
-        '<div class="alerta-traspaso-titulo">💬 Mensaje de ' + (m.nombre||'turno anterior') + '</div>' +
-        '<div class="alerta-traspaso-sub">' + m.mensaje + '</div>' +
-        '<button onclick="cerrarMensajeStaff(\'' + m.id + '\')" style="margin-top:6px;width:100%;padding:6px;border-radius:7px;border:0.5px solid #3a2c00;background:#2a1a00;font-size:11px;color:var(--amber);cursor:pointer">✓ Entendido</button>' +
-        '</div>';
-    });
-    const vistasLocal = JSON.parse(localStorage.getItem('alertas_vistas') || '{}');
-    alertas.filter(a => !vistasLocal[a.id]).forEach(a => {
-      html += '<div style="margin:0 14px 6px;background:#1a0010;border:0.5px solid #4a0030;border-radius:10px;padding:10px 12px">' +
-        '<div style="font-size:12px;font-weight:500;color:#E060A0;margin-bottom:2px">⚠ Insumo agotado · ' + (a.insumo||a.nombre||'') + '</div>' +
-        '<div style="font-size:11px;color:#804060;font-style:italic;margin-bottom:6px">' + (a.mensaje||'') + ' — avisado por ' + (a.nombre||'') + '</div>' +
-        '<button onclick="verAlerta(\'' + a.id + '\')" style="width:100%;padding:6px;border-radius:7px;border:0.5px solid #4a0030;background:#2a0018;font-size:11px;color:#E060A0;cursor:pointer">✓ Entendido, ya sé</button>' +
-        '</div>';
-    });
-    divAlertas.innerHTML = html;
-    document.querySelectorAll('.badge-tareas').forEach(b => b.classList.toggle('visible', urgentes.length > 0 || mensajes.length > 0));
-  };
-
-  let urgentesRT = [], mensajesRT = [], alertasRT = [];
-
-  // Urgentes en tiempo real
-  const { onSnapshot: onSnap2, collection: col2, query: q2, where: w2 } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
-  onSnap2(q2(col2(db, 'tareas_urgentes'), w2('uid','==',usuarioActual.uid), w2('fecha','==',getFechaHoy()), w2('completada','==',false)),
-    snap => { urgentesRT = snap.docs.map(d=>({id:d.id,...d.data()})); renderAlertas(urgentesRT, mensajesRT, alertasRT); }
-  );
-
-  // Mensajes turno en tiempo real
-  onSnap2(q2(col2(db, 'mensajes_turno'), w2('fecha','==',getFechaHoy())),
-    snap => { mensajesRT = snap.docs.map(d=>({id:d.id,...d.data()})).filter(m=>m.uid!==usuarioActual.uid); renderAlertas(urgentesRT, mensajesRT, alertasRT); }
-  );
-
-  // Alertas insumos en tiempo real
-  onSnap2(q2(col2(db, 'alertas_insumos'), w2('fecha','==',getFechaHoy()), w2('activa','==',true)),
-    snap => { alertasRT = snap.docs.map(d=>({id:d.id,...d.data()})); renderAlertas(urgentesRT, mensajesRT, alertasRT); }
-  );
-
+  // Listener tareas_dia en tiempo real
   const fecha = getFechaHoy();
   if (unsuscribeTareas) unsuscribeTareas();
-  unsuscribeTareas = onSnapshot(
+  unsuscribeTareas = onSnap(
     firestoreDoc(db, 'tareas_dia', usuarioActual.uid + '_' + fecha),
-    (snap) => {
-      tareasDia = snap.exists() ? snap.data().estados || {} : {};
-      renderTareas();
+    (s) => {
+      tareasDia = s.exists() ? s.data().estados || {} : {};
+      renderGlobal();
+      if (areaActual) renderAreaLista();
     }
   );
 
-  document.getElementById('btn-toggle-alerta-ins').addEventListener('click', () => {
-    const body = document.getElementById('alerta-ins-body');
-    const arrow = document.getElementById('alerta-ins-arrow');
-    const visible = body.style.display === 'flex';
-    // Cerrar resumen si está abierto
-    document.getElementById('resumen-whatsapp').style.display = 'none';
-    document.getElementById('resumen-pie-arrow').textContent = '▼';
-    body.style.display = visible ? 'none' : 'flex';
-    body.style.flexDirection = visible ? '' : 'column';
-    arrow.textContent = visible ? '▼' : '▲';
-  });
+  // Listener urgentes
+  onSnap(query(collection(db, 'tareas_urgentes'), where('uid', '==', usuarioActual.uid), where('fecha', '==', fecha), where('completada', '==', false)),
+    s => { urgentesRT = s.docs.map(d => ({ id: d.id, ...d.data() })); renderBadges(); actualizarNavBadge(); }
+  );
 
-  document.getElementById('btn-enviar-alerta-ins').addEventListener('click', async () => {
-    const nombre = document.getElementById('alerta-ins-nombre').value.trim();
-    const msg = document.getElementById('alerta-ins-msg').value.trim();
-    if (!nombre) { mostrarToast('Escribe qué insumo se agotó', '#E24B4A'); return; }
-    const { addDoc, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
-    await addDoc(collection(db, 'alertas_insumos'), {
-      uid: usuarioActual.uid,
-      nombre: datosUsuario.nombre,
-      insumo: nombre,
-      mensaje: msg || 'Se agotó el insumo',
-      fecha: getFechaHoy(),
-      timestamp: new Date().toISOString(),
-      activa: true
-    });
-    document.getElementById('alerta-ins-nombre').value = '';
-    document.getElementById('alerta-ins-msg').value = '';
-    document.getElementById('alerta-ins-body').style.display = 'none';
-    document.getElementById('alerta-ins-arrow').textContent = '▼';
-    mostrarToast('Alerta enviada a todos ✓', '#E060A0');
-  }); 
+  // Listener mensajes turno
+  onSnap(query(collection(db, 'mensajes_turno'), where('fecha', '==', fecha)),
+    s => { mensajesRT = s.docs.map(d => ({ id: d.id, ...d.data() })).filter(m => m.uid !== usuarioActual.uid); renderBadges(); actualizarNavBadge(); }
+  );
+
+  // Listener alertas insumos
+  onSnap(query(collection(db, 'alertas_insumos'), where('fecha', '==', fecha), where('activa', '==', true)),
+    s => { alertasRT = s.docs.map(d => ({ id: d.id, ...d.data() })); renderBadges(); actualizarNavBadge(); }
+  );
+
+  // Mensaje siguiente turno
   document.getElementById('btn-msg-libre').addEventListener('click', () => {
     msgLibreAbierto = !msgLibreAbierto;
     document.getElementById('msg-libre-body').style.display = msgLibreAbierto ? 'flex' : 'none';
@@ -396,183 +350,380 @@ async function iniciarTareas() {
   document.getElementById('btn-msg-libre-send').addEventListener('click', async () => {
     const msg = document.getElementById('msg-libre-input').value.trim();
     if (!msg) return;
-    const fecha = getFechaHoy();
     const { setDoc, doc: fd } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
-    await setDoc(fd(db, 'mensajes_turno', usuarioActual.uid + '_' + fecha), {
-      uid: usuarioActual.uid,
-      nombre: datosUsuario.nombre,
-      fecha,
-      mensaje: msg,
-      timestamp: new Date().toISOString()
+    await setDoc(fd(db, 'mensajes_turno', usuarioActual.uid + '_' + getFechaHoy()), {
+      uid: usuarioActual.uid, nombre: datosUsuario.nombre,
+      fecha: getFechaHoy(), mensaje: msg, timestamp: new Date().toISOString()
     });
     document.getElementById('msg-libre-input').value = '';
     msgLibreAbierto = false;
     document.getElementById('msg-libre-body').style.display = 'none';
     document.getElementById('msg-libre-arrow').textContent = '▼';
-    alert('Mensaje enviado al siguiente turno y al admin.');
-  });
-
-  document.querySelectorAll('.chip-area').forEach(chip => {
-    chip.addEventListener('click', () => {
-      catActualTareas = chip.dataset.cat;
-      document.querySelectorAll('.chip-area').forEach(c => c.classList.remove('activo'));
-      chip.classList.add('activo');
-      renderTareas();
-    });
+    mostrarToast('Mensaje enviado al siguiente turno ✓', '#BA7517');
   });
 }
 
-function getTareasFiltradas() {
-  if (catActualTareas === 'todas') return tareasConfig;
-  if (catActualTareas === 'general') return tareasConfig.filter(t => t.area === 'general');
-  return tareasConfig.filter(t => t.area === catActualTareas);
-}
-
-function renderTareas() {
-  const lista = document.getElementById('tareas-lista');
-  const tareas = getTareasFiltradas();
-  const pendientes = tareas.filter(t => {
-    const est = tareasDia[t.id];
-    return !est || est === 'pendiente';
-  });
-  const total = tareas.length;
-  const hechas = total - pendientes.length;
-  const pct = total > 0 ? Math.round((hechas / total) * 100) : 0;
-
-  document.getElementById('tareas-progreso').textContent = hechas + '/' + total;
-  document.getElementById('tareas-prog-fill').style.width = pct + '%';
-
-  if (pendientes.length === 0 && total > 0) {
-    lista.innerHTML = '<div class="todo-listo"><div class="todo-listo-icon">🎉</div><div class="todo-listo-txt">¡Todo listo en este turno!</div><div class="todo-listo-sub">Buen trabajo</div></div>';
-    return;
-  }
-
-  const secciones = [
-    { key: 'urgente', badge: 'URGENTE AHORA', cls: 'sec-urgente' },
-    { key: 'traspaso', badge: 'TURNO ANTERIOR', cls: 'sec-traspaso' },
-    { key: 'recurrente', badge: 'CADA 2-3H', cls: 'sec-recurrente' },
-    { key: 'normal', badge: 'TAREAS DEL TURNO', cls: 'sec-turno' },
-  ];
+// ===== RENDER VISTA GLOBAL =====
+function renderGlobal() {
+  const grid = document.getElementById('tareas-grid-areas');
+  let totalHecho = 0, totalAll = 0;
 
   let html = '';
-  secciones.forEach(sec => {
-    const items = pendientes.filter(t => {
-      if (sec.key === 'normal') return t.tipo === 'normal' || t.tipo === 'turno';
-      return t.tipo === sec.key;
-    });
-    if (!items.length) return;
-    html += '<div class="sec-badge ' + sec.cls + '">' + sec.badge + '</div>';
-    items.forEach(t => {
-      const isNpOpen = nopudeAbierto[t.id];
-      const isExpanded = tareasExpandidas[t.id];
-      const tagCls = TAG_CLASES[t.area] || 'tag-general';
-      const tagLbl = TAG_LABELS[t.area] || t.area;
-      html += '<div class="tarea-card tarea-compacta" id="tarea-' + t.id + '">';
-      html += '<div class="tarea-top" onclick="expandirTarea(\'' + t.id + '\')" style="cursor:pointer">';
-      html += '<div class="tarea-chk" onclick="event.stopPropagation();marcarTarea(\'' + t.id + '\')"></div>';
-      html += '<div class="tarea-body"><div class="tarea-nombre">' + t.nombre + '</div>';
-      html += '<div class="tarea-meta"><span class="tag-area ' + tagCls + '">' + tagLbl + '</span>';
-      if (t.compartida) html += '<span style="font-size:10px;color:var(--purple)">compartida</span>';
-      if (t.tipo === 'recurrente') html += '<span style="font-size:10px;color:var(--amber)">↻ ' + t.repHoras + 'h</span>';
-      html += '</div></div>';
-      html += '<span style="font-size:12px;color:var(--text3);padding:0 4px">' + (isExpanded ? '▲' : '▼') + '</span>';
-      html += '</div>';
-      if (isExpanded) {
-        html += '<div class="tarea-btns">';
-        html += '<div class="btn-yahay" onclick="marcarYahay(\'' + t.id + '\')">Ya hay / no aplica</div>';
-        html += '<div class="btn-nopude" onclick="toggleNopude(\'' + t.id + '\')">No pude</div>';
-        html += '</div>';
-        if (isNpOpen) {
-          html += '<div class="nopude-box">';
-          html += '<textarea class="nopude-inp" id="np-' + t.id + '" rows="2" placeholder="¿Por qué no pudiste? El admin lo verá..."></textarea>';
-          html += '<button class="btn-nopude-send" onclick="enviarNopude(\'' + t.id + '\')">Enviar y dejar pendiente</button>';
-          html += '</div>';
-        }
-      }
-      html += '</div>';
-    });
-  });
+  AREAS_ORDEN.forEach(area => {
+    const cfg = AREA_CONFIG[area];
+    const ts = tareasConfig.filter(t => t.area === area);
+    if (!ts.length) return;
+    const hecho = ts.filter(t => { const e = tareasDia[t.id]; return e === 'hecho' || e === 'yahay'; }).length;
+    const pend = ts.length - hecho;
+    const pct = ts.length ? Math.round(hecho / ts.length * 100) : 0;
+    totalHecho += hecho;
+    totalAll += ts.length;
 
-  lista.innerHTML = html;
+    const esGeneral = area === 'general';
+    html += '<div class="area-card ' + cfg.cls + (esGeneral ? ' area-general' : '') + '" onclick="tareasAbrirArea(\'' + area + '\')">';
+    html += '<div class="area-card-nom">' + cfg.nom + '</div>';
+    html += '<div class="area-card-num">' + pend + '</div>';
+    html += '<div class="area-card-lbl">pendientes de ' + ts.length + '</div>';
+    html += '<div class="area-card-bar"><div class="area-card-fill" style="width:' + pct + '%"></div></div>';
+    html += '</div>';
+  });
+  grid.innerHTML = html;
+
+  // Actualizar badge progreso topbar
+  document.getElementById('tareas-progreso').textContent = totalHecho + '/' + totalAll;
 }
 
-window.cerrarMensajeStaff = (id) => {
-  const vistos = JSON.parse(localStorage.getItem('mensajes_vistos') || '{}');
-  vistos[id] = true;
-  localStorage.setItem('mensajes_vistos', JSON.stringify(vistos));
-  mostrarToast('Mensaje marcado como leído ✓', '#BA7517');
+// ===== BADGES DE ALERTAS =====
+function renderBadges() {
+  const row = document.getElementById('tareas-badges-row');
+  const msgVistosLocal = JSON.parse(localStorage.getItem('mensajes_vistos') || '{}');
+  const alertasVistasLocal = JSON.parse(localStorage.getItem('alertas_vistas') || '{}');
+
+  const urg = urgentesRT.length;
+  const msg = mensajesRT.filter(m => !msgVistosLocal[m.id]).length;
+  const ins = alertasRT.filter(a => !alertasVistasLocal[a.id]).length;
+
+  const tiene = urg > 0 || msg > 0 || ins > 0;
+  row.style.display = tiene ? 'flex' : 'none';
+
+  let html = '';
+  if (urg > 0) {
+    html += '<div class="alert-badge-card abc-urgente" onclick="abrirModalAlertas(\'urgente\')">';
+    html += '<div class="abc-inner"><div class="abc-top"><span class="abc-icon">⚡</span><span class="abc-num">' + urg + '</span></div>';
+    html += '<div class="abc-lbl">Urgentes</div></div>';
+    html += '<div class="abc-btn">Ver y completar</div></div>';
+  }
+  if (msg > 0) {
+    html += '<div class="alert-badge-card abc-msg" onclick="abrirModalAlertas(\'msg\')">';
+    html += '<div class="abc-inner"><div class="abc-top"><span class="abc-icon">💬</span><span class="abc-num">' + msg + '</span></div>';
+    html += '<div class="abc-lbl">Turno anterior</div></div>';
+    html += '<div class="abc-btn">Ver y confirmar</div></div>';
+  }
+  if (ins > 0) {
+    html += '<div class="alert-badge-card abc-insumo" onclick="abrirModalAlertas(\'insumo\')">';
+    html += '<div class="abc-inner"><div class="abc-top"><span class="abc-icon">△</span><span class="abc-num">' + ins + '</span></div>';
+    html += '<div class="abc-lbl">Insumos agotados</div></div>';
+    html += '<div class="abc-btn">Ver alertas</div></div>';
+  }
+  row.innerHTML = html;
+}
+
+function actualizarNavBadge() {
+  const msgVistosLocal = JSON.parse(localStorage.getItem('mensajes_vistos') || '{}');
+  const tiene = urgentesRT.length > 0 || mensajesRT.filter(m => !msgVistosLocal[m.id]).length > 0;
+  document.querySelectorAll('.badge-tareas').forEach(b => b.classList.toggle('visible', tiene));
+}
+
+// ===== MODAL ALERTAS =====
+window.abrirModalAlertas = (tipo) => {
+  const overlay = document.getElementById('modal-alertas-overlay');
+  const titulosMap = { urgente: '⚡ Tareas urgentes', msg: '💬 Turno anterior', insumo: '△ Insumos agotados' };
+  document.getElementById('modal-alertas-titulo').textContent = titulosMap[tipo];
+  document.getElementById('modal-alertas-titulo').style.color = tipo === 'urgente' ? '#E24B4A' : tipo === 'msg' ? '#EF9F27' : '#5DAAE8';
+  renderModalAlertas(tipo);
+  overlay.style.display = 'flex';
 };
 
-window.completarUrgente = async (id) => {
-  const { doc: fd, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
-  await updateDoc(fd(db, 'tareas_urgentes', id), { completada: true });
-  mostrarToast('Tarea urgente completada ✓');
-};
+function renderModalAlertas(tipo) {
+  const msgVistosLocal = JSON.parse(localStorage.getItem('mensajes_vistos') || '{}');
+  const alertasVistasLocal = JSON.parse(localStorage.getItem('alertas_vistas') || '{}');
+  let items = [];
+  if (tipo === 'urgente') items = urgentesRT;
+  else if (tipo === 'msg') items = mensajesRT.filter(m => !msgVistosLocal[m.id]);
+  else items = alertasRT.filter(a => !alertasVistasLocal[a.id]);
 
-window.verAlerta = (id) => {
-  const vistas = JSON.parse(localStorage.getItem('alertas_vistas') || '{}');
-  vistas[id] = true;
-  localStorage.setItem('alertas_vistas', JSON.stringify(vistas));
-  mostrarToast('Alerta marcada como vista ✓', '#E060A0');
-};
-
-window.expandirTarea = (id) => {
-  tareasExpandidas[id] = !tareasExpandidas[id];
-  renderTareas();
-};
-
-window.marcarTarea = async (id) => {
-  const el = document.getElementById('tarea-' + id);
-  if (el) el.classList.add('desapareciendo');
-  setTimeout(async () => {
-    const t = tareasConfig.find(x => x.id === id);
-    if (!t) return;
-    const { setDoc, doc: fd } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
-    const fecha = getFechaHoy();
-    const docRef = fd(db, 'tareas_dia', usuarioActual.uid + '_' + fecha);
-    const nuevos = Object.assign({}, tareasDia);
-    nuevos[id] = 'hecho';
-    await setDoc(docRef, { uid: usuarioActual.uid, fecha, estados: nuevos }, { merge: true });
-    if (t.tipo === 'recurrente' && t.repHoras > 0) {
-      setTimeout(async () => {
-        const { setDoc: sd, doc: fd2 } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
-        const n2 = Object.assign({}, tareasDia);
-        delete n2[id];
-        await sd(fd2(db, 'tareas_dia', usuarioActual.uid + '_' + getFechaHoy()), { uid: usuarioActual.uid, fecha: getFechaHoy(), estados: n2 }, { merge: true });
-      }, t.repHoras * 3600000);
+  let html = '';
+  items.forEach((item, idx) => {
+    const done = estadosModal[item.id];
+    const cls = 'modal-item-' + tipo;
+    if (idx > 0) html += '<div class="modal-sep"></div>';
+    html += '<div class="' + cls + '">';
+    html += '<div class="mi-body">';
+    if (tipo === 'urgente') {
+      html += '<div class="mi-titulo">' + item.tarea + '</div>';
+      html += '<div class="mi-sub">Asignado por Admin</div>';
+    } else if (tipo === 'msg') {
+      html += '<div class="mi-titulo">' + (item.nombre || 'Turno anterior') + '</div>';
+      html += '<div class="mi-sub">' + item.mensaje + '</div>';
+    } else {
+      html += '<div class="mi-titulo">' + (item.insumo || item.nombre || '—') + '</div>';
+      html += '<div class="mi-sub">' + (item.mensaje || '') + ' — ' + (item.nombre || '') + '</div>';
     }
-  }, 280);
+    html += '</div>';
+
+    if (tipo === 'insumo') {
+      if (done) {
+        html += '<button class="mi-accion done">✓ Entendido, ya sé</button>';
+      } else {
+        html += '<button class="mi-accion modal-item-insumo" onclick="confirmarAlerta(\'' + item.id + '\',\'insumo\')" style="">Entendido, ya sé</button>';
+      }
+    } else if (done) {
+      const doneTxt = tipo === 'urgente' ? '✓ Completada' : '✓ Entendido';
+      html += '<button class="mi-accion done">' + doneTxt + '</button>';
+    } else {
+      const btnTxt = tipo === 'urgente' ? 'Marcar como completada' : 'Entendido';
+      html += '<button class="mi-accion" onclick="confirmarAlerta(\'' + item.id + '\',\'' + tipo + '\')">' + btnTxt + '</button>';
+    }
+    html += '</div>';
+  });
+
+  if (!html) html = '<div style="text-align:center;padding:24px;font-size:12px;color:#555;">Sin alertas pendientes</div>';
+  document.getElementById('modal-alertas-list').innerHTML = html;
+}
+
+window.confirmarAlerta = async (id, tipo) => {
+  estadosModal[id] = true;
+
+  if (tipo === 'urgente') {
+    const { doc: fd, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    await updateDoc(fd(db, 'tareas_urgentes', id), { completada: true });
+  } else if (tipo === 'msg') {
+    const vistos = JSON.parse(localStorage.getItem('mensajes_vistos') || '{}');
+    vistos[id] = true;
+    localStorage.setItem('mensajes_vistos', JSON.stringify(vistos));
+  } else if (tipo === 'insumo') {
+    const vistas = JSON.parse(localStorage.getItem('alertas_vistas') || '{}');
+    vistas[id] = true;
+    localStorage.setItem('alertas_vistas', JSON.stringify(vistas));
+  }
+
+  renderBadges();
+  // Detectar tipo actual del modal
+  const titulo = document.getElementById('modal-alertas-titulo').textContent;
+  const tipoActual = titulo.includes('urgente') ? 'urgente' : titulo.includes('anterior') ? 'msg' : 'insumo';
+  renderModalAlertas(tipoActual);
+  mostrarToast(tipo === 'urgente' ? 'Tarea completada ✓' : 'Entendido ✓', tipo === 'urgente' ? '#1D9E75' : '#BA7517');
 };
 
-window.marcarYahay = async (id) => {
-  const el = document.getElementById('tarea-' + id);
-  if (el) el.classList.add('desapareciendo');
-  setTimeout(async () => {
-    const { setDoc, doc: fd } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
-    const fecha = getFechaHoy();
-    const nuevos = Object.assign({}, tareasDia);
-    nuevos[id] = 'yahay';
-    await setDoc(fd(db, 'tareas_dia', usuarioActual.uid + '_' + fecha), { uid: usuarioActual.uid, fecha, estados: nuevos }, { merge: true });
-  }, 280);
+window.cerrarModalAlertas = (e) => {
+  if (e.target === document.getElementById('modal-alertas-overlay')) {
+    document.getElementById('modal-alertas-overlay').style.display = 'none';
+  }
 };
 
-window.toggleNopude = (id) => {
-  nopudeAbierto[id] = !nopudeAbierto[id];
-  renderTareas();
+// ===== VISTA POR ÁREA =====
+window.tareasAbrirArea = (area) => {
+  areaActual = area;
+  filtroTexto = '';
+  nopudoAbierto = null;
+  document.getElementById('area-search-inp').value = '';
+  document.getElementById('area-detail-title').textContent = AREA_CONFIG[area].nom;
+  document.getElementById('sort-az').classList.remove('on');
+  document.getElementById('sort-tipo').classList.add('on');
+  ordenActual = 'tipo';
+  document.getElementById('tareas-vista-global').style.display = 'none';
+  const va = document.getElementById('tareas-vista-area');
+  va.style.display = 'flex';
+  va.style.flexDirection = 'column';
+  renderAreaLista();
 };
 
-window.enviarNopude = async (id) => {
-  const el = document.getElementById('np-' + id);
-  if (!el || !el.value.trim()) return;
-  const motivo = el.value.trim();
+window.tareasVolverGlobal = () => {
+  areaActual = null;
+  nopudoAbierto = null;
+  filtroTexto = '';
+  document.getElementById('tareas-vista-area').style.display = 'none';
+  document.getElementById('tareas-vista-global').style.display = 'flex';
+  document.getElementById('tareas-vista-global').style.flexDirection = 'column';
+};
+
+window.tareasFiltar = (val) => {
+  filtroTexto = val.toLowerCase();
+  renderAreaLista();
+};
+
+window.tareasSetOrden = (o) => {
+  ordenActual = o;
+  document.getElementById('sort-az').classList.toggle('on', o === 'az');
+  document.getElementById('sort-tipo').classList.toggle('on', o === 'tipo');
+  renderAreaLista();
+};
+
+const PRIO_ORDEN = { urgente: 0, recurrente: 1, turno: 2, normal: 3 };
+
+function renderAreaLista() {
+  if (!areaActual) return;
+  const contenedor = document.getElementById('area-tareas-list');
+  const ts = tareasConfig.filter(t => t.area === areaActual);
+  const filtradas = filtroTexto ? ts.filter(t => t.nombre.toLowerCase().includes(filtroTexto)) : ts;
+
+  const pendientes = filtradas.filter(t => { const e = tareasDia[t.id]; return !e; });
+  const nopudos   = filtradas.filter(t => tareasDia[t.id] === 'nopudo');
+  const hechas    = filtradas.filter(t => { const e = tareasDia[t.id]; return e === 'hecho' || e === 'yahay'; });
+
+  let pendSort = [...pendientes];
+  if (ordenActual === 'az') pendSort.sort((a, b) => a.nombre.localeCompare(b.nombre));
+  else pendSort.sort((a, b) => (PRIO_ORDEN[a.tipo] || 3) - (PRIO_ORDEN[b.tipo] || 3));
+
+  // Actualizar contador
+  const totalArea = ts.length;
+  const pendCnt = totalArea - hechas.length;
+  document.getElementById('area-detail-cnt').textContent = pendCnt + ' pendientes';
+
+  let html = '';
+
+  // PENDIENTES
+  if (pendSort.length) {
+    const secs = ordenActual === 'tipo'
+      ? [{ k: 'recurrente', l: 'Recurrentes' }, { k: 'turno', l: 'Por turno' }, { k: 'normal', l: 'Tareas del turno' }]
+      : [{ k: 'all', l: 'Tareas pendientes' }];
+
+    secs.forEach(sec => {
+      const items = sec.k === 'all' ? pendSort : pendSort.filter(t => t.tipo === sec.k);
+      if (!items.length) return;
+      html += '<div class="at-sec-lbl">' + sec.l + '</div>';
+      items.forEach(t => {
+        const k = areaActual + '||' + t.id;
+        const npOpen = nopudoAbierto === k;
+        html += '<div class="at-row">';
+        html += '<div class="at-top">';
+        html += '<div class="at-chk" onclick="atMarcarHecho(\'' + t.id + '\')"></div>';
+        html += '<div class="at-nom">' + t.nombre + '</div>';
+        html += '<div class="at-btns">';
+        html += '<button class="btn-at-yahay" onclick="atMarcarYahay(\'' + t.id + '\')" title="Ya estaba / no aplica">' + svCheck('#1D9E75') + '</button>';
+        html += '<button class="btn-at-x" onclick="atToggleNp(\'' + k + '\')" title="No pude">' + svX('#E24B4A') + '</button>';
+        html += '</div></div>';
+        if (t.tipo === 'recurrente') html += '<div class="at-rec-lbl">↻ recurrente · cada ' + (t.repHoras || 2) + 'h</div>';
+        if (npOpen) {
+          html += '<div class="at-npbox"><textarea class="at-npta" id="npta_' + t.id + '" rows="2" placeholder="¿Por qué no pudiste? El admin lo verá..."></textarea>';
+          html += '<button class="at-np-send" onclick="atEnviarNp(\'' + t.id + '\')">Enviar y dejar pendiente</button></div>';
+        }
+        html += '</div>';
+      });
+    });
+  }
+
+  // NO PUDIERON
+  if (nopudos.length) {
+    html += '<div class="at-sec-lbl at-sec-lbl-nopudo">No pudieron hacerse</div>';
+    nopudos.forEach(t => {
+      html += '<div class="at-row at-nopudo-borde">';
+      html += '<div class="at-top">';
+      html += '<div class="at-chk" style="border-color:#3a1010;cursor:default;"></div>';
+      html += '<div class="at-nom nopudo-color">' + t.nombre + '</div>';
+      html += '<span style="font-size:10px;color:#8a2020;white-space:nowrap;flex-shrink:0;">No pudo</span>';
+      html += '</div>';
+      // Mostrar motivo si existe en tareasDia
+      const motivoKey = 'motivo_' + t.id;
+      // El motivo viene del snapshot de Firestore, aquí lo revisamos en tareasDia como campo extra
+      // No está en estados, está directo en el documento
+      html += '</div>';
+    });
+  }
+
+  // COMPLETADAS
+  if (hechas.length) {
+    html += '<div class="at-sec-lbl at-sec-lbl-done">Completadas (' + hechas.length + ')</div>';
+    hechas.forEach(t => {
+      const e = tareasDia[t.id];
+      html += '<div class="at-row at-done"><div class="at-top">';
+      if (e === 'hecho') {
+        html += '<div class="at-chk on">' + svCheck('#fff') + '</div>';
+      } else {
+        html += '<div class="at-chk-circle">' + svCheck('#1D9E75') + '</div>';
+      }
+      html += '<div class="at-nom tachada">' + t.nombre + '</div>';
+      html += '</div></div>';
+    });
+  }
+
+  if (!html) html = '<div style="text-align:center;padding:32px 0;font-size:12px;color:#444;">Sin tareas que coincidan</div>';
+  contenedor.innerHTML = html;
+
+  if (nopudoAbierto) {
+    const tid = nopudoAbierto.split('||')[1];
+    setTimeout(() => {
+      const ta = document.getElementById('npta_' + tid);
+      if (ta) ta.focus();
+    }, 30);
+  }
+}
+
+// ===== ACCIONES DE TAREA =====
+window.atMarcarHecho = async (id) => {
+  const { setDoc, doc: fd } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const fecha = getFechaHoy();
+  const nuevos = Object.assign({}, tareasDia);
+  nuevos[id] = 'hecho';
+  await setDoc(fd(db, 'tareas_dia', usuarioActual.uid + '_' + fecha), { uid: usuarioActual.uid, fecha, estados: nuevos }, { merge: true });
+  nopudoAbierto = null;
+  // Comprobar si era recurrente
+  const t = tareasConfig.find(x => x.id === id);
+  if (t && t.tipo === 'recurrente' && t.repHoras > 0) {
+    setTimeout(async () => {
+      const { setDoc: sd, doc: fd2 } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+      const n2 = Object.assign({}, tareasDia);
+      delete n2[id];
+      await sd(fd2(db, 'tareas_dia', usuarioActual.uid + '_' + getFechaHoy()), { uid: usuarioActual.uid, fecha: getFechaHoy(), estados: n2 }, { merge: true });
+    }, t.repHoras * 3600000);
+  }
+};
+
+window.atMarcarYahay = async (id) => {
+  const { setDoc, doc: fd } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const fecha = getFechaHoy();
+  const nuevos = Object.assign({}, tareasDia);
+  nuevos[id] = 'yahay';
+  await setDoc(fd(db, 'tareas_dia', usuarioActual.uid + '_' + fecha), { uid: usuarioActual.uid, fecha, estados: nuevos }, { merge: true });
+  nopudoAbierto = null;
+};
+
+window.atToggleNp = (k) => {
+  if (nopudoAbierto === k) {
+    nopudoAbierto = null;
+  } else {
+    // Guardar automáticamente el anterior si tenía texto
+    if (nopudoAbierto) {
+      const prevId = nopudoAbierto.split('||')[1];
+      const ta = document.getElementById('npta_' + prevId);
+      if (ta && ta.value.trim()) {
+        atEnviarNpSilent(prevId, ta.value.trim());
+      }
+    }
+    nopudoAbierto = k;
+  }
+  renderAreaLista();
+};
+
+window.atEnviarNp = async (id) => {
+  const ta = document.getElementById('npta_' + id);
+  if (!ta || !ta.value.trim()) return;
+  const motivo = ta.value.trim();
+  await atEnviarNpSilent(id, motivo);
+  nopudoAbierto = null;
+  mostrarToast('Motivo enviado al admin ✓', '#E24B4A');
+};
+
+async function atEnviarNpSilent(id, motivo) {
   const { setDoc, doc: fd } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
   const fecha = getFechaHoy();
   const nuevos = Object.assign({}, tareasDia);
   nuevos[id] = 'nopudo';
-  await setDoc(fd(db, 'tareas_dia', usuarioActual.uid + '_' + fecha), { uid: usuarioActual.uid, fecha, estados: nuevos, ['motivo_' + id]: motivo }, { merge: true });
-  nopudeAbierto[id] = false;
-  alert('Motivo enviado al admin. La tarea quedará pendiente para el siguiente turno.');
-};
+  const datos = { uid: usuarioActual.uid, fecha, estados: nuevos };
+  datos['motivo_' + id] = motivo;
+  await setDoc(fd(db, 'tareas_dia', usuarioActual.uid + '_' + fecha), datos, { merge: true });
+}
+
 
 // ===== MÓDULO: INSUMOS =====
 let insumosData = [];

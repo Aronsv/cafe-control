@@ -748,23 +748,34 @@ async function iniciarInsumos() {
   });
 
   const btnAlertaIns = document.getElementById('btn-toggle-alerta-ins');
-    if (btnAlertaIns) btnAlertaIns.addEventListener('click', () => {
-    const body = document.getElementById('resumen-whatsapp');
-    const arrow = document.getElementById('resumen-pie-arrow');
+  if (btnAlertaIns) btnAlertaIns.addEventListener('click', () => {
+    const body = document.getElementById('alerta-ins-body');
+    const arrow = document.getElementById('alerta-ins-arrow');
+    if (!body) return;
     const visible = body.style.display === 'flex';
-    // Cerrar alerta si está abierta
-    document.getElementById('alerta-ins-body').style.display = 'none';
-    document.getElementById('alerta-ins-arrow').textContent = '▼';
-     // DENTRO del listener de btn-toggle-resumen, cámbialo por:
-    const alertaBody = document.getElementById('alerta-ins-body');
-    const alertaArrow = document.getElementById('alerta-ins-arrow');
-    if (alertaBody) alertaBody.style.display = 'none';
-    if (alertaArrow) alertaArrow.style.display = '▼';
+    const resumen = document.getElementById('resumen-whatsapp');
+    const resumenArrow = document.getElementById('resumen-pie-arrow');
+    if (resumen) resumen.style.display = 'none';
+    if (resumenArrow) resumenArrow.textContent = '▼';
     body.style.display = visible ? 'none' : 'flex';
     body.style.flexDirection = visible ? '' : 'column';
     arrow.textContent = visible ? '▼' : '▲';
   });
-
+ 
+  document.getElementById('btn-toggle-resumen').addEventListener('click', () => {
+    const body = document.getElementById('resumen-whatsapp');
+    const arrow = document.getElementById('resumen-pie-arrow');
+    if (!body) return;
+    const visible = body.style.display === 'flex';
+    const alertaBody = document.getElementById('alerta-ins-body');
+    const alertaArrow = document.getElementById('alerta-ins-arrow');
+    if (alertaBody) alertaBody.style.display = 'none';
+    if (alertaArrow) alertaArrow.textContent = '▼';
+    body.style.display = visible ? 'none' : 'flex';
+    body.style.flexDirection = visible ? '' : 'column';
+    arrow.textContent = visible ? '▼' : '▲';
+  });
+ 
   document.getElementById('btn-copiar-lista').addEventListener('click', () => {
     copiarLista();
   });

@@ -373,39 +373,80 @@
             </div>
             <div id="horarios-dia-lista"></div>
           </div>
-          <div id="modal-horario" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:center;justify-content:center">
-            <div style="background:var(--bg2);border-radius:16px;padding:20px;width:90%;max-width:340px;display:flex;flex-direction:column;gap:12px">
-              <div style="font-size:15px;font-weight:500;color:var(--text)" id="modal-horario-titulo">Asignar horario</div>
+          <div id="modal-horario" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:300;align-items:flex-end;justify-content:center">
+            <div style="background:#1a1a1a;border-radius:16px 16px 0 0;padding:16px;width:100%;max-width:480px;display:flex;flex-direction:column;gap:10px;max-height:85vh;overflow-y:auto;">
+ 
+              <div>
+                <div style="font-size:13px;font-weight:500;color:var(--text)" id="modal-horario-titulo">Asignar horario</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:2px;">Asignar horario del día</div>
+              </div>
+ 
               <input type="hidden" id="modal-uid">
               <input type="hidden" id="modal-fecha">
+ 
+              <!-- Tipo de día -->
               <div>
                 <div class="edit-reg-lbl">Tipo de día</div>
-                <select class="edit-reg-inp" id="modal-tipo-dia">
-                  <option value="trabajo">Trabajo</option>
-                  <option value="libre">Libre</option>
-                  <option value="permiso">Permiso</option>
-                </select>
-              </div>
-              <div id="modal-horas-wrap">
-                <div style="display:flex;gap:8px">
-                  <div style="flex:1">
-                    <div class="edit-reg-lbl">Entrada</div>
-                    <input class="edit-reg-inp" type="time" id="modal-hora-entrada" value="08:00">
-                  </div>
-                  <div style="flex:1">
-                    <div class="edit-reg-lbl">Salida</div>
-                    <input class="edit-reg-inp" type="time" id="modal-hora-salida" value="13:00">
-                  </div>
-                </div>
-                <div style="margin-top:8px">
-                  <div class="edit-reg-lbl">Turno</div>
-                  <select class="edit-reg-inp" id="modal-turno">
-                    <option value="mañana">Mañana</option>
-                    <option value="tarde">Tarde</option>
-                    <option value="completo">Completo</option>
-                  </select>
+                <div style="display:flex;gap:5px;margin-top:4px;">
+                  <div id="opt-trabajo" onclick="modalSetTipo('trabajo')" style="flex:1;padding:7px 4px;border-radius:7px;border:0.5px solid #1D9E75;background:#0f2a18;font-size:11px;color:#5DCAA5;cursor:pointer;text-align:center;">Trabajo</div>
+                  <div id="opt-libre" onclick="modalSetTipo('libre')" style="flex:1;padding:7px 4px;border-radius:7px;border:0.5px solid #2a2a2a;background:#111;font-size:11px;color:#555;cursor:pointer;text-align:center;">Libre</div>
+                  <div id="opt-permiso" onclick="modalSetTipo('permiso')" style="flex:1;padding:7px 4px;border-radius:7px;border:0.5px solid #2a2a2a;background:#111;font-size:11px;color:#555;cursor:pointer;text-align:center;">Permiso</div>
                 </div>
               </div>
+ 
+              <!-- Selector de turno -->
+              <div id="modal-bloque-turno">
+                <div class="edit-reg-lbl">Turno</div>
+                <div style="display:flex;gap:5px;margin-top:4px;">
+                  <div id="opt-turno-manana" onclick="modalSetTurno('manana')" style="flex:1;padding:7px 4px;border-radius:7px;border:0.5px solid #2a2a2a;background:#111;font-size:11px;color:#555;cursor:pointer;text-align:center;">Mañana</div>
+                  <div id="opt-turno-tarde" onclick="modalSetTurno('tarde')" style="flex:1;padding:7px 4px;border-radius:7px;border:0.5px solid #2a2a2a;background:#111;font-size:11px;color:#555;cursor:pointer;text-align:center;">Tarde</div>
+                  <div id="opt-turno-partido" onclick="modalSetTurno('partido')" style="flex:1;padding:7px 4px;border-radius:7px;border:0.5px solid #2a2a2a;background:#111;font-size:11px;color:#555;cursor:pointer;text-align:center;">Partido</div>
+                </div>
+              </div>
+ 
+              <!-- Bloque horas -->
+              <div id="modal-bloque-horas" style="display:none;flex-direction:column;gap:8px;">
+ 
+                <!-- Mañana -->
+                <div id="modal-b-manana" style="display:none;background:#111;border:0.5px solid #2a2a2a;border-radius:8px;padding:10px;">
+                  <div style="font-size:10px;font-weight:500;padding:3px 8px;border-radius:10px;display:inline-block;margin-bottom:8px;background:#2a1800;color:#EF9F27;border:0.5px solid #3a2400;">Turno mañana</div>
+                  <div style="display:flex;gap:8px;">
+                    <div style="flex:1">
+                      <div class="edit-reg-lbl">Entrada</div>
+                      <input class="edit-reg-inp" type="time" id="modal-m-entrada" value="08:00" oninput="modalActualizarTol()">
+                    </div>
+                    <div style="flex:1">
+                      <div class="edit-reg-lbl">Salida</div>
+                      <input class="edit-reg-inp" type="time" id="modal-m-salida" value="13:00">
+                    </div>
+                  </div>
+                </div>
+ 
+                <!-- Tarde -->
+                <div id="modal-b-tarde" style="display:none;background:#111;border:0.5px solid #2a2a2a;border-radius:8px;padding:10px;">
+                  <div style="font-size:10px;font-weight:500;padding:3px 8px;border-radius:10px;display:inline-block;margin-bottom:8px;background:#1a1a2e;color:#7F77DD;border:0.5px solid #28284a;">Turno tarde</div>
+                  <div style="display:flex;gap:8px;">
+                    <div style="flex:1">
+                      <div class="edit-reg-lbl">Entrada</div>
+                      <input class="edit-reg-inp" type="time" id="modal-t-entrada" value="15:00" oninput="modalActualizarTol()">
+                    </div>
+                    <div style="flex:1">
+                      <div class="edit-reg-lbl">Salida</div>
+                      <input class="edit-reg-inp" type="time" id="modal-t-salida" value="20:00">
+                    </div>
+                  </div>
+                </div>
+ 
+                <!-- Info tolerancia -->
+                <div id="modal-tol-info" style="display:none;background:#1a1400;border:0.5px solid #3a2c00;border-radius:7px;padding:7px 10px;font-size:10px;color:#8a7030;"></div>
+              </div>
+ 
+              <div style="display:flex;gap:8px;margin-top:2px;">
+                <button class="btn-edit-save" onclick="guardarHorario()">Guardar</button>
+                <button class="btn-edit-cancel" onclick="cerrarModalHorario()">Cancelar</button>
+              </div>
+            </div>
+          </div>
               <div style="display:flex;gap:8px">
                 <button class="btn-edit-save" onclick="guardarHorario()">Guardar</button>
                 <button class="btn-edit-cancel" onclick="cerrarModalHorario()">Cancelar</button>

@@ -397,15 +397,14 @@ function renderGlobal() {
 function renderBadges() {
   const row = document.getElementById('tareas-badges-row');
   const msgVistosLocal = JSON.parse(localStorage.getItem('mensajes_vistos') || '{}');
-  const alertasVistasLocal = JSON.parse(localStorage.getItem('alertas_vistas') || '{}');
-
+ 
   const urg = urgentesRT.length;
   const msg = mensajesRT.filter(m => !msgVistosLocal[m.id]).length;
-  const ins = alertasRT.filter(a => !alertasVistasLocal[a.id]).length;
-
+  const ins = alertasRT.length; // siempre muestra todos, solo admin cierra
+ 
   const tiene = urg > 0 || msg > 0 || ins > 0;
   row.style.display = tiene ? 'flex' : 'none';
-
+ 
   let html = '';
   if (urg > 0) {
     html += '<div class="alert-badge-card abc-urgente" onclick="abrirModalAlertas(\'urgente\')">';
@@ -427,13 +426,13 @@ function renderBadges() {
   }
   row.innerHTML = html;
 }
-
+ 
 function actualizarNavBadge() {
   const msgVistosLocal = JSON.parse(localStorage.getItem('mensajes_vistos') || '{}');
-  const tiene = urgentesRT.length > 0 || mensajesRT.filter(m => !msgVistosLocal[m.id]).length > 0;
+  const tiene = urgentesRT.length > 0 || mensajesRT.filter(m => !msgVistosLocal[m.id]).length > 0 || alertasRT.length > 0;
   document.querySelectorAll('.badge-tareas').forEach(b => b.classList.toggle('visible', tiene));
 }
-
+ 
 // ===== MODAL ALERTAS =====
 window.abrirModalAlertas = (tipo) => {
   const overlay = document.getElementById('modal-alertas-overlay');
@@ -443,15 +442,14 @@ window.abrirModalAlertas = (tipo) => {
   renderModalAlertas(tipo);
   overlay.style.display = 'flex';
 };
-
+ 
 function renderModalAlertas(tipo) {
   const msgVistosLocal = JSON.parse(localStorage.getItem('mensajes_vistos') || '{}');
-  const alertasVistasLocal = JSON.parse(localStorage.getItem('alertas_vistas') || '{}');
   let items = [];
   if (tipo === 'urgente') items = urgentesRT;
   else if (tipo === 'msg') items = mensajesRT.filter(m => !msgVistosLocal[m.id]);
-  else items = alertasRT.filter(a => !alertasVistasLocal[a.id]);
-
+  else items = alertasRT; // insumos: siempre todos los activos
+ 
   let html = '';
   items.forEach((item, idx) => {
     const done = estadosModal[item.id];
@@ -459,6 +457,7 @@ function renderModalAlertas(tipo) {
     if (idx > 0) html += '<div class="modal-sep"></div>';
     html += '<div class="' + cls + '">';
     html += '<div class="mi-body">';
+ 
     if (tipo === 'urgente') {
       html += '<div class="mi-titulo">' + item.tarea + '</div>';
       html += '<div class="mi-sub">Asignado por Admin</div>';
@@ -466,17 +465,15 @@ function renderModalAlertas(tipo) {
       html += '<div class="mi-titulo">' + (item.nombre || 'Turno anterior') + '</div>';
       html += '<div class="mi-sub">' + item.mensaje + '</div>';
     } else {
+      // insumos
       html += '<div class="mi-titulo">' + (item.insumo || item.nombre || '—') + '</div>';
-      html += '<div class="mi-sub">' + (item.mensaje || '') + ' — ' + (item.nombre || '') + '</div>';
+      html += '<div class="mi-sub">' + (item.mensaje || '') + ' — reportado por ' + (item.nombre || '') + '</div>';
     }
     html += '</div>';
-
+ 
     if (tipo === 'insumo') {
-      if (done) {
-        html += '<button class="mi-accion done">✓ Entendido, ya sé</button>';
-      } else {
-        html += '<button class="mi-accion modal-item-insumo" onclick="confirmarAlerta(\'' + item.id + '\',\'insumo\')" style="">Entendido, ya sé</button>';
-      }
+      // Solo informativo — botón no hace nada crítico, el admin cierra desde su panel
+      html += '<button class="mi-accion modal-item-insumo" style="cursor:default;opacity:0.6;">Solo el admin puede cerrar esto</button>';
     } else if (done) {
       const doneTxt = tipo === 'urgente' ? '✓ Completada' : '✓ Entendido';
       html += '<button class="mi-accion done">' + doneTxt + '</button>';
@@ -486,35 +483,32 @@ function renderModalAlertas(tipo) {
     }
     html += '</div>';
   });
-
+ 
   if (!html) html = '<div style="text-align:center;padding:24px;font-size:12px;color:#555;">Sin alertas pendientes</div>';
   document.getElementById('modal-alertas-list').innerHTML = html;
 }
-
+ 
 window.confirmarAlerta = async (id, tipo) => {
   estadosModal[id] = true;
-
+ 
   if (tipo === 'urgente') {
     const { doc: fd, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
     await updateDoc(fd(db, 'tareas_urgentes', id), { completada: true });
+    mostrarToast('Tarea completada ✓', '#1D9E75');
   } else if (tipo === 'msg') {
     const vistos = JSON.parse(localStorage.getItem('mensajes_vistos') || '{}');
     vistos[id] = true;
     localStorage.setItem('mensajes_vistos', JSON.stringify(vistos));
-  } else if (tipo === 'insumo') {
-    const vistas = JSON.parse(localStorage.getItem('alertas_vistas') || '{}');
-    vistas[id] = true;
-    localStorage.setItem('alertas_vistas', JSON.stringify(vistas));
+    mostrarToast('Entendido ✓', '#BA7517');
   }
-
+  // tipo 'insumo' no hace nada — solo admin cierra desde Firestore
+ 
   renderBadges();
-  // Detectar tipo actual del modal
   const titulo = document.getElementById('modal-alertas-titulo').textContent;
   const tipoActual = titulo.includes('urgente') ? 'urgente' : titulo.includes('anterior') ? 'msg' : 'insumo';
   renderModalAlertas(tipoActual);
-  mostrarToast(tipo === 'urgente' ? 'Tarea completada ✓' : 'Entendido ✓', tipo === 'urgente' ? '#1D9E75' : '#BA7517');
 };
-
+ 
 window.cerrarModalAlertas = (e) => {
   if (e.target === document.getElementById('modal-alertas-overlay')) {
     document.getElementById('modal-alertas-overlay').style.display = 'none';

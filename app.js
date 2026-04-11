@@ -731,7 +731,7 @@ async function iniciarInsumos() {
   insumosData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   insumosSeleccionados = {};
   renderInsumos();
-
+ 
   document.querySelectorAll('[data-cat-ins]').forEach(chip => {
     chip.addEventListener('click', () => {
       catActualIns = chip.dataset.catIns;
@@ -740,7 +740,8 @@ async function iniciarInsumos() {
       renderInsumos();
     });
   });
-
+ 
+  // Listener: abrir/cerrar reporte de insumo agotado
   const btnAlertaIns = document.getElementById('btn-toggle-alerta-ins');
   if (btnAlertaIns) btnAlertaIns.addEventListener('click', () => {
     const body = document.getElementById('alerta-ins-body');
@@ -756,6 +757,30 @@ async function iniciarInsumos() {
     arrow.textContent = visible ? '▼' : '▲';
   });
  
+  // Listener: enviar alerta de insumo agotado
+  const btnEnviarAlerta = document.getElementById('btn-enviar-alerta-ins');
+  if (btnEnviarAlerta) btnEnviarAlerta.addEventListener('click', async () => {
+    const nombre = document.getElementById('alerta-ins-nombre').value.trim();
+    const msg = document.getElementById('alerta-ins-msg').value.trim();
+    if (!nombre) { mostrarToast('Escribe qué insumo se agotó', '#E24B4A'); return; }
+    const { addDoc, collection: col2 } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    await addDoc(col2(db, 'alertas_insumos'), {
+      uid: usuarioActual.uid,
+      nombre: datosUsuario.nombre,
+      insumo: nombre,
+      mensaje: msg || 'Se agotó el insumo',
+      fecha: getFechaHoy(),
+      timestamp: new Date().toISOString(),
+      activa: true
+    });
+    document.getElementById('alerta-ins-nombre').value = '';
+    document.getElementById('alerta-ins-msg').value = '';
+    document.getElementById('alerta-ins-body').style.display = 'none';
+    document.getElementById('alerta-ins-arrow').textContent = '▼';
+    mostrarToast('Alerta enviada a todos ✓', '#E060A0');
+  });
+ 
+  // Listener: abrir/cerrar lista WhatsApp
   document.getElementById('btn-toggle-resumen').addEventListener('click', () => {
     const body = document.getElementById('resumen-whatsapp');
     const arrow = document.getElementById('resumen-pie-arrow');
@@ -770,6 +795,7 @@ async function iniciarInsumos() {
     arrow.textContent = visible ? '▼' : '▲';
   });
  
+  // Listener: copiar lista
   document.getElementById('btn-copiar-lista').addEventListener('click', () => {
     copiarLista();
   });

@@ -747,13 +747,19 @@ async function iniciarInsumos() {
     });
   });
 
-  document.getElementById('btn-toggle-resumen').addEventListener('click', () => {
+  const btnAlertaIns = document.getElementById('btn-toggle-alerta-ins');
+    if (btnAlertaIns) btnAlertaIns.addEventListener('click', () => {
     const body = document.getElementById('resumen-whatsapp');
     const arrow = document.getElementById('resumen-pie-arrow');
     const visible = body.style.display === 'flex';
     // Cerrar alerta si está abierta
     document.getElementById('alerta-ins-body').style.display = 'none';
     document.getElementById('alerta-ins-arrow').textContent = '▼';
+     // DENTRO del listener de btn-toggle-resumen, cámbialo por:
+    const alertaBody = document.getElementById('alerta-ins-body');
+    const alertaArrow = document.getElementById('alerta-ins-arrow');
+    if (alertaBody) alertaBody.style.display = 'none';
+    if (alertaArrow) alertaArrow.style.display = '▼';
     body.style.display = visible ? 'none' : 'flex';
     body.style.flexDirection = visible ? '' : 'column';
     arrow.textContent = visible ? '▼' : '▲';
